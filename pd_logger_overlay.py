@@ -22,7 +22,7 @@ from PySide6.QtCore import Qt, QTimer, Signal, QObject
 from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction
 from pynput import keyboard
 
-CURRENT_VERSION = "1.1.0"
+CURRENT_VERSION = "1.1.1"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory

@@ -1,5 +1,5 @@
 {
-    "version": "1.1.0",
-    "changelog": "- Neuer Log-Typ: Streifenpartner mitnehmen (1 Bild)\n- Zählt Streifenpartner (0/2) live im Zwischenstand mit\n- Voll anpassbares HUD: 5 Farbthemen + Eigene Farben (Color Picker)\n- HUD-Skalierung (Kompakt bis Sehr groß), Position, Schriftart & Transparenz\n- Taste [7] für Streifenpartner, [8] / [Z] für Zwischenstand",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.1.0/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.1.1",
+    "changelog": "- Automatischer GitHub-Updater direkt verknüpft (keine manuelle Link-Eingabe)\n- Neuer Log-Typ: Streifenpartner mitnehmen (1 Bild)\n- Zählt Streifenpartner (0/2) live im Zwischenstand mit\n- Voll anpassbares HUD: 5 Farbthemen + Eigene Farben (Color Picker)\n- HUD-Skalierung, Position, Schriftart & Transparenz",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.1.1/LSPD_Log_Assistent_Paket.zip"
 }
