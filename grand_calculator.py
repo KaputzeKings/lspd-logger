@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QProgressBar, QTextEdit, QTabWidget, QComboBox, QSlider, QColorDialog, QScrollArea,
     QCheckBox, QButtonGroup, QRadioButton
 )
-from PySide6.QtCore import Qt, QTimer, Signal, QObject
+from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint
 from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKeyEvent, QPen
 
 def get_base_dir():
@@ -53,6 +53,161 @@ class ClickableTerminalEdit(QTextEdit):
         super().mousePressEvent(e)
         self.clicked.emit()
 
+class OffenseCard(QFrame):
+    clicked = Signal()
+
+    def __init__(self, item, overlay, parent=None):
+        super().__init__(parent)
+        self.item = item
+        self.item_id = item.get("id", "")
+        self.name = item.get("name", "")
+        self.fine = item.get("fine", 0) or 0
+        self.wanteds = item.get("wanteds", 0) or item.get("mandatoryWanteds", 0) or 0
+        self.voluntary_w = item.get("voluntaryWanteds", 0) or 0
+        self.voluntary_f = item.get("voluntaryFine", 0) or 0
+        self.info = item.get("info", "") or ""
+        self.overlay = overlay
+        self.is_selected = False
+        self.v_buttons = []
+
+        self.setCursor(Qt.PointingHandCursor)
+        self.init_card_ui()
+
+    def init_card_ui(self):
+        self.apply_style(False)
+
+        c_lay = QVBoxLayout(self)
+        c_lay.setContentsMargins(10, 6, 10, 6)
+        c_lay.setSpacing(4)
+
+        # Row 1: Checkbox, Name, Fine, Wanteds
+        row1 = QHBoxLayout()
+        row1.setSpacing(8)
+
+        self.cb = QCheckBox(f"<b>{self.item_id}</b> — {self.name}")
+        self.cb.setStyleSheet("font-size: 13px; font-weight: normal; color: #f1f5f9;")
+        self.cb.clicked.connect(self.on_cb_clicked)
+        row1.addWidget(self.cb, stretch=1)
+
+        fine_str = f"${self.fine:,.0f}".replace(",", ".")
+        fine_badge = QLabel(fine_str)
+        fine_badge.setStyleSheet("background: #064e3b; color: #34d399; font-weight: bold; border-radius: 4px; padding: 3px 8px; font-size: 12px;")
+        row1.addWidget(fine_badge)
+
+        w_str = f"★ {self.wanteds}" if self.wanteds > 0 else "0 Wanteds"
+        w_badge = QLabel(w_str)
+        w_badge.setStyleSheet("background: #78350f; color: #fbbf24; font-weight: bold; border-radius: 4px; padding: 3px 8px; font-size: 12px;")
+        row1.addWidget(w_badge)
+
+        c_lay.addLayout(row1)
+
+        # Row 2: Voluntary / Graue Wanteds & License info
+        if self.voluntary_w > 0 or "entziehen" in self.info.lower():
+            row2 = QHBoxLayout()
+            row2.setSpacing(6)
+            if self.voluntary_w > 0:
+                v_lbl = QLabel(f"<span style='color:#a1a1aa; font-size:11px;'>Graue Wanteds (0-{self.voluntary_w}):</span>")
+                row2.addWidget(v_lbl)
+
+                for count in range(self.voluntary_w + 1):
+                    btn_v = QPushButton(str(count))
+                    btn_v.setFixedSize(26, 22)
+                    btn_v.setCheckable(True)
+                    btn_v.setChecked(count == 0)
+                    btn_v.setStyleSheet("""
+                        QPushButton {
+                            background: #27142b;
+                            color: #d8b4fe;
+                            border: 1px solid #701a75;
+                            border-radius: 4px;
+                            padding: 0px;
+                            font-size: 11px;
+                        }
+                        QPushButton:checked {
+                            background: #a855f7;
+                            color: #ffffff;
+                            font-weight: bold;
+                        }
+                    """)
+                    btn_v.clicked.connect(lambda _, c=count: self.on_voluntary_clicked(c))
+                    self.v_buttons.append(btn_v)
+                    row2.addWidget(btn_v)
+
+                if self.voluntary_f > 0:
+                    v_fine_lbl = QLabel(f"<span style='color:#34d399; font-size:11px;'>+${self.voluntary_f:,.0f}/W.</span>".replace(",", "."))
+                    row2.addWidget(v_fine_lbl)
+
+            if "entziehen" in self.info.lower():
+                row2.addStretch()
+                entzug_badge = QLabel(f"⚠️ {self.info}")
+                entzug_badge.setStyleSheet("background: #450a0a; color: #f87171; font-weight: bold; border-radius: 4px; padding: 2px 8px; font-size: 11px;")
+                row2.addWidget(entzug_badge)
+
+            c_lay.addLayout(row2)
+
+    def apply_style(self, selected):
+        self.is_selected = selected
+        if selected:
+            self.setStyleSheet("""
+                OffenseCard {
+                    background-color: #221338;
+                    border: 2px solid #a855f7;
+                    border-radius: 8px;
+                }
+                OffenseCard:hover {
+                    border: 2px solid #c084fc;
+                    background-color: #2a1845;
+                }
+            """)
+        else:
+            self.setStyleSheet("""
+                OffenseCard {
+                    background-color: #130d22;
+                    border: 1px solid #2e1065;
+                    border-radius: 8px;
+                }
+                OffenseCard:hover {
+                    border: 1px solid #7c3aed;
+                    background-color: #19122c;
+                }
+            """)
+
+    def set_selected_visual(self, selected):
+        self.apply_style(selected)
+        self.cb.blockSignals(True)
+        self.cb.setChecked(selected)
+        self.cb.blockSignals(False)
+
+    def set_voluntary_visual(self, count):
+        for idx, btn in enumerate(self.v_buttons):
+            btn.blockSignals(True)
+            btn.setChecked(idx == count)
+            btn.blockSignals(False)
+
+    def on_cb_clicked(self):
+        # Click on the checkbox itself
+        self.overlay.toggle_offense(self.item)
+
+    def on_voluntary_clicked(self, count):
+        self.overlay.set_voluntary_wanteds(self.item, count)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            # Check if clicked inside a child push button (voluntary buttons handle themselves)
+            child = self.childAt(event.pos())
+            if isinstance(child, QPushButton):
+                super().mousePressEvent(event)
+                return
+            # Otherwise, toggle offense!
+            self.overlay.toggle_offense(self.item)
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
+    def reset(self):
+        self.set_selected_visual(False)
+        self.set_voluntary_visual(0)
+
 class GrandCalculatorOverlay(QWidget):
     closed = Signal()
 
@@ -74,6 +229,7 @@ class GrandCalculatorOverlay(QWidget):
         self.selected_items = {} # id -> {"item": item, "voluntary": count}
         self.current_category = "Alle"
         self.search_term = ""
+        self.cards_by_id = {}
 
         self.check_icon_url = ensure_check_icon()
 
@@ -181,7 +337,6 @@ class GrandCalculatorOverlay(QWidget):
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 height: 0px;
             }}
-            /* High-contrast explicit Checkbox Indicator Styles */
             QCheckBox {{
                 color: #f1f5f9;
                 font-size: 13px;
@@ -440,159 +595,84 @@ class GrandCalculatorOverlay(QWidget):
 
         layout.addLayout(right_box, stretch=40)
 
-        self.populate_offenses()
+        # Build cards once
+        self.build_offenses_list()
 
-    def populate_offenses(self):
-        # Clear existing
-        while self.offenses_layout.count():
-            item = self.offenses_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+    def build_offenses_list(self):
+        self.cards_by_id = {}
+        for cat, items in self.db.items():
+            for item in items:
+                item_id = item.get("id", "")
+                card = OffenseCard(item, self)
+                self.cards_by_id[item_id] = card
+                self.offenses_layout.addWidget(card)
 
-        c = self.theme_colors
-        displayed = 0
+        self.offenses_layout.addStretch()
+        self.filter_offenses()
+
+    def filter_offenses(self):
+        q = self.search_term.lower()
+        cur_cat = self.current_category.lower()
 
         for cat, items in self.db.items():
-            # Filter category
+            cat_lower = cat.lower()
+
+            # Check category match
+            cat_matches = True
             if self.current_category != "Alle":
-                cat_lower = cat.lower()
-                cur_lower = self.current_category.lower()
-                if "integrität" in cur_lower and "integrität" not in cat_lower:
-                    continue
-                elif "wirtschaft" in cur_lower and "wirtschaft" not in cat_lower:
-                    continue
-                elif "beamte" in cur_lower and "beamten" not in cat_lower:
-                    continue
-                elif cur_lower not in cat_lower:
-                    continue
+                if "integrität" in cur_cat:
+                    cat_matches = "integrität" in cat_lower
+                elif "wirtschaft" in cur_cat:
+                    cat_matches = "wirtschaft" in cat_lower
+                elif "beamte" in cur_cat:
+                    cat_matches = "beamten" in cat_lower
+                else:
+                    cat_matches = cur_cat in cat_lower
 
             for item in items:
                 item_id = item.get("id", "")
-                name = item.get("name", "")
-                fine = item.get("fine", 0)
-                wanteds = item.get("wanteds", 0) or 0
-                voluntary_w = item.get("voluntaryWanteds", 0) or 0
-                voluntary_f = item.get("voluntaryFine", 0) or 0
-                info = item.get("info", "")
+                card = self.cards_by_id.get(item_id)
+                if not card:
+                    continue
 
-                # Search filter
-                if self.search_term:
-                    q = self.search_term.lower()
-                    if q not in item_id.lower() and q not in name.lower() and q not in info.lower():
-                        continue
+                if not cat_matches:
+                    card.setVisible(False)
+                    continue
 
-                displayed += 1
-                is_selected = item_id in self.selected_items
-
-                card = QFrame()
-                border_color = "#a855f7" if is_selected else "#2e1065"
-                card_bg = "#1e1333" if is_selected else c['card_bg']
-                card.setStyleSheet(f"""
-                    QFrame {{
-                        background-color: {card_bg};
-                        border: 1px solid {border_color};
-                        border-radius: 6px;
-                        padding: 6px 10px;
-                    }}
-                    QFrame:hover {{
-                        border: 1px solid {c['border']};
-                    }}
-                """)
-                c_lay = QVBoxLayout(card)
-                c_lay.setContentsMargins(6, 4, 6, 4)
-                c_lay.setSpacing(4)
-
-                # Row 1: Checkbox, Name, Badges
-                row1 = QHBoxLayout()
-                cb = QCheckBox(f"<b>{item_id}</b> — {name}")
-                cb.setChecked(is_selected)
-                cb.setStyleSheet("font-size: 12px;")
-                cb.toggled.connect(lambda checked, i=item: self.on_item_toggled(i, checked))
-                row1.addWidget(cb, stretch=1)
-
-                fine_str = f"${fine:,.0f}".replace(",", ".")
-                fine_badge = QLabel(fine_str)
-                fine_badge.setStyleSheet("background: #064e3b; color: #34d399; font-weight: bold; border-radius: 4px; padding: 2px 6px; font-size: 11px;")
-                row1.addWidget(fine_badge)
-
-                w_str = f"★ {wanteds}" if wanteds > 0 else "0 Wanteds"
-                w_badge = QLabel(w_str)
-                w_badge.setStyleSheet("background: #78350f; color: #fbbf24; font-weight: bold; border-radius: 4px; padding: 2px 6px; font-size: 11px;")
-                row1.addWidget(w_badge)
-
-                c_lay.addLayout(row1)
-
-                # Row 2: Voluntary / Graue Wanteds & License info
-                if voluntary_w > 0 or "entziehen" in info.lower():
-                    row2 = QHBoxLayout()
-                    if voluntary_w > 0:
-                        v_lbl = QLabel(f"<span style='color:#a1a1aa; font-size:11px;'>Graue Wanteds (0 bis {voluntary_w}):</span>")
-                        row2.addWidget(v_lbl)
-
-                        current_v = self.selected_items.get(item_id, {}).get("voluntary", 0)
-                        for count in range(voluntary_w + 1):
-                            btn_v = QPushButton(str(count))
-                            btn_v.setFixedSize(24, 20)
-                            btn_v.setCheckable(True)
-                            btn_v.setChecked(current_v == count)
-                            btn_v.setStyleSheet(f"""
-                                QPushButton {{
-                                    background: #27142b;
-                                    color: #d8b4fe;
-                                    border: 1px solid #701a75;
-                                    border-radius: 3px;
-                                    padding: 0px;
-                                    font-size: 10px;
-                                }}
-                                QPushButton:checked {{
-                                    background: #a855f7;
-                                    color: #ffffff;
-                                    font-weight: bold;
-                                }}
-                            """)
-                            btn_v.clicked.connect(lambda _, it=item, val=count: self.set_voluntary_wanteds(it, val))
-                            row2.addWidget(btn_v)
-
-                        if voluntary_f > 0:
-                            v_fine_lbl = QLabel(f"<span style='color:#34d399; font-size:10px;'>+${voluntary_f:,.0f}/W.</span>".replace(",", "."))
-                            row2.addWidget(v_fine_lbl)
-
-                    if "entziehen" in info.lower():
-                        row2.addStretch()
-                        entzug_badge = QLabel(f"⚠️ {info}")
-                        entzug_badge.setStyleSheet("background: #450a0a; color: #f87171; font-weight: bold; border-radius: 4px; padding: 2px 6px; font-size: 10px;")
-                        row2.addWidget(entzug_badge)
-
-                    c_lay.addLayout(row2)
-
-                self.offenses_layout.addWidget(card)
-
-        if displayed == 0:
-            none_lbl = QLabel("Keine Straftaten gefunden.")
-            none_lbl.setStyleSheet("color: #a1a1aa; font-size: 13px; padding: 20px;")
-            self.offenses_layout.addWidget(none_lbl)
-
-        self.offenses_layout.addStretch()
+                if q:
+                    name_lower = card.name.lower()
+                    id_lower = card.item_id.lower()
+                    info_lower = card.info.lower()
+                    match_search = (q in id_lower) or (q in name_lower) or (q in info_lower)
+                    card.setVisible(match_search)
+                else:
+                    card.setVisible(True)
 
     def filter_category(self, cat_name):
         self.current_category = cat_name
         for name, b in self.cat_buttons.items():
             b.setChecked(name == cat_name)
-        self.populate_offenses()
+        self.filter_offenses()
 
     def on_search_changed(self, text):
         self.search_term = text.strip()
-        self.populate_offenses()
+        self.filter_offenses()
 
-    def on_item_toggled(self, item, checked):
+    def toggle_offense(self, item):
         item_id = item.get("id")
-        if checked:
-            if item_id not in self.selected_items:
-                self.selected_items[item_id] = {"item": item, "voluntary": 0}
+        if item_id in self.selected_items:
+            del self.selected_items[item_id]
+            is_sel = False
         else:
-            if item_id in self.selected_items:
-                del self.selected_items[item_id]
-        self.populate_offenses()
+            self.selected_items[item_id] = {"item": item, "voluntary": 0}
+            is_sel = True
+
+        card = self.cards_by_id.get(item_id)
+        if card:
+            card.set_selected_visual(is_sel)
+            if not is_sel:
+                card.set_voluntary_visual(0)
+
         self.recalculate()
 
     def set_voluntary_wanteds(self, item, count):
@@ -601,7 +681,12 @@ class GrandCalculatorOverlay(QWidget):
             self.selected_items[item_id] = {"item": item, "voluntary": count}
         else:
             self.selected_items[item_id]["voluntary"] = count
-        self.populate_offenses()
+
+        card = self.cards_by_id.get(item_id)
+        if card:
+            card.set_selected_visual(True)
+            card.set_voluntary_visual(count)
+
         self.recalculate()
 
     def recalculate(self):
@@ -617,7 +702,7 @@ class GrandCalculatorOverlay(QWidget):
         for item_id, data in self.selected_items.items():
             item = data["item"]
             vol_count = data.get("voluntary", 0)
-            base_wanteds = item.get("wanteds", 0) or 0
+            base_wanteds = item.get("wanteds", 0) or item.get("mandatoryWanteds", 0) or 0
             fine = item.get("fine", 0) or 0
 
             offense_ids.append(item_id)
@@ -640,14 +725,16 @@ class GrandCalculatorOverlay(QWidget):
             vol_fine = most_severe.get("voluntaryFine", 0) or 0
 
             max_fine = base_fine + (vol_count * vol_fine)
-            max_wanteds = (most_severe.get("wanteds", 0) or 0) + vol_count
+            base_w = most_severe.get("wanteds", 0) or most_severe.get("mandatoryWanteds", 0) or 0
+            max_wanteds = base_w + vol_count
         else:
-            # Fallback if no most_severe found
+            # Fallback
             for item_id, data in self.selected_items.items():
                 item = data["item"]
                 vol_count = data.get("voluntary", 0)
+                base_w = item.get("wanteds", 0) or item.get("mandatoryWanteds", 0) or 0
                 item_fine = (item.get("fine", 0) or 0) + (vol_count * (item.get("voluntaryFine", 0) or 0))
-                item_wanteds = (item.get("wanteds", 0) or 0) + vol_count
+                item_wanteds = base_w + vol_count
                 if item_fine > max_fine:
                     max_fine = item_fine
                 if item_wanteds > max_wanteds:
@@ -744,13 +831,14 @@ class GrandCalculatorOverlay(QWidget):
 
     def reset_calculator(self):
         self.selected_items.clear()
+        for card in self.cards_by_id.values():
+            card.reset()
         self.search_input.clear()
         self.input_officer.clear()
         self.input_system_wanteds.clear()
         self.cb_reue.setChecked(False)
         if hasattr(self, 'cb_repeat'):
             self.cb_repeat.setChecked(False)
-        self.populate_offenses()
         self.recalculate()
 
     # --- TAB 2: TOW RECHNER (1:1 Grandkasten) ---
