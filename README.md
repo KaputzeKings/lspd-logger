@@ -108,9 +108,10 @@ Erkennt neu erstellte Screenshots (aus Medal, Shadowplay, FiveM etc.) und öffne
 | Taste | Funktion |
 | :--- | :--- |
 | **`F12`** | Bußgeld-, Wanteds- & TOW-Rechner öffnen / schließen |
+| **`F10`** | Teleprompter & Rechtebelehrung (Automatischer 3s Auto-Play & Auto-Close) |
 | **`1` bis `7`** | Screenshot-Kategorie auswählen (wenn HUD aktiv ist) |
 | **`Z`** | Tages-Zwischenstand manuell an Discord senden |
-| **`ESC`** | Rechner oder Screenshot-Overlay schließen |
+| **`ESC`** | Rechner, Teleprompter oder Screenshot-Overlay schließen |
 
 ---
 
