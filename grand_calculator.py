@@ -527,6 +527,18 @@ class FloatingPrompterHUD(QWidget):
         self.btn_auto.clicked.connect(self.main_calc.toggle_autoplay)
         ctrl_row.addWidget(self.btn_auto)
 
+        self.combo_hud_speed = QComboBox()
+        self.combo_hud_speed.setToolTip("Auto-Play Geschwindigkeit (3-10 Sek.)")
+        self.combo_hud_speed.setStyleSheet(f"background: {t['card_bg']}; color: {t['text']}; border: 1px solid {t['border_subtle']}; border-radius: 5px; padding: 3px 5px; font-size: 11px; font-weight: bold;")
+        for s in range(3, 11):
+            self.combo_hud_speed.addItem(f"{s}s", s)
+        init_sec = getattr(self.main_calc, 'prompter_autoplay_seconds', 3)
+        idx = self.combo_hud_speed.findText(f"{init_sec}s")
+        if idx >= 0:
+            self.combo_hud_speed.setCurrentIndex(idx)
+        self.combo_hud_speed.currentIndexChanged.connect(lambda i: self.main_calc.set_prompter_seconds(self.combo_hud_speed.itemData(i)))
+        ctrl_row.addWidget(self.combo_hud_speed)
+
         self.btn_next = QPushButton("▶ Weiter")
         self.btn_next.setCursor(Qt.PointingHandCursor)
         self.btn_next.setStyleSheet(f"background: {t['accent']}; color: {t['accent_text']}; border: none; border-radius: 5px; padding: 4px 12px; font-size: 11px; font-weight: 900;")
@@ -625,7 +637,12 @@ class GrandCalculatorOverlay(QWidget):
         self.prompter_font_size = 20
         self.prompter_autoplay_running = False
         self.prompter_autoplay_seconds = 3
-        self.prompter_autoplay_countdown = 3
+        try:
+            from pd_logger_overlay import CONFIG
+            self.prompter_autoplay_seconds = int(CONFIG.get("prompter_seconds", 3))
+        except Exception:
+            pass
+        self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
         self.prompter_autoplay_timer = QTimer(self)
         self.prompter_autoplay_timer.timeout.connect(self._on_autoplay_tick)
         self.attorney_timer_seconds = 300
@@ -638,24 +655,64 @@ class GrandCalculatorOverlay(QWidget):
         self.resize_to_screen()
 
     def resize_to_screen(self):
-        screen = QApplication.primaryScreen().geometry()
-        scale = 0.84
+        primary = QApplication.primaryScreen()
+        avail = primary.availableGeometry() if primary else None
+        avail_x = avail.x() if avail else 0
+        avail_y = avail.y() if avail else 0
+        avail_w = avail.width() if avail else 1920
+        avail_h = avail.height() if avail else 1080
+
+        scale = 0.82
         try:
             from pd_logger_overlay import CONFIG
-            scale = float(CONFIG.get("calc_scale", 0.84))
+            scale = float(CONFIG.get("calc_scale", 0.82))
         except Exception:
             pass
-        w = max(1000, int(screen.width() * scale))
-        h = max(680, int(screen.height() * scale))
-        x = (screen.width() - w) // 2
-        y = (screen.height() - h) // 2
+
+        w = int(avail_w * scale)
+        h = int(avail_h * scale)
+
+        # Responsive limits based on preset to fully support 25% and 50%
+        if scale <= 0.35:      # 25% Mini
+            min_w, min_h = 420, 280
+        elif scale <= 0.65:    # 50% Halb
+            min_w, min_h = 680, 440
+        elif scale <= 0.80:    # 75% Kompakt
+            min_w, min_h = 880, 560
+        else:                  # Standard, Groß, Vollbild
+            min_w, min_h = 980, 620
+
+        w = max(min_w, min(w, avail_w - 10))
+        h = max(min_h, min(h, avail_h - 10))
+
+        x = avail_x + (avail_w - w) // 2
+        y = avail_y + (avail_h - h) // 2
         self.setGeometry(x, y, w, h)
+
+    def get_grid_columns(self):
+        if hasattr(self, 'offenses_scroll') and self.offenses_scroll.width() > 100:
+            w = self.offenses_scroll.width()
+        else:
+            w = int(self.width() * 0.58)
+
+        if w >= 700:
+            return 3
+        elif w >= 420:
+            return 2
+        else:
+            return 1
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, 'offenses_grid') and hasattr(self, 'all_card_items'):
+            self.filter_offenses()
 
     def init_ui(self):
         t = self.theme_data
 
         p = self.palette()
         p.setColor(QPalette.Window, QColor(t['bg']))
+        p.setColor(QPalette.WindowText, QColor(t['text']))
         p.setColor(QPalette.Base, QColor(t['bg']))
         p.setColor(QPalette.AlternateBase, QColor(t['surface']))
         p.setColor(QPalette.Light, QColor(t['surface']))
@@ -663,7 +720,12 @@ class GrandCalculatorOverlay(QWidget):
         p.setColor(QPalette.Dark, QColor(t['bg']))
         p.setColor(QPalette.Shadow, QColor(t['bg']))
         p.setColor(QPalette.Button, QColor(t['card_bg']))
+        p.setColor(QPalette.ButtonText, QColor(t['text']))
         self.setPalette(p)
+        try:
+            QApplication.instance().setPalette(p)
+        except Exception:
+            pass
 
         self.setStyleSheet(f"""
             QWidget {{
@@ -816,6 +878,36 @@ class GrandCalculatorOverlay(QWidget):
         self.combo_header_theme.currentTextChanged.connect(self.on_theme_changed_from_ui)
         header.addWidget(self.combo_header_theme)
 
+        # Scale selector dropdown in header
+        lbl_scale = QLabel("📐 <span style='font-size:11px; color:#94a3b8;'>Größe:</span>")
+        header.addWidget(lbl_scale)
+
+        self.combo_header_scale = QComboBox()
+        self.combo_header_scale.setFixedWidth(130)
+        scale_opts = [
+            ("25% (Mini)", 0.25),
+            ("50% (Halb)", 0.50),
+            ("75% (Kompakt)", 0.75),
+            ("82% (Standard)", 0.82),
+            ("88% (Groß)", 0.88),
+            ("95% (Sehr groß)", 0.95),
+            ("100% (Voll)", 1.00)
+        ]
+        curr_sc = 0.82
+        try:
+            from pd_logger_overlay import CONFIG
+            curr_sc = float(CONFIG.get("calc_scale", 0.82))
+        except Exception:
+            pass
+
+        for name, val in scale_opts:
+            self.combo_header_scale.addItem(name, val)
+            if abs(val - curr_sc) < 0.03:
+                self.combo_header_scale.setCurrentIndex(self.combo_header_scale.count() - 1)
+
+        self.combo_header_scale.currentIndexChanged.connect(self.on_scale_changed_from_ui)
+        header.addWidget(self.combo_header_scale)
+
         help_lbl = QLabel("<span style='color: #94a3b8; font-size: 11px; margin-left: 6px;'><b>[F12]</b> Schließen</span>")
         header.addWidget(help_lbl)
 
@@ -840,7 +932,10 @@ class GrandCalculatorOverlay(QWidget):
         frame_layout.addLayout(header)
 
         # Tabs
+        self.setMinimumSize(380, 240)
+        self.main_frame.setMinimumSize(380, 240)
         self.tabs = QTabWidget()
+        self.tabs.setMinimumSize(360, 200)
         frame_layout.addWidget(self.tabs)
 
         self.tab_bussgeld = QWidget()
@@ -897,17 +992,22 @@ class GrandCalculatorOverlay(QWidget):
         # Category Filter Pills
         self.cat_scroll = QScrollArea()
         self.cat_scroll.setFixedHeight(44)
+        self.cat_scroll.setMinimumWidth(50)
         self.cat_scroll.setWidgetResizable(True)
         self.cat_scroll.setFrameShape(QFrame.NoFrame)
         self.cat_scroll.setFrameShadow(QFrame.Plain)
         self.cat_scroll.setLineWidth(0)
         self.cat_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.cat_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.cat_scroll.setStyleSheet("background: transparent; border: none;")
-        self.cat_scroll.viewport().setStyleSheet("background: transparent; border: none;")
+        self.cat_scroll.setStyleSheet(f"background-color: {t['bg']}; border: none;")
+        self.cat_scroll.viewport().setStyleSheet(f"background-color: {t['bg']}; border: none;")
+        self.cat_scroll.viewport().setAutoFillBackground(False)
+        self.cat_scroll.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.cat_scroll.viewport().setAttribute(Qt.WA_TranslucentBackground, True)
 
         self.cat_widget = QWidget()
-        self.cat_widget.setStyleSheet("background: transparent; border: none;")
+        self.cat_widget.setStyleSheet(f"background-color: {t['bg']}; border: none;")
+        self.cat_widget.setAttribute(Qt.WA_TranslucentBackground, True)
         self.cat_lay = QHBoxLayout(self.cat_widget)
         self.cat_lay.setContentsMargins(0, 0, 0, 0)
         self.cat_lay.setSpacing(6)
@@ -929,6 +1029,7 @@ class GrandCalculatorOverlay(QWidget):
 
         # Offenses scroll area (3-Column Grandkasten Grid)
         self.offenses_scroll = QScrollArea()
+        self.offenses_scroll.setMinimumWidth(50)
         self.offenses_scroll.setWidgetResizable(True)
         self.offenses_scroll.setFrameShape(QFrame.NoFrame)
         self.offenses_scroll.setFrameShadow(QFrame.Plain)
@@ -953,6 +1054,7 @@ class GrandCalculatorOverlay(QWidget):
 
         # Glass Box 1: Gesamtstrafe & Big Star Rating
         self.top_frame = QFrame()
+        self.top_frame.setMinimumWidth(120)
         self.top_frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {t['surface']};
@@ -1010,6 +1112,7 @@ class GrandCalculatorOverlay(QWidget):
 
         # Glass Box 2: Optionen für den Aktenvermerk
         self.opts_frame = QFrame()
+        self.opts_frame.setMinimumWidth(120)
         self.opts_frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {t['surface']};
@@ -1076,6 +1179,7 @@ class GrandCalculatorOverlay(QWidget):
 
         # Glass Box 3: Aktenvermerk Terminal & Copy Button
         self.akte_frame = QFrame()
+        self.akte_frame.setMinimumWidth(120)
         self.akte_frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {t['surface']};
@@ -1263,23 +1367,24 @@ class GrandCalculatorOverlay(QWidget):
         while self.offenses_grid.count():
             self.offenses_grid.takeAt(0)
 
-        # Repopulate matched cards in 3 columns (Grandkasten layout)
+        # Repopulate matched cards with dynamic columns (Grandkasten layout)
+        cols = self.get_grid_columns()
         for idx, card in enumerate(matched_cards):
-            r = idx // 3
-            c = idx % 3
+            r = idx // cols
+            c = idx % cols
             self.offenses_grid.addWidget(card, r, c)
 
         if hasattr(self, 'lbl_no_results'):
             if is_searching and len(matched_cards) == 0:
                 self.lbl_no_results.setText(f"🔍 Keine Straftaten für \"{raw_q}\" gefunden.\nÜberprüfe Stichwort oder Paragraph.")
-                self.offenses_grid.addWidget(self.lbl_no_results, 0, 0, 1, 3)
+                self.offenses_grid.addWidget(self.lbl_no_results, 0, 0, 1, cols)
                 self.lbl_no_results.setVisible(True)
             else:
                 self.lbl_no_results.setVisible(False)
 
         # Push items neatly to top if fewer items
         if matched_cards:
-            self.offenses_grid.setRowStretch((len(matched_cards) - 1) // 3 + 1, 1)
+            self.offenses_grid.setRowStretch((len(matched_cards) - 1) // cols + 1, 1)
 
     def filter_category(self, cat_name):
         self.current_category = cat_name
@@ -2021,6 +2126,27 @@ class GrandCalculatorOverlay(QWidget):
         self.btn_p_auto.clicked.connect(self.toggle_autoplay)
         act_bar.addWidget(self.btn_p_auto)
 
+        self.combo_p_speed = QComboBox()
+        self.combo_p_speed.setToolTip("Auto-Play Durchlaufzeit (3 bis 10 Sekunden)")
+        self.combo_p_speed.setStyleSheet(f"""
+            QComboBox {{
+                background-color: {t['card_bg']};
+                color: {t['text']};
+                border: 1px solid {t['border_subtle']};
+                border-radius: 6px;
+                padding: 9px 12px;
+                font-size: 13px;
+                font-weight: bold;
+            }}
+        """)
+        for s in range(3, 11):
+            self.combo_p_speed.addItem(f"{s}s", s)
+        idx_speed = self.combo_p_speed.findText(f"{self.prompter_autoplay_seconds}s")
+        if idx_speed >= 0:
+            self.combo_p_speed.setCurrentIndex(idx_speed)
+        self.combo_p_speed.currentIndexChanged.connect(lambda i: self.set_prompter_seconds(self.combo_p_speed.itemData(i)))
+        act_bar.addWidget(self.combo_p_speed)
+
         self.btn_p_next = QPushButton("⏭ Weiter (Leertaste / Enter)")
         self.btn_p_next.setCursor(Qt.PointingHandCursor)
         self.btn_p_next.setStyleSheet(f"""
@@ -2218,6 +2344,50 @@ class GrandCalculatorOverlay(QWidget):
             self.lbl_font_val.setText(f"{val}px")
         self.render_prompter_sentences()
 
+    def on_scale_changed_from_ui(self, idx):
+        if not hasattr(self, 'combo_header_scale'):
+            return
+        val = self.combo_header_scale.itemData(idx)
+        if val:
+            try:
+                from pd_logger_overlay import CONFIG, save_config
+                CONFIG["calc_scale"] = float(val)
+                save_config(CONFIG)
+            except Exception:
+                pass
+            self.resize_to_screen()
+
+    def set_prompter_seconds(self, seconds, save=True):
+        if not seconds:
+            return
+        self.prompter_autoplay_seconds = int(seconds)
+        if not self.prompter_autoplay_running:
+            self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
+
+        if hasattr(self, 'combo_p_speed'):
+            self.combo_p_speed.blockSignals(True)
+            idx = self.combo_p_speed.findText(f"{seconds}s")
+            if idx >= 0:
+                self.combo_p_speed.setCurrentIndex(idx)
+            self.combo_p_speed.blockSignals(False)
+
+        if hasattr(self, 'floating_prompter') and hasattr(self.floating_prompter, 'combo_hud_speed'):
+            self.floating_prompter.combo_hud_speed.blockSignals(True)
+            idx = self.floating_prompter.combo_hud_speed.findText(f"{seconds}s")
+            if idx >= 0:
+                self.floating_prompter.combo_hud_speed.setCurrentIndex(idx)
+            self.floating_prompter.combo_hud_speed.blockSignals(False)
+
+        self._update_autoplay_buttons()
+
+        if save:
+            try:
+                from pd_logger_overlay import CONFIG, save_config
+                CONFIG["prompter_seconds"] = int(seconds)
+                save_config(CONFIG)
+            except Exception:
+                pass
+
     def toggle_floating_prompter(self):
         if hasattr(self, 'floating_prompter'):
             if self.floating_prompter.isVisible():
@@ -2226,10 +2396,14 @@ class GrandCalculatorOverlay(QWidget):
             else:
                 self.prompter_step = 0
                 self.render_prompter_sentences()
-                screen = QApplication.primaryScreen().geometry()
+                primary = QApplication.primaryScreen()
+                avail = primary.availableGeometry() if primary else None
+                avail_x = avail.x() if avail else 0
+                avail_y = avail.y() if avail else 0
+                avail_w = avail.width() if avail else 1920
                 w = self.floating_prompter.width()
-                x = (screen.width() - w) // 2
-                y = 50
+                x = avail_x + (avail_w - w) // 2
+                y = avail_y + 45
                 self.floating_prompter.move(x, y)
                 self.floating_prompter.show()
                 self.floating_prompter.raise_()
@@ -2254,20 +2428,22 @@ class GrandCalculatorOverlay(QWidget):
         self._update_autoplay_buttons()
 
     def _update_autoplay_buttons(self):
+        sec = self.prompter_autoplay_seconds
+        cnt = self.prompter_autoplay_countdown
         if hasattr(self, 'btn_p_auto'):
             if self.prompter_autoplay_running:
-                self.btn_p_auto.setText(f"⏸ Auto-Play ({self.prompter_autoplay_countdown}s)")
+                self.btn_p_auto.setText(f"⏸ Auto-Play ({cnt}s)")
                 self.btn_p_auto.setStyleSheet("background-color: #eab308; color: #000000; border: none; border-radius: 6px; padding: 10px 18px; font-weight: 900; font-size: 13px;")
             else:
-                self.btn_p_auto.setText("▶ Auto-Play (3s)")
+                self.btn_p_auto.setText(f"▶ Auto-Play ({sec}s)")
                 self.btn_p_auto.setStyleSheet("background-color: #059669; color: #ffffff; border: none; border-radius: 6px; padding: 10px 18px; font-weight: bold; font-size: 13px;")
 
         if hasattr(self, 'floating_prompter') and hasattr(self.floating_prompter, 'btn_auto'):
             if self.prompter_autoplay_running:
-                self.floating_prompter.btn_auto.setText(f"⏸ {self.prompter_autoplay_countdown}s")
+                self.floating_prompter.btn_auto.setText(f"⏸ {cnt}s")
                 self.floating_prompter.btn_auto.setStyleSheet("background: #eab308; color: #000000; border: none; border-radius: 5px; padding: 4px 9px; font-size: 11px; font-weight: 900;")
             else:
-                self.floating_prompter.btn_auto.setText("▶ Auto (3s)")
+                self.floating_prompter.btn_auto.setText(f"▶ Auto ({sec}s)")
                 self.floating_prompter.btn_auto.setStyleSheet("background: #059669; color: #ffffff; border: none; border-radius: 5px; padding: 4px 9px; font-size: 11px; font-weight: bold;")
 
     def _on_autoplay_tick(self):
@@ -2334,9 +2510,9 @@ class GrandCalculatorOverlay(QWidget):
                     self.floating_prompter.lbl_hud_timer.setText("⚠️ 00:00!")
                     self.floating_prompter.lbl_hud_timer.setStyleSheet("background: #450a0a; color: #f87171; border: 1px solid #ef4444; border-radius: 5px; padding: 5px 8px; font-size: 11px; font-weight: bold;")
                 try:
-                    import winsound
-                    winsound.Beep(1200, 250)
-                    winsound.Beep(1600, 350)
+                    from pd_logger_overlay import play_beep
+                    play_beep(1200, 250)
+                    play_beep(1600, 350)
                 except Exception:
                     pass
 
@@ -2445,6 +2621,7 @@ class GrandCalculatorOverlay(QWidget):
         try:
             p = self.palette()
             p.setColor(QPalette.Window, QColor(t['bg']))
+            p.setColor(QPalette.WindowText, QColor(t['text']))
             p.setColor(QPalette.Base, QColor(t['bg']))
             p.setColor(QPalette.AlternateBase, QColor(t['surface']))
             p.setColor(QPalette.Light, QColor(t['surface']))
@@ -2452,26 +2629,30 @@ class GrandCalculatorOverlay(QWidget):
             p.setColor(QPalette.Dark, QColor(t['bg']))
             p.setColor(QPalette.Shadow, QColor(t['bg']))
             p.setColor(QPalette.Button, QColor(t['card_bg']))
+            p.setColor(QPalette.ButtonText, QColor(t['text']))
             self.setPalette(p)
+            QApplication.instance().setPalette(p)
         except Exception:
             pass
 
         if hasattr(self, 'cat_scroll'):
-            self.cat_scroll.setStyleSheet("background: transparent; border: none;")
-            self.cat_scroll.viewport().setStyleSheet("background: transparent; border: none;")
+            self.cat_scroll.setStyleSheet(f"background-color: {t['bg']}; border: none;")
+            self.cat_scroll.viewport().setStyleSheet(f"background-color: {t['bg']}; border: none;")
+            self.cat_scroll.viewport().setAutoFillBackground(False)
             self.cat_scroll.setFrameShape(QFrame.NoFrame)
             self.cat_scroll.setFrameShadow(QFrame.Plain)
             self.cat_scroll.setLineWidth(0)
         if hasattr(self, 'cat_widget'):
-            self.cat_widget.setStyleSheet("background: transparent; border: none;")
+            self.cat_widget.setStyleSheet(f"background-color: {t['bg']}; border: none;")
         if hasattr(self, 'offenses_scroll'):
-            self.offenses_scroll.setStyleSheet("background: transparent; border: none;")
-            self.offenses_scroll.viewport().setStyleSheet("background: transparent; border: none;")
+            self.offenses_scroll.setStyleSheet(f"background-color: {t['bg']}; border: none;")
+            self.offenses_scroll.viewport().setStyleSheet(f"background-color: {t['bg']}; border: none;")
+            self.offenses_scroll.viewport().setAutoFillBackground(False)
             self.offenses_scroll.setFrameShape(QFrame.NoFrame)
             self.offenses_scroll.setFrameShadow(QFrame.Plain)
             self.offenses_scroll.setLineWidth(0)
         if hasattr(self, 'offenses_container'):
-            self.offenses_container.setStyleSheet("background: transparent; border: none;")
+            self.offenses_container.setStyleSheet(f"background-color: {t['bg']}; border: none;")
         if hasattr(self, 'tab_bussgeld'):
             self.tab_bussgeld.setStyleSheet("background: transparent; border: none;")
         if hasattr(self, 'tab_tow'):
@@ -2486,6 +2667,20 @@ class GrandCalculatorOverlay(QWidget):
             self.floating_prompter.update_theme(t)
         if hasattr(self, 'prompter_layout'):
             self.render_prompter_sentences()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton and hasattr(self, 'drag_pos') and self.drag_pos:
+            self.move(event.globalPosition().toPoint() - self.drag_pos)
+            event.accept()
+        else:
+            super().mouseMoveEvent(event)
 
     # --- KEY & EVENT HANDLERS ---
     def keyPressEvent(self, event: QKeyEvent):

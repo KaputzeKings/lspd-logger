@@ -1,4 +1,4 @@
-# 🛡️ LSPD Log Assistent
+# 👮‍♂️ LSPD Log Assistent
 
 [![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=7c3aed&label=Version)](https://github.com/KaputzeKings/lspd-logger/releases)
 [![GrandRP DE1](https://img.shields.io/badge/GrandRP-DE1-blue.svg)](https://gta5grand.com)
@@ -10,14 +10,20 @@ Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset
 
 ---
 
-## 🚀 Kernfunktionen
+## 🌟 Kernfunktionen
 
 ### 1. ⚖️ Dienst-Rechner & Aktenvermerk ([F12])
-Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner (82% Bildschirmgröße) direkt über dem Spiel.
+Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Spiel.
 
+* **Multi-Auflösung & Flexible Größen (25% bis 100%):**
+  * **25% (Mini):** Ultrakompakte 1-Spalten-Ansicht – ideal für kleine Monitore, Laptops oder Nebenbeiblick.
+  * **50% (Halb):** 2-Spalten-Ansicht – halbe Bildschirmbreite für entspanntes Multitasking.
+  * **75% / 82% / 88% / 95% / 100%:** Volle 3-Spalten-Kartenansicht.
+  * **Live-Größenwähler im Header:** Ohne Neustart direkt im F12-Fenster zwischen 25%, 50%, 75%, 82%, 88%, 95% und 100% wechseln.
+  * **Anpassung an jede Bildschirmauflösung:** Automatische Ausrichtung für 4K, 1440p, 1080p, 720p/Laptops und Ultrawide (21:9) ohne Taskleisten-Clipping.
 * **Bußgeld- & Strafenkatalog nach Grandkasten (GrandRP DE1):**
   * Über **100 offizielle Straftaten** in 9 Kategorien (`StVO`, `StGB Integrität`, `StGB Wirtschaft`, `StGB Beamte`, `WaffG`, `BtMG`, `Sperrzonen`, `BDG`, `StPO`).
-  * **Echtzeit-Suchleiste:** Suche blitzschnell nach Paragraphen oder Stichwörtern (z.B. *Mord*, *Flucht*, *Drogen*, *§4*).
+  * **Echtzeit-Suchleiste:** Suche blitzschnell nach Paragraphen oder Stichwörtern (z.B. *Mord*, *Flucht*, *Drogen*, *§4*, *101*).
   * **Höchststrafe-Regel (1:1 Grandkasten):** Weder Bußgelder noch Wanteds addieren sich willkürlich auf – es zählt immer nur das schwerste Delikt für Gesamtstrafe und Fahndungslevel.
   * **Graue Wanteds (`voluntaryWanteds`):** Beamten-Ermessensspielraum per Knopfdruck auswählbar inkl. exakter automatischer Bußgelderhöhung.
   * **Reue & Kooperation (StGB §35):** Reduziert Wanteds automatisch um 2 (min. 1) und vermerkt das Delikt im Aktenvermerk.
@@ -28,78 +34,49 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner (82% Bildschirmgrö
     * `04.11 16:02 - StGB §5 + StGB §35`
     * `04.11 16:02 - StGB §5 + 2 Systemwanteds`
     * `04.11 16:05 - StVO §10 Art. 16 @LSPD Alex Springfield`
-  * **Lizenz-Entzug:** Prominente rote Warn-Badges bei Delikten, die den Entzug von Führerschein oder Waffenschein verlangen (bleiben sauber außerhalb des Aktenvermerks).
+  * **Lizenz-Entzug:** Prominente rote Warn-Badges bei Delikten, die den Entzug von Führerschein oder Waffenschein verlangen.
   * **1-Klick-Kopieren:** Klick auf den Aktenvermerk oder den Button kopiert den Text sofort ins Clipboard fürs MDT.
-  * **1-Klick-Zurücksetzen:** Leert alle Felder und setzt Bußgeld und Wanteds sofort auf 0 zurück.
 
 * **TOW Rechner (StVO §25 Abschlepp- & Blitzerrechner):**
   * Zonen: *Verkehrsberuhigt (50 km/h)*, *Innerorts (150 km/h)*, *Außerorts (200 km/h)*, *Freeway (300 km/h)*, *Highway (350 km/h)*.
-  * Automatische Prüfung der Geschwindigkeitsüberschreitung, Bußgelder ($10.000 bis $50.000) und Kennzeichnung als **Abschleppberechtigt** (ab 41 km/h drüber).
+  * Exakte 4 Stufen für Geschwindigkeitsüberschreitungen (10-40 km/h: $5.000, 41-60 km/h: $10.000, 61-100 km/h: $15.000, ab 101 km/h: $20.000).
   * Checkbox für **Wiederholungstäter (StVO §25 lit. 2)** mit Verdopplung des Bußgeldes.
-  * Generiert sofort die fertige Akte mit Kennzeichen und Ort: `04.11 16:05 - StVO §25 @Market - ABC-123`.
+  * Generiert sofort die fertige Akte mit Kennzeichen und Ort: `04.11 16:05 - StVO §8 @Market - ABC-123`.
 
 ---
 
-### 2. 📸 Automatisiertes Discord-Forum-Logging (Hotkeys 1–8)
-Erkennt neu erstellte Screenshots (aus Medal, Shadowplay, FiveM etc.) und öffnet ein elegantes HUD-Overlay:
-
-| Taste | Aktion | Beschreibung |
-| :---: | :--- | :--- |
-| **`1`** | **Inhaftierung** | Loggt Festnahme/Haft ins Forum (inkl. Wanteds, Bußgeld & Akte) |
-| **`2`** | **Globaler Notruf** | Loggt Anfahrt/Teilnahme an einem globalen Notruf |
-| **`3`** | **Lokaler Notruf** | Loggt Anfahrt/Teilnahme an einem lokalen Notruf |
-| **`4`** | **Event** | Loggt Schutz oder Teilnahme an einem Server-Event |
-| **`5`** | **Shoprob / Atmrob** | Loggt Raubüberfälle (Shoprob, Bank, ATM) |
-| **`6`** | **FZ-Raid** | Loggt Fort Zancudo Raid-Einsätze |
-| **`7`** | **Streifenpartner** | Loggt Streifenfahrten mit Kollegen (Partnermeldung) |
-| **`Z`** | **Zwischenstand** | Sendet den aktuellen Tageszähler sofort in den Discord-Thread |
-| **`ESC`** | **Schließen / Abbrechen** | Schließt das Screenshot-Overlay ohne Aktion |
-| **`F12`** | **Dienst-Rechner** | Öffnet/Schließt den Grandkasten Bußgeld- & TOW-Rechner |
+### 2. 📜 Teleprompter, Rechtebelehrung & Anwalts-Timer ([F10])
+* **Exakte Miranda-Rechte:**
+  1. *Sie haben das Recht zu schweigen, alles was Sie sagen kann und wird gegen Sie verwendet werden.*
+  2. *Ab 2 Wanteds haben Sie das Recht auf einen staatlich anerkannten Anwalt, den Sie selbst benennen müssen.*
+  3. *Wenn kein Anwalt verfügbar ist, wird Ihnen ein Pflichtverteidiger gestellt.*
+  4. *Die Judikative übernimmt der Exekutivbeamte.*
+  5. *Wenn ein Anwalt hinzugezogen wird, kann es länger als 25 Minuten dauern.*
+  6. *Haben Sie ihre Rechte verstanden?*
+* **Automatischer Auto-Play:** Startet beim Öffnen mit **[F10]** direkt.
+* **Auto-Close:** Schließt sich nach dem ersten Durchlauf automatisch selbst.
+* **Einstellbarer Takt (3 bis 10 Sekunden):**
+  * Im F12-Rechner (Tab 3) oder im F10 Mini-HUD kann die Durchlaufzeit flexibel von **3s bis 10s** eingestellt werden.
+* **Integrierter 5-Minuten Anwalts-Timer:** Fristüberwachung mit akustischem Signal und 1-Klick Vermerkerstellung.
 
 ---
 
-### 3. 📊 Live-HUD & Uprank-Zähler
-- Zeigt in Echtzeit deine heutigen Einsätze auf dem Bildschirm:
-  - `GL / LO`: Globale / Lokale Notrufe
-  - `Shop`: Shoprobs & Überfälle
-  - `Ev`: Events
-  - `FZ`: Fort Zancudo Einsätze
-  - `Inh`: Durchgeführte Inhaftierungen
-  - `Partner`: Streifenpartner-Einsätze
-- **Automatische Mitternachts-Abrechnung (00:00 Uhr):** Sendet automatisch deinen Tagesbericht ins Discord-Forum und setzt alle Zähler für die nächste Schicht auf 0 zurück.
+### 3. 🔊 Sound-Einstellungen (Piepton Ein / Aus)
+* Der Signalton (Piep-Sound) bei Uploads, Aktionen und Timer-Ablauf kann flexibel **ein- und ausgeschaltet** werden:
+  * In den **Einstellungen (⚙️ HUD & Aussehen)**.
+  * Direkt im **System-Tray Menü** mit einem Klick auf `🔊 Signalton (Piep-Sound)`.
 
 ---
 
-### 4. 🎨 Vollständig anpassbares Design
-- **Theme-Presets:**
-  - 🟣 *Schwarz-Lila* (Modern Dark & Purple Neon)
-  - 🔵 *Midnight Blue* (Elegantes Dunkelblau)
-  - 🟡 *Cyberpunk* (Gelb-Schwarz)
-  - 🟢 *Stealth Dark* (Minimalistisches Dunkelgrün)
-  - ⚪ *LSPD Classic* (Weiß / Polizei-Blau)
-  - 🎨 *Benutzerdefiniert* (Freier Color-Picker für Hintergrund, Akzentfarbe, Rahmen & Text)
-- **Positionierung:** Oben Rechts, Oben Links, Unten Rechts, Unten Links.
-- **Skalierung & Transparenz:** Stufenlos anpassbar von 70% bis 120%.
-
----
-
-### 5. 🔄 Integrierter Auto-Updater
-- Erkennt neue Updates auf GitHub automatisch im Hintergrund.
-- **1-Klick-Installation:** Lädt das Update im Hintergrund herunter, entpackt alle Dateien sicher und startet die Anwendung nahtlos neu – keine manuelle Link-Eingabe oder manuelles Entpacken nötig!
-
----
-
-## 📥 Installation
-
-1. Lade dir die neueste Version herunter:  
-   👉 **[Neueste Version downloaden (Releases)](https://github.com/KaputzeKings/lspd-logger/releases/latest)**
-2. Entpacke das ZIP-Archiv in einen beliebigen Ordner (z.B. auf den Desktop).
-3. Starte `LSPD_Log_Assistent.exe`.
-4. Beim ersten Start öffnet sich das Einstellungsfenster:
-   - **Reisepass-ID (Badge):** Deine Dienstnummer / Reisepassnummer.
-   - **Screenshot-Ordner:** Wähle deinen Medal- oder Aufnahmeordner (z.B. `Videos\Medal\Screenshots\...`).
-   - **Discord Bot / Webhook Token & Channel-ID:** Trage deine Zugangsdaten für das Forum ein.
-5. Fertig! Das Tool läuft im Hintergrund (Tray-Icon unten rechts neben der Uhr).
+### 4. 🎨 Vollständig anpassbares Design & Themes
+* **Live-Themes:**
+  * 🌐 *Grandkasten Cyberpunk* (Original Grandkasten DE1 Navy / Blue)
+  * ⚫ *Schwarz-Grau-Weiß (Monochrome)*
+  * 🟣 *Schwarz-Lila (Standard)*
+  * 🔵 *LSPD Cyber Blue*
+  * 🔴 *Tactical Stealth Red*
+  * 🟢 *Emerald Special Forces*
+* **Windows Light Mode Bugfix:** Keine weißen Balken oder Anzeigefehler mehr bei hellem Windows-Design.
 
 ---
 
@@ -108,14 +85,15 @@ Erkennt neu erstellte Screenshots (aus Medal, Shadowplay, FiveM etc.) und öffne
 | Taste | Funktion |
 | :--- | :--- |
 | **`F12`** | Bußgeld-, Wanteds- & TOW-Rechner öffnen / schließen |
-| **`F10`** | Teleprompter & Rechtebelehrung (Automatischer 3s Auto-Play & Auto-Close) |
+| **`F10`** | Teleprompter & Rechtebelehrung (Automatischer Auto-Play & Auto-Close) |
 | **`1` bis `7`** | Screenshot-Kategorie auswählen (wenn HUD aktiv ist) |
 | **`Z`** | Tages-Zwischenstand manuell an Discord senden |
 | **`ESC`** | Rechner, Teleprompter oder Screenshot-Overlay schließen |
 
 ---
 
-## 🛠️ Mitwirkende & Credits
+## 👥 Mitwirkende & Credits
 - **Entwickelt für:** LSPD Beamte auf GrandRP DE1
+- **Credits & Stimmen:** Justin Liebermann, Alex Springfield, Stefan Grand
 - **Datenbasis Strafenkatalog:** Nach offizieller Vorlage von [Grandkasten](https://grandkasten.com/)
 - **Repository & Updates:** [KaputzeKings/lspd-logger](https://github.com/KaputzeKings/lspd-logger)

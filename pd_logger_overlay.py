@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKey
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.3.1"
+CURRENT_VERSION = "1.3.2"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -46,6 +46,15 @@ def log(msg):
     except Exception:
         pass
     print(msg)
+
+def play_beep(freq=1000, duration=150):
+    try:
+        cfg = globals().get("CONFIG", {})
+        if cfg.get("sound_enabled", True):
+            import winsound
+            winsound.Beep(freq, duration)
+    except Exception:
+        pass
 
 def adjust_color(hex_color, factor):
     try:
@@ -201,6 +210,10 @@ def get_default_config():
         "watch_dir": get_default_watch_dir(),
         "discord_token": "",
         "update_url": "",
+        "sound_enabled": True,
+        "prompter_seconds": 3,
+        "calc_scale": 0.82,
+        "calc_theme": "Grandkasten Cyberpunk",
         "hud": {
             "theme": "Schwarz-Lila (Standard)",
             "scale": 1.0,
@@ -572,30 +585,48 @@ exit
         log(f"[Apply Update Error] {e}")
 
 def calculate_overlay_geometry(scale=1.0, position="Oben Rechts"):
-    screen = QApplication.primaryScreen().geometry()
+    primary = QApplication.primaryScreen()
+    if primary:
+        avail = primary.availableGeometry()
+    else:
+        avail = None
+
+    avail_x = avail.x() if avail else 0
+    avail_y = avail.y() if avail else 0
+    avail_w = avail.width() if avail else 1920
+    avail_h = avail.height() if avail else 1080
+
     base_w = 350
     base_h = 530
     w = int(base_w * scale)
     h = int(base_h * scale)
-    
-    margin_x = 40
-    margin_y = 50
+
+    # Adaptive limits: Overlay never exceeds available screen space on small resolutions (e.g. 720p/1366x768)
+    w = min(w, max(260, avail_w - 30))
+    h = min(h, max(380, avail_h - 30))
+
+    margin_x = 30
+    margin_y = 35
 
     if position == "Oben Links":
-        x = margin_x
-        y = margin_y
+        x = avail_x + margin_x
+        y = avail_y + margin_y
     elif position == "Unten Rechts":
-        x = screen.width() - w - margin_x
-        y = screen.height() - h - 70
+        x = avail_x + avail_w - w - margin_x
+        y = avail_y + avail_h - h - margin_y
     elif position == "Unten Links":
-        x = margin_x
-        y = screen.height() - h - 70
+        x = avail_x + margin_x
+        y = avail_y + avail_h - h - margin_y
     elif position == "Mitte":
-        x = (screen.width() - w) // 2
-        y = (screen.height() - h) // 2
+        x = avail_x + (avail_w - w) // 2
+        y = avail_y + (avail_h - h) // 2
     else: # Oben Rechts
-        x = screen.width() - w - margin_x
-        y = margin_y
+        x = avail_x + avail_w - w - margin_x
+        y = avail_y + margin_y
+
+    # Safe clamp within available screen geometry
+    x = max(avail_x, min(x, avail_x + avail_w - w))
+    y = max(avail_y, min(y, avail_y + avail_h - h))
 
     return x, y, w, h
 
@@ -1043,10 +1074,13 @@ class SetupDialog(QDialog):
 
         grid_hud.addWidget(QLabel("6. F12 Rechner Größe:"), 4, 0)
         self.calc_scale_combo = QComboBox()
+        self.calc_scale_combo.addItem("Mini (25%)", 0.25)
+        self.calc_scale_combo.addItem("Halb (50%)", 0.50)
         self.calc_scale_combo.addItem("Kompakt (75%)", 0.75)
         self.calc_scale_combo.addItem("Standard (82%)", 0.82)
         self.calc_scale_combo.addItem("Groß (88%)", 0.88)
         self.calc_scale_combo.addItem("Sehr groß (95%)", 0.95)
+        self.calc_scale_combo.addItem("Vollbild (100%)", 1.00)
         c_scale = float(CONFIG.get("calc_scale", 0.82))
         for i in range(self.calc_scale_combo.count()):
             if abs(self.calc_scale_combo.itemData(i) - c_scale) < 0.02:
@@ -1084,6 +1118,12 @@ class SetupDialog(QDialog):
         op_lay.addWidget(self.op_slider)
         op_lay.addWidget(self.op_label)
         l_hud.addLayout(op_lay)
+
+        # Sound toggle
+        self.cb_sound = QCheckBox("🔊 Signalton (Piep-Sound) bei Uploads & Aktionen aktivieren")
+        self.cb_sound.setChecked(CONFIG.get("sound_enabled", True))
+        self.cb_sound.setStyleSheet("font-size: 12px; font-weight: bold; margin-top: 6px;")
+        l_hud.addWidget(self.cb_sound)
 
         # Test Preview button
         self.btn_preview = QPushButton("👁️ HUD-Vorschau jetzt testen")
@@ -1145,6 +1185,8 @@ class SetupDialog(QDialog):
         CONFIG["calc_scale"] = float(self.calc_scale_combo.currentData())
         if hasattr(self, 'calc_theme_combo'):
             CONFIG["calc_theme"] = self.calc_theme_combo.currentText()
+        if hasattr(self, 'cb_sound'):
+            CONFIG["sound_enabled"] = self.cb_sound.isChecked()
 
         CONFIG["hud"] = {
             "theme": self.theme_combo.currentText(),
@@ -1496,7 +1538,7 @@ class PDOverlayWindow(QWidget):
         threading.Thread(target=self._fetch_stats_async, daemon=True).start()
 
         try:
-            winsound.Beep(1200, 100)
+            play_beep(1200, 100)
         except Exception:
             pass
 
@@ -1557,8 +1599,8 @@ class PDOverlayWindow(QWidget):
             self.save_pending_state({"type": "Event", "path": self.current_screenshot, "time": time.time()})
             self.show_notification("📌 Foto 1 gespeichert! Warte auf Foto 2.")
             try:
-                winsound.Beep(900, 80)
-                winsound.Beep(1300, 80)
+                play_beep(900, 80)
+                play_beep(1300, 80)
             except Exception:
                 pass
             QTimer.singleShot(1800, self.close_overlay)
@@ -1575,8 +1617,8 @@ class PDOverlayWindow(QWidget):
             self.save_pending_state({"type": "Ammu-Rob", "path": self.current_screenshot, "time": time.time()})
             self.show_notification("📌 Foto 1 gespeichert! Warte auf Foto 2.")
             try:
-                winsound.Beep(900, 80)
-                winsound.Beep(1300, 80)
+                play_beep(900, 80)
+                play_beep(1300, 80)
             except Exception:
                 pass
             QTimer.singleShot(1800, self.close_overlay)
@@ -1593,8 +1635,8 @@ class PDOverlayWindow(QWidget):
             self.save_pending_state({"type": "FZ Raid", "path": self.current_screenshot, "time": time.time()})
             self.show_notification("📌 Foto 1 gespeichert! Warte auf Foto 2.")
             try:
-                winsound.Beep(900, 80)
-                winsound.Beep(1300, 80)
+                play_beep(900, 80)
+                play_beep(1300, 80)
             except Exception:
                 pass
             QTimer.singleShot(1800, self.close_overlay)
@@ -1626,8 +1668,8 @@ class PDOverlayWindow(QWidget):
         success, resp = send_to_discord(token, thread_id, formatted, [])
         if success:
             try:
-                winsound.Beep(1400, 100)
-                winsound.Beep(1800, 150)
+                play_beep(1400, 100)
+                play_beep(1800, 150)
             except Exception:
                 pass
             self.show_notification("✅ Zwischenstand in Discord gepostet!")
@@ -1654,8 +1696,8 @@ class PDOverlayWindow(QWidget):
         success, resp = send_to_discord(token, thread_id, title, file_paths)
         if success:
             try:
-                winsound.Beep(1500, 100)
-                winsound.Beep(1900, 150)
+                play_beep(1500, 100)
+                play_beep(1900, 150)
             except Exception:
                 pass
             self.show_notification("✅ Erfolgreich in Discord gepostet!")
@@ -1984,6 +2026,20 @@ def main():
     act_update = QAction("🔄 Nach Updates suchen", tray_menu)
     act_update.triggered.connect(manual_check_updates)
     tray_menu.addAction(act_update)
+
+    def toggle_sound_tray():
+        new_val = not CONFIG.get("sound_enabled", True)
+        CONFIG["sound_enabled"] = new_val
+        save_config(CONFIG)
+        act_sound.setChecked(new_val)
+        if new_val:
+            play_beep(1200, 100)
+
+    act_sound = QAction("🔊 Signalton (Piep-Sound)", tray_menu)
+    act_sound.setCheckable(True)
+    act_sound.setChecked(CONFIG.get("sound_enabled", True))
+    act_sound.triggered.connect(toggle_sound_tray)
+    tray_menu.addAction(act_sound)
 
     act_settings = QAction("⚙️ Einstellungen (HUD / Badge / Pfade)", tray_menu)
     act_settings.triggered.connect(show_settings_dialog)
