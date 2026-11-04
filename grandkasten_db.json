@@ -71,7 +71,6 @@
       "fine": 15000,
       "wanteds": 0,
       "mandatory": false,
-      "info": "Führerschein entziehen",
       "mandatoryWanteds": 0,
       "voluntaryWanteds": 0
     },
@@ -81,7 +80,6 @@
       "fine": 20000,
       "wanteds": 0,
       "mandatory": false,
-      "info": "Führerschein entziehen",
       "mandatoryWanteds": 0,
       "voluntaryWanteds": 0
     },

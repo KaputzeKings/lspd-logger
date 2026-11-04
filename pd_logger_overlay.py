@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKey
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.2.8"
+CURRENT_VERSION = "1.3.0"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory

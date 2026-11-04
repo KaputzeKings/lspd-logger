@@ -31,21 +31,30 @@ def load_grandkasten_db():
 def make_item_key(item):
     return f"{item.get('id', '')}|{item.get('name', '')}"
 
+def normalize_search_text(t):
+    if not t:
+        return ""
+    t = t.lower()
+    t = t.replace('ae', 'a').replace('oe', 'o').replace('ue', 'u').replace('ss', 's')
+    t = t.replace('ä', 'a').replace('ö', 'o').replace('ü', 'u').replace('ß', 's')
+    t = t.replace('§', ' ').replace('/', ' ').replace('-', ' ').replace('.', ' ').replace(',', ' ')
+    return ' '.join(t.split())
+
 CALC_THEMES = {
     "Grandkasten Cyberpunk": {
-        "bg": "#0a0a0c",
-        "surface": "#13141a",
-        "card_bg": "#16161c",
-        "card_hover": "#1e1e27",
+        "bg": "#0f111a",
+        "surface": "#141724",
+        "card_bg": "#1e202f",
+        "card_hover": "#26293c",
         "border": "#00d2ff",
-        "border_subtle": "#252530",
-        "accent": "#00d2ff",
-        "accent_text": "#000000",
-        "card_active_bg": "#0c2538",
-        "card_active_border": "#00d2ff",
-        "text": "#f3f4f6",
-        "text_muted": "#94a3b8",
-        "money": "#4ade80",
+        "border_subtle": "#2e334a",
+        "accent": "#3b82f6",
+        "accent_text": "#ffffff",
+        "card_active_bg": "#24253e",
+        "card_active_border": "#8b5cf6",
+        "text": "#e2e8f0",
+        "text_muted": "#8892b0",
+        "money": "#22c55e",
         "stars": "#ffcc00",
         "danger": "#ef4444"
     },
@@ -202,6 +211,14 @@ class OffenseCard(QFrame):
         self.is_selected = False
         self.voluntary_selected = 0
         self.v_buttons = []
+        self.is_starred = False
+
+        self.setObjectName("offenseCard")
+        self.setFrameShape(QFrame.NoFrame)
+        self.setFrameShadow(QFrame.Plain)
+        self.setLineWidth(0)
+        self.setMidLineWidth(0)
+        self.setFixedHeight(84)
 
         self.setCursor(Qt.PointingHandCursor)
         self.init_card_ui()
@@ -212,19 +229,20 @@ class OffenseCard(QFrame):
     def init_card_ui(self):
         t = self.get_theme()
         c_lay = QVBoxLayout(self)
-        c_lay.setContentsMargins(12, 9, 12, 9)
-        c_lay.setSpacing(4)
+        c_lay.setContentsMargins(12, 8, 12, 8)
+        c_lay.setSpacing(3)
 
-        # Row 1: Paragraph ID, Selection checkmark, License Pill
+        # Row 1: Paragraph ID on left, License Pill & Star Icon on right
         row1 = QHBoxLayout()
-        row1.setSpacing(8)
+        row1.setContentsMargins(0, 0, 0, 0)
+        row1.setSpacing(6)
 
         self.lbl_id = QLabel(self.item_id)
-        self.lbl_id.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: bold;")
+        self.lbl_id.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: bold; background: transparent;")
         row1.addWidget(self.lbl_id)
 
         self.lbl_check = QLabel("✓")
-        self.lbl_check.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: 900;")
+        self.lbl_check.setStyleSheet(f"color: {t.get('card_active_border', '#8b5cf6')}; font-size: 13px; font-weight: 900; background: transparent;")
         self.lbl_check.setVisible(False)
         row1.addWidget(self.lbl_check)
 
@@ -239,40 +257,50 @@ class OffenseCard(QFrame):
                 font-weight: bold;
                 border: 1px solid #7f1d1d;
                 border-radius: 4px;
-                padding: 2px 7px;
-                font-size: 10px;
+                padding: 1px 6px;
+                font-size: 9px;
             """)
             row1.addWidget(entzug_badge)
 
+        self.btn_star = QPushButton("★")
+        self.btn_star.setFixedSize(20, 20)
+        self.btn_star.setCursor(Qt.PointingHandCursor)
+        self.btn_star.setStyleSheet("background: transparent; border: none; color: #475569; font-size: 14px; padding: 0;")
+        self.btn_star.clicked.connect(self.toggle_star)
+        row1.addWidget(self.btn_star)
+
         c_lay.addLayout(row1)
 
-        # Row 2: Offense Description
+        # Row 2: Offense Description (Clean Grandkasten typography)
         self.lbl_name = QLabel(self.name)
         self.lbl_name.setWordWrap(True)
-        self.lbl_name.setStyleSheet(f"color: {t['text']}; font-size: 13px; line-height: 1.3;")
+        self.lbl_name.setStyleSheet(f"color: {t['text']}; font-size: 12px; font-weight: 500; line-height: 1.2; background: transparent;")
         c_lay.addWidget(self.lbl_name)
 
         # Row 3: Wanteds Stars / Gray buttons on Left, Fine on Right
         row3 = QHBoxLayout()
-        row3.setContentsMargins(0, 3, 0, 0)
+        row3.setContentsMargins(0, 2, 0, 0)
         row3.setSpacing(6)
 
         stars_container = QHBoxLayout()
         stars_container.setSpacing(4)
 
         if self.wanteds == 0 and self.voluntary_w == 0:
-            lbl_none = QLabel("<span style='color: #64748b; font-size: 11px;'>-</span>")
+            lbl_none = QLabel("<span style='color: #64748b; font-size: 12px; font-weight: bold;'>-</span>")
+            lbl_none.setStyleSheet("background: transparent;")
             stars_container.addWidget(lbl_none)
         else:
             # Mandatory gold stars
             if self.wanteds > 0:
                 stars_gold = "★ " * self.wanteds
-                lbl_gold = QLabel(f"<span style='color: #ffcc00; font-size: 14px; font-weight: bold;'>{stars_gold.strip()}</span>")
+                lbl_gold = QLabel(f"<span style='color: #ffcc00; font-size: 13px; font-weight: bold;'>{stars_gold.strip()}</span>")
+                lbl_gold.setStyleSheet("background: transparent;")
                 stars_container.addWidget(lbl_gold)
 
             # Voluntary gray wanteds selector
             if self.voluntary_w > 0:
                 lbl_vol = QLabel("<span style='color: #94a3b8; font-size: 10px; margin-left: 2px;'>Grau:</span>")
+                lbl_vol.setStyleSheet("background: transparent;")
                 stars_container.addWidget(lbl_vol)
 
                 for count in range(self.voluntary_w + 1):
@@ -308,50 +336,55 @@ class OffenseCard(QFrame):
         row3.addLayout(stars_container)
         row3.addStretch()
 
-        # Fine Display (Grandkasten Green)
+        # Fine Display (Grandkasten Clean Green text, NO dark background box)
         fine_str = f"${self.fine:,.0f}".replace(",", ".")
         self.lbl_fine = QLabel(fine_str)
-        self.lbl_fine.setStyleSheet("""
-            background-color: #052e16;
-            color: #4ade80;
-            border: 1px solid #166534;
-            border-radius: 4px;
-            padding: 2px 8px;
-            font-size: 12px;
-            font-weight: bold;
+        self.lbl_fine.setStyleSheet(f"""
+            color: {t.get('money', '#22c55e')};
+            background: transparent;
+            border: none;
+            font-size: 13px;
+            font-weight: 900;
         """)
         row3.addWidget(self.lbl_fine)
 
         c_lay.addLayout(row3)
         self.apply_style(False)
 
+    def toggle_star(self):
+        self.is_starred = not self.is_starred
+        color = "#eab308" if self.is_starred else "#475569"
+        self.btn_star.setStyleSheet(f"background: transparent; border: none; color: {color}; font-size: 14px; padding: 0;")
+
     def apply_style(self, selected):
         self.is_selected = selected
         t = self.get_theme()
+        active_border = t.get('card_active_border', '#8b5cf6')
+        active_bg = t.get('card_active_bg', '#24253e')
         if selected:
             self.setStyleSheet(f"""
-                OffenseCard {{
-                    background-color: {t['card_active_bg']};
-                    border: 2px solid {t['card_active_border']};
+                QFrame#offenseCard, #offenseCard {{
+                    background-color: {active_bg};
+                    border: 2px solid {active_border};
                     border-radius: 8px;
                 }}
-                OffenseCard:hover {{
-                    border: 2px solid {t['accent']};
+                QFrame#offenseCard:hover, #offenseCard:hover {{
+                    border: 2px solid {active_border};
                 }}
             """)
             if hasattr(self, 'lbl_check'):
-                self.lbl_check.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: 900;")
+                self.lbl_check.setStyleSheet(f"color: {active_border}; font-size: 13px; font-weight: 900; background: transparent;")
                 self.lbl_check.setVisible(True)
             if hasattr(self, 'lbl_id'):
-                self.lbl_id.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: bold;")
+                self.lbl_id.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: bold; background: transparent;")
         else:
             self.setStyleSheet(f"""
-                OffenseCard {{
+                QFrame#offenseCard, #offenseCard {{
                     background-color: {t['card_bg']};
                     border: 1px solid {t['border_subtle']};
                     border-radius: 8px;
                 }}
-                OffenseCard:hover {{
+                QFrame#offenseCard:hover, #offenseCard:hover {{
                     background-color: {t['card_hover']};
                     border: 1px solid {t['accent']};
                 }}
@@ -359,7 +392,12 @@ class OffenseCard(QFrame):
             if hasattr(self, 'lbl_check'):
                 self.lbl_check.setVisible(False)
             if hasattr(self, 'lbl_id'):
-                self.lbl_id.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: bold;")
+                self.lbl_id.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: bold; background: transparent;")
+
+        if hasattr(self, 'lbl_fine'):
+            self.lbl_fine.setStyleSheet(f"color: {t.get('money', '#22c55e')}; background: transparent; border: none; font-size: 13px; font-weight: 900;")
+        if hasattr(self, 'lbl_name'):
+            self.lbl_name.setStyleSheet(f"color: {t['text']}; font-size: 12px; font-weight: 500; line-height: 1.2; background: transparent;")
 
     def set_selected_visual(self, selected):
         self.apply_style(selected)
@@ -397,7 +435,7 @@ class FloatingPrompterHUD(QWidget):
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.drag_pos = None
-        self.setFixedSize(540, 185)
+        self.setFixedSize(600, 185)
         self.init_ui()
 
     def init_ui(self):
@@ -468,28 +506,35 @@ class FloatingPrompterHUD(QWidget):
         ctrl_row = QHBoxLayout()
         ctrl_row.setSpacing(6)
 
-        self.btn_prev = QPushButton("◀ Vorheriger")
+        self.btn_prev = QPushButton("◀")
+        self.btn_prev.setFixedSize(28, 26)
         self.btn_prev.setCursor(Qt.PointingHandCursor)
-        self.btn_prev.setStyleSheet(f"background: {t['card_bg']}; color: {t['text']}; border: 1px solid {t['border_subtle']}; border-radius: 5px; padding: 5px 10px; font-size: 11px; font-weight: bold;")
+        self.btn_prev.setStyleSheet(f"background: {t['card_bg']}; color: {t['text']}; border: 1px solid {t['border_subtle']}; border-radius: 5px; font-size: 11px; font-weight: bold;")
         self.btn_prev.clicked.connect(self.main_calc.prompter_prev)
         ctrl_row.addWidget(self.btn_prev)
 
         self.btn_copy = QPushButton("📋 Kopieren")
         self.btn_copy.setCursor(Qt.PointingHandCursor)
-        self.btn_copy.setStyleSheet(f"background: {t['card_bg']}; color: #38bdf8; border: 1px solid #0284c7; border-radius: 5px; padding: 5px 10px; font-size: 11px; font-weight: bold;")
+        self.btn_copy.setStyleSheet(f"background: {t['card_bg']}; color: #38bdf8; border: 1px solid #0284c7; border-radius: 5px; padding: 4px 8px; font-size: 11px; font-weight: bold;")
         self.btn_copy.clicked.connect(self.main_calc.prompter_copy_current)
         ctrl_row.addWidget(self.btn_copy)
 
-        self.btn_next = QPushButton("▶ Nächster Satz")
+        self.btn_auto = QPushButton("▶ Auto (3s)")
+        self.btn_auto.setCursor(Qt.PointingHandCursor)
+        self.btn_auto.setStyleSheet("background: #059669; color: #ffffff; border: none; border-radius: 5px; padding: 4px 9px; font-size: 11px; font-weight: bold;")
+        self.btn_auto.clicked.connect(self.main_calc.toggle_autoplay)
+        ctrl_row.addWidget(self.btn_auto)
+
+        self.btn_next = QPushButton("▶ Weiter")
         self.btn_next.setCursor(Qt.PointingHandCursor)
-        self.btn_next.setStyleSheet(f"background: {t['accent']}; color: {t['accent_text']}; border: none; border-radius: 5px; padding: 5px 14px; font-size: 11px; font-weight: 900;")
+        self.btn_next.setStyleSheet(f"background: {t['accent']}; color: {t['accent_text']}; border: none; border-radius: 5px; padding: 4px 12px; font-size: 11px; font-weight: 900;")
         self.btn_next.clicked.connect(self.main_calc.prompter_next)
         ctrl_row.addWidget(self.btn_next, stretch=1)
 
         # Mini Attorney Timer Indicator
         self.lbl_hud_timer = QLabel("⏱️ 05:00")
         self.lbl_hud_timer.setCursor(Qt.PointingHandCursor)
-        self.lbl_hud_timer.setStyleSheet(f"background: {t['card_bg']}; color: #38bdf8; border: 1px solid {t['border_subtle']}; border-radius: 5px; padding: 5px 8px; font-size: 11px; font-weight: bold;")
+        self.lbl_hud_timer.setStyleSheet(f"background: {t['card_bg']}; color: #38bdf8; border: 1px solid {t['border_subtle']}; border-radius: 5px; padding: 4px 7px; font-size: 11px; font-weight: bold;")
         self.lbl_hud_timer.mousePressEvent = lambda _: self.main_calc.toggle_attorney_timer()
         ctrl_row.addWidget(self.lbl_hud_timer)
 
@@ -568,6 +613,11 @@ class GrandCalculatorOverlay(QWidget):
         self.prompter_step = 0
         self.prompter_current_template = "Miranda-Warnung (Standard)"
         self.prompter_font_size = 20
+        self.prompter_autoplay_running = False
+        self.prompter_autoplay_seconds = 3
+        self.prompter_autoplay_countdown = 3
+        self.prompter_autoplay_timer = QTimer(self)
+        self.prompter_autoplay_timer.timeout.connect(self._on_autoplay_tick)
         self.attorney_timer_seconds = 300
         self.attorney_timer_running = False
         self.attorney_timer = QTimer(self)
@@ -598,6 +648,11 @@ class GrandCalculatorOverlay(QWidget):
         p.setColor(QPalette.Window, QColor(t['bg']))
         p.setColor(QPalette.Base, QColor(t['bg']))
         p.setColor(QPalette.AlternateBase, QColor(t['surface']))
+        p.setColor(QPalette.Light, QColor(t['surface']))
+        p.setColor(QPalette.Midlight, QColor(t['surface']))
+        p.setColor(QPalette.Dark, QColor(t['bg']))
+        p.setColor(QPalette.Shadow, QColor(t['bg']))
+        p.setColor(QPalette.Button, QColor(t['card_bg']))
         self.setPalette(p)
 
         self.setStyleSheet(f"""
@@ -658,28 +713,41 @@ class GrandCalculatorOverlay(QWidget):
                 selection-color: {t['accent_text']};
                 border: 1px solid {t['border_subtle']};
             }}
-            QScrollArea, QScrollArea > QWidget, QScrollArea > QWidget > QWidget, QScrollArea::viewport {{
+            QScrollArea, QAbstractScrollArea {{
                 background: transparent;
                 background-color: transparent;
                 border: none;
             }}
+            QScrollArea > QWidget, QScrollArea > QWidget > QWidget, QScrollArea::viewport {{
+                background: transparent;
+                background-color: transparent;
+                border: none;
+            }}
+            QScrollBar:horizontal {{
+                height: 0px;
+                border: none;
+                background: transparent;
+            }}
             QScrollBar:vertical {{
                 border: none;
-                background: {t['bg']};
-                width: 8px;
+                background: transparent;
+                width: 7px;
                 margin: 0px;
-                border-radius: 4px;
+                border-radius: 3px;
             }}
             QScrollBar::handle:vertical {{
                 background: {t['border_subtle']};
                 min-height: 25px;
-                border-radius: 4px;
+                border-radius: 3px;
             }}
             QScrollBar::handle:vertical:hover {{
                 background: {t['accent']};
             }}
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
                 height: 0px;
+                background: transparent;
+                border: none;
             }}
             QCheckBox {{
                 color: {t['text']};
@@ -820,6 +888,9 @@ class GrandCalculatorOverlay(QWidget):
         self.cat_scroll = QScrollArea()
         self.cat_scroll.setFixedHeight(44)
         self.cat_scroll.setWidgetResizable(True)
+        self.cat_scroll.setFrameShape(QFrame.NoFrame)
+        self.cat_scroll.setFrameShadow(QFrame.Plain)
+        self.cat_scroll.setLineWidth(0)
         self.cat_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.cat_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.cat_scroll.setStyleSheet("background: transparent; border: none;")
@@ -846,16 +917,21 @@ class GrandCalculatorOverlay(QWidget):
         self.cat_scroll.setWidget(self.cat_widget)
         left_box.addWidget(self.cat_scroll)
 
-        # Offenses scroll area
+        # Offenses scroll area (3-Column Grandkasten Grid)
         self.offenses_scroll = QScrollArea()
         self.offenses_scroll.setWidgetResizable(True)
+        self.offenses_scroll.setFrameShape(QFrame.NoFrame)
+        self.offenses_scroll.setFrameShadow(QFrame.Plain)
+        self.offenses_scroll.setLineWidth(0)
+        self.offenses_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.offenses_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.offenses_scroll.setStyleSheet("background: transparent; border: none;")
         self.offenses_scroll.viewport().setStyleSheet("background: transparent; border: none;")
         self.offenses_container = QWidget()
         self.offenses_container.setStyleSheet("background: transparent; border: none;")
-        self.offenses_layout = QVBoxLayout(self.offenses_container)
-        self.offenses_layout.setContentsMargins(0, 0, 6, 0)
-        self.offenses_layout.setSpacing(8)
+        self.offenses_grid = QGridLayout(self.offenses_container)
+        self.offenses_grid.setContentsMargins(0, 0, 8, 0)
+        self.offenses_grid.setSpacing(10)
         self.offenses_scroll.setWidget(self.offenses_container)
         left_box.addWidget(self.offenses_scroll)
 
@@ -1116,25 +1192,37 @@ class GrandCalculatorOverlay(QWidget):
 
     def build_offenses_list(self):
         self.cards_by_key = {}
+        self.all_card_items = []
         for cat, items in self.db.items():
             for item in items:
                 key = make_item_key(item)
                 card = OffenseCard(item, self)
                 self.cards_by_key[key] = card
-                self.offenses_layout.addWidget(card)
+                self.all_card_items.append((cat, item, card))
 
-        self.offenses_layout.addStretch()
+        self.lbl_no_results = QLabel("🔍 Keine passenden Straftatbestände gefunden.")
+        self.lbl_no_results.setAlignment(Qt.AlignCenter)
+        self.lbl_no_results.setStyleSheet("color: #94a3b8; font-size: 13px; font-weight: bold; padding: 30px;")
+        self.lbl_no_results.setVisible(False)
+
         self.filter_offenses()
 
     def filter_offenses(self):
-        q = self.search_term.lower()
-        cur_cat = self.current_category.lower()
+        raw_q = self.search_term.strip()
+        q_norm = normalize_search_text(raw_q)
+        q_words = q_norm.split() if q_norm else []
 
-        for cat, items in self.db.items():
+        cur_cat = self.current_category.lower()
+        is_searching = bool(q_words)
+
+        matched_cards = []
+
+        for cat, item, card in self.all_card_items:
             cat_lower = cat.lower()
 
             cat_matches = True
-            if self.current_category != "Alle":
+            # When actively searching, search GLOBALLY across all categories so nothing gets hidden!
+            if not is_searching and self.current_category != "Alle":
                 if "integrität" in cur_cat:
                     cat_matches = "integrität" in cat_lower
                 elif "wirtschaft" in cur_cat:
@@ -1144,24 +1232,44 @@ class GrandCalculatorOverlay(QWidget):
                 else:
                     cat_matches = cur_cat in cat_lower
 
-            for item in items:
-                key = make_item_key(item)
-                card = self.cards_by_key.get(key)
-                if not card:
-                    continue
+            if not cat_matches:
+                card.setVisible(False)
+                continue
 
-                if not cat_matches:
-                    card.setVisible(False)
-                    continue
-
-                if q:
-                    name_lower = card.name.lower()
-                    id_lower = card.item_id.lower()
-                    info_lower = card.info.lower()
-                    match_search = (q in id_lower) or (q in name_lower) or (q in info_lower)
-                    card.setVisible(match_search)
-                else:
+            if is_searching:
+                haystack = normalize_search_text(f"{card.item_id} {card.name} {card.info} {cat}")
+                # Match if all typed words are found anywhere in ID, Name, Info or Category
+                match = all(w in haystack for w in q_words)
+                if match:
                     card.setVisible(True)
+                    matched_cards.append(card)
+                else:
+                    card.setVisible(False)
+            else:
+                card.setVisible(True)
+                matched_cards.append(card)
+
+        # Clear existing items from grid
+        while self.offenses_grid.count():
+            self.offenses_grid.takeAt(0)
+
+        # Repopulate matched cards in 3 columns (Grandkasten layout)
+        for idx, card in enumerate(matched_cards):
+            r = idx // 3
+            c = idx % 3
+            self.offenses_grid.addWidget(card, r, c)
+
+        if hasattr(self, 'lbl_no_results'):
+            if is_searching and len(matched_cards) == 0:
+                self.lbl_no_results.setText(f"🔍 Keine Straftaten für \"{raw_q}\" gefunden.\nÜberprüfe Stichwort oder Paragraph.")
+                self.offenses_grid.addWidget(self.lbl_no_results, 0, 0, 1, 3)
+                self.lbl_no_results.setVisible(True)
+            else:
+                self.lbl_no_results.setVisible(False)
+
+        # Push items neatly to top if fewer items
+        if matched_cards:
+            self.offenses_grid.setRowStretch((len(matched_cards) - 1) // 3 + 1, 1)
 
     def filter_category(self, cat_name):
         self.current_category = cat_name
@@ -1806,6 +1914,10 @@ class GrandCalculatorOverlay(QWidget):
         # Scroll area for sentence list
         self.prompter_scroll = QScrollArea()
         self.prompter_scroll.setWidgetResizable(True)
+        self.prompter_scroll.setFrameShape(QFrame.NoFrame)
+        self.prompter_scroll.setFrameShadow(QFrame.Plain)
+        self.prompter_scroll.setLineWidth(0)
+        self.prompter_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.prompter_scroll.setStyleSheet("background: transparent; border: none;")
         self.prompter_scroll.viewport().setStyleSheet("background: transparent; border: none;")
 
@@ -1879,6 +1991,25 @@ class GrandCalculatorOverlay(QWidget):
         """)
         self.btn_p_copy_all.clicked.connect(self.prompter_copy_all)
         act_bar.addWidget(self.btn_p_copy_all)
+
+        self.btn_p_auto = QPushButton("▶ Auto-Play (3s)")
+        self.btn_p_auto.setCursor(Qt.PointingHandCursor)
+        self.btn_p_auto.setStyleSheet("""
+            QPushButton {
+                background-color: #059669;
+                color: #ffffff;
+                border: none;
+                border-radius: 6px;
+                padding: 10px 18px;
+                font-weight: bold;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #047857;
+            }
+        """)
+        self.btn_p_auto.clicked.connect(self.toggle_autoplay)
+        act_bar.addWidget(self.btn_p_auto)
 
         self.btn_p_next = QPushButton("⏭ Weiter (Leertaste / Enter)")
         self.btn_p_next.setCursor(Qt.PointingHandCursor)
@@ -2068,6 +2199,54 @@ class GrandCalculatorOverlay(QWidget):
                 self.floating_prompter.raise_()
                 self.floating_prompter.activateWindow()
 
+    def toggle_autoplay(self):
+        if self.prompter_autoplay_running:
+            self.stop_autoplay()
+        else:
+            self.start_autoplay()
+
+    def start_autoplay(self):
+        self.prompter_autoplay_running = True
+        self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
+        self.prompter_autoplay_timer.start(1000)
+        self._update_autoplay_buttons()
+
+    def stop_autoplay(self):
+        self.prompter_autoplay_running = False
+        self.prompter_autoplay_timer.stop()
+        self._update_autoplay_buttons()
+
+    def _update_autoplay_buttons(self):
+        if hasattr(self, 'btn_p_auto'):
+            if self.prompter_autoplay_running:
+                self.btn_p_auto.setText(f"⏸ Auto-Play ({self.prompter_autoplay_countdown}s)")
+                self.btn_p_auto.setStyleSheet("background-color: #eab308; color: #000000; border: none; border-radius: 6px; padding: 10px 18px; font-weight: 900; font-size: 13px;")
+            else:
+                self.btn_p_auto.setText("▶ Auto-Play (3s)")
+                self.btn_p_auto.setStyleSheet("background-color: #059669; color: #ffffff; border: none; border-radius: 6px; padding: 10px 18px; font-weight: bold; font-size: 13px;")
+
+        if hasattr(self, 'floating_prompter') and hasattr(self.floating_prompter, 'btn_auto'):
+            if self.prompter_autoplay_running:
+                self.floating_prompter.btn_auto.setText(f"⏸ {self.prompter_autoplay_countdown}s")
+                self.floating_prompter.btn_auto.setStyleSheet("background: #eab308; color: #000000; border: none; border-radius: 5px; padding: 4px 9px; font-size: 11px; font-weight: 900;")
+            else:
+                self.floating_prompter.btn_auto.setText("▶ Auto (3s)")
+                self.floating_prompter.btn_auto.setStyleSheet("background: #059669; color: #ffffff; border: none; border-radius: 5px; padding: 4px 9px; font-size: 11px; font-weight: bold;")
+
+    def _on_autoplay_tick(self):
+        if not self.prompter_autoplay_running:
+            return
+        self.prompter_autoplay_countdown -= 1
+        if self.prompter_autoplay_countdown <= 0:
+            sentences = PROMPTER_TEMPLATES.get(self.prompter_current_template, [])
+            if self.prompter_step < len(sentences) - 1:
+                self.prompter_next()
+            else:
+                self.prompter_step = 0
+                self.render_prompter_sentences()
+            self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
+        self._update_autoplay_buttons()
+
     def toggle_attorney_timer(self):
         if self.attorney_timer_running:
             self.attorney_timer.stop()
@@ -2226,6 +2405,11 @@ class GrandCalculatorOverlay(QWidget):
             p.setColor(QPalette.Window, QColor(t['bg']))
             p.setColor(QPalette.Base, QColor(t['bg']))
             p.setColor(QPalette.AlternateBase, QColor(t['surface']))
+            p.setColor(QPalette.Light, QColor(t['surface']))
+            p.setColor(QPalette.Midlight, QColor(t['surface']))
+            p.setColor(QPalette.Dark, QColor(t['bg']))
+            p.setColor(QPalette.Shadow, QColor(t['bg']))
+            p.setColor(QPalette.Button, QColor(t['card_bg']))
             self.setPalette(p)
         except Exception:
             pass
@@ -2233,11 +2417,17 @@ class GrandCalculatorOverlay(QWidget):
         if hasattr(self, 'cat_scroll'):
             self.cat_scroll.setStyleSheet("background: transparent; border: none;")
             self.cat_scroll.viewport().setStyleSheet("background: transparent; border: none;")
+            self.cat_scroll.setFrameShape(QFrame.NoFrame)
+            self.cat_scroll.setFrameShadow(QFrame.Plain)
+            self.cat_scroll.setLineWidth(0)
         if hasattr(self, 'cat_widget'):
             self.cat_widget.setStyleSheet("background: transparent; border: none;")
         if hasattr(self, 'offenses_scroll'):
             self.offenses_scroll.setStyleSheet("background: transparent; border: none;")
             self.offenses_scroll.viewport().setStyleSheet("background: transparent; border: none;")
+            self.offenses_scroll.setFrameShape(QFrame.NoFrame)
+            self.offenses_scroll.setFrameShadow(QFrame.Plain)
+            self.offenses_scroll.setLineWidth(0)
         if hasattr(self, 'offenses_container'):
             self.offenses_container.setStyleSheet("background: transparent; border: none;")
         if hasattr(self, 'tab_bussgeld'):
