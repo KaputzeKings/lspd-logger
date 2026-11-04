@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKey
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.2.7"
+CURRENT_VERSION = "1.2.8"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -610,6 +610,7 @@ class OverlaySignal(QObject):
     update_progress = Signal(int, str)
     reload_theme = Signal()
     toggle_calculator = Signal()
+    toggle_prompter = Signal()
 
 overlay_signal = OverlaySignal()
 
@@ -1772,6 +1773,9 @@ def start_keyboard_listener():
                     overlay_signal.key_pressed.emit(c)
             elif key == keyboard.Key.esc:
                 overlay_signal.key_pressed.emit("esc")
+            elif key == keyboard.Key.f10 or str(key) == 'Key.f10' or getattr(key, 'name', '') == 'f10':
+                log("[Keyboard] F10 Taste erkannt -> Toggle Teleprompter HUD")
+                overlay_signal.toggle_prompter.emit()
             elif key == keyboard.Key.f12 or str(key) == 'Key.f12' or getattr(key, 'name', '') == 'f12':
                 log("[Keyboard] F12 Taste erkannt -> Toggle Rechner")
                 overlay_signal.toggle_calculator.emit()
@@ -1836,6 +1840,16 @@ def main():
             log(f"[Calc Error] {e}")
 
     overlay_signal.toggle_calculator.connect(toggle_calc)
+
+    def toggle_prompter_hud():
+        log("[Prompter] toggle_prompter_hud getriggert")
+        try:
+            if hasattr(calc_overlay, 'toggle_floating_prompter'):
+                calc_overlay.toggle_floating_prompter()
+        except Exception as e:
+            log(f"[Prompter Error] {e}")
+
+    overlay_signal.toggle_prompter.connect(toggle_prompter_hud)
 
     def reload_hud_theme():
         overlay.apply_theme()
@@ -1938,6 +1952,10 @@ def main():
     act_calc = QAction("⚖️ Bußgeld- & TOW-Rechner (F12)", tray_menu)
     act_calc.triggered.connect(toggle_calc)
     tray_menu.addAction(act_calc)
+
+    act_prompter = QAction("📜 Teleprompter & Rechte (F10)", tray_menu)
+    act_prompter.triggered.connect(toggle_prompter_hud)
+    tray_menu.addAction(act_prompter)
 
     act_summary = QAction("📊 Zwischenstand jetzt senden", tray_menu)
     act_summary.triggered.connect(overlay.handle_send_summary)

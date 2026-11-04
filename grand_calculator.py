@@ -136,6 +136,49 @@ CALC_THEMES = {
     }
 }
 
+PROMPTER_TEMPLATES = {
+    "Miranda-Warnung (Standard)": [
+        "Sie haben das Recht zu schweigen.",
+        "Alles, was Sie sagen, kann und wird vor Gericht gegen Sie verwendet werden.",
+        "Sie haben das Recht auf einen Anwalt.",
+        "Sollten Sie sich keinen Anwalt leisten können, wird Ihnen vom Staat ein Pflichtverteidiger gestellt, insofern einer verfügbar ist.",
+        "Haben Sie Ihre Rechte verstanden?"
+    ],
+    "Miranda-Warnung (Wiederholung)": [
+        "Ich wiederhole Ihre Rechte ein zweites und letztes Mal:",
+        "Sie haben das Recht zu schweigen.",
+        "Alles, was Sie sagen, kann und wird vor Gericht gegen Sie verwendet werden.",
+        "Sie haben das Recht auf einen Anwalt.",
+        "Sollten Sie sich keinen Anwalt leisten können, wird Ihnen ein Pflichtverteidiger gestellt.",
+        "Haben Sie Ihre Rechte nun verstanden?"
+    ],
+    "Allgemeine Verkehrskontrolle": [
+        "Guten Tag, Los Santos Police Department.",
+        "Grund für das Anhalten Ihres Fahrzeugs ist eine allgemeine Verkehrskontrolle.",
+        "Bitte schalten Sie den Motor ab und lassen Sie die Hände am Lenkrad.",
+        "Händigen Sie mir bitte Führerschein und Fahrzeugpapiere aus."
+    ],
+    "Durchsuchungsbelehrung (§ Dienstvorschrift)": [
+        "Sie werden nun gemäß der geltenden Dienstvorschriften nach Waffen, Munition und Betäubungsmitteln durchsucht.",
+        "Leisten Sie keinen Widerstand und verhalten Sie sich ruhig.",
+        "Jeder Fluchtversuch oder Widerstand wird als schwere Straftat geahndet."
+    ],
+    "Platzverweis & Sperrzone (§ BDG)": [
+        "Sie befinden sich im Bereich eines laufenden polizeilichen Einsatzes.",
+        "Ich erteile Ihnen hiermit einen formellen Platzverweis.",
+        "Entfernen Sie sich unverzüglich um mindestens 50 Meter von diesem Bereich.",
+        "Sollten Sie der Aufforderung nicht nachkommen, wird unmittelbarer Zwang angewendet und Sie werden inhaftiert."
+    ],
+    "Blutentnahme & Drogentest": [
+        "Aufgrund des Verdachts auf das Führen eines Kraftfahrzeugs unter berauschenden Mitteln ordne ich eine Blutentnahme an.",
+        "Eine Verweigerung zieht den sofortigen Führerscheinentzug sowie ein Strafverfahren nach sich."
+    ],
+    "Reue-Aufklärung (§35 StGB)": [
+        "Gemäß §35 des Strafgesetzbuches haben Sie die Möglichkeit, Reue zu zeigen und umfassend zu kooperieren.",
+        "Bei ehrlicher Reue und Geständnis kann Ihre Strafe um bis zu 2 Wanteds gemildert werden."
+    ]
+}
+
 class ClickableTerminalEdit(QTextEdit):
     clicked = Signal()
     def mousePressEvent(self, e):
@@ -346,6 +389,157 @@ class OffenseCard(QFrame):
         self.set_selected_visual(False)
         self.set_voluntary_visual(0)
 
+class FloatingPrompterHUD(QWidget):
+    def __init__(self, main_calc, theme_data, parent=None):
+        super().__init__(parent)
+        self.main_calc = main_calc
+        self.theme_data = theme_data
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.drag_pos = None
+        self.setFixedSize(540, 185)
+        self.init_ui()
+
+    def init_ui(self):
+        t = self.theme_data
+        self.setStyleSheet(f"""
+            QFrame#hudContainer {{
+                background-color: {t['bg']};
+                border: 2px solid {t['accent']};
+                border-radius: 12px;
+            }}
+            QLabel {{
+                color: {t['text']};
+                font-family: 'Segoe UI', system-ui, sans-serif;
+            }}
+        """)
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.container = QFrame(self)
+        self.container.setObjectName("hudContainer")
+        c_lay = QVBoxLayout(self.container)
+        c_lay.setContentsMargins(12, 8, 12, 10)
+        c_lay.setSpacing(6)
+
+        # Header bar (Draggable)
+        header = QHBoxLayout()
+        header.setSpacing(8)
+
+        self.lbl_hud_title = QLabel(f"📜 <b style='color: {t['accent']};'>TELEPROMPTER</b>")
+        header.addWidget(self.lbl_hud_title)
+
+        self.combo_hud_template = QComboBox()
+        self.combo_hud_template.setStyleSheet(f"background: {t['card_bg']}; color: {t['text']}; border: 1px solid {t['border_subtle']}; border-radius: 4px; padding: 2px 6px; font-size: 11px;")
+        for name in PROMPTER_TEMPLATES.keys():
+            self.combo_hud_template.addItem(name)
+        self.combo_hud_template.currentTextChanged.connect(self.main_calc.prompter_on_template_change)
+        header.addWidget(self.combo_hud_template, stretch=1)
+
+        self.lbl_hud_step = QLabel("[1/5]")
+        self.lbl_hud_step.setStyleSheet(f"color: {t['text_muted']}; font-weight: bold; font-size: 11px;")
+        header.addWidget(self.lbl_hud_step)
+
+        btn_close = QPushButton("✕")
+        btn_close.setFixedSize(22, 22)
+        btn_close.setCursor(Qt.PointingHandCursor)
+        btn_close.setStyleSheet("background: #ef4444; color: #ffffff; border: none; border-radius: 4px; font-weight: bold; font-size: 11px;")
+        btn_close.clicked.connect(self.hide)
+        header.addWidget(btn_close)
+
+        c_lay.addLayout(header)
+
+        # Sentence Display Box
+        self.sentence_box = QFrame()
+        self.sentence_box.setStyleSheet(f"background: {t['surface']}; border: 1px solid {t['border_subtle']}; border-radius: 8px; padding: 8px;")
+        s_lay = QVBoxLayout(self.sentence_box)
+        s_lay.setContentsMargins(8, 6, 8, 6)
+
+        self.lbl_sentence = QLabel("Sie haben das Recht zu schweigen.")
+        self.lbl_sentence.setWordWrap(True)
+        self.lbl_sentence.setAlignment(Qt.AlignCenter)
+        self.lbl_sentence.setStyleSheet(f"color: {t['text']}; font-size: 15px; font-weight: 700; line-height: 1.3;")
+        s_lay.addWidget(self.lbl_sentence)
+
+        c_lay.addWidget(self.sentence_box, stretch=1)
+
+        # Controls Row
+        ctrl_row = QHBoxLayout()
+        ctrl_row.setSpacing(6)
+
+        self.btn_prev = QPushButton("◀ Vorheriger")
+        self.btn_prev.setCursor(Qt.PointingHandCursor)
+        self.btn_prev.setStyleSheet(f"background: {t['card_bg']}; color: {t['text']}; border: 1px solid {t['border_subtle']}; border-radius: 5px; padding: 5px 10px; font-size: 11px; font-weight: bold;")
+        self.btn_prev.clicked.connect(self.main_calc.prompter_prev)
+        ctrl_row.addWidget(self.btn_prev)
+
+        self.btn_copy = QPushButton("📋 Kopieren")
+        self.btn_copy.setCursor(Qt.PointingHandCursor)
+        self.btn_copy.setStyleSheet(f"background: {t['card_bg']}; color: #38bdf8; border: 1px solid #0284c7; border-radius: 5px; padding: 5px 10px; font-size: 11px; font-weight: bold;")
+        self.btn_copy.clicked.connect(self.main_calc.prompter_copy_current)
+        ctrl_row.addWidget(self.btn_copy)
+
+        self.btn_next = QPushButton("▶ Nächster Satz")
+        self.btn_next.setCursor(Qt.PointingHandCursor)
+        self.btn_next.setStyleSheet(f"background: {t['accent']}; color: {t['accent_text']}; border: none; border-radius: 5px; padding: 5px 14px; font-size: 11px; font-weight: 900;")
+        self.btn_next.clicked.connect(self.main_calc.prompter_next)
+        ctrl_row.addWidget(self.btn_next, stretch=1)
+
+        # Mini Attorney Timer Indicator
+        self.lbl_hud_timer = QLabel("⏱️ 05:00")
+        self.lbl_hud_timer.setCursor(Qt.PointingHandCursor)
+        self.lbl_hud_timer.setStyleSheet(f"background: {t['card_bg']}; color: #38bdf8; border: 1px solid {t['border_subtle']}; border-radius: 5px; padding: 5px 8px; font-size: 11px; font-weight: bold;")
+        self.lbl_hud_timer.mousePressEvent = lambda _: self.main_calc.toggle_attorney_timer()
+        ctrl_row.addWidget(self.lbl_hud_timer)
+
+        c_lay.addLayout(ctrl_row)
+        main_layout.addWidget(self.container)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton and self.drag_pos:
+            self.move(event.globalPosition().toPoint() - self.drag_pos)
+            event.accept()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() in (Qt.Key_Space, Qt.Key_Right, Qt.Key_Return, Qt.Key_Enter):
+            self.main_calc.prompter_next()
+            event.accept()
+        elif event.key() in (Qt.Key_Left, Qt.Key_Backspace):
+            self.main_calc.prompter_prev()
+            event.accept()
+        elif event.key() == Qt.Key_C:
+            self.main_calc.prompter_copy_current()
+            event.accept()
+        elif event.key() in (Qt.Key_Escape, Qt.Key_F10):
+            self.hide()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def update_theme(self, theme_data):
+        self.theme_data = theme_data
+        t = theme_data
+        if hasattr(self, 'container'):
+            self.container.setStyleSheet(f"""
+                QFrame#hudContainer {{
+                    background-color: {t['bg']};
+                    border: 2px solid {t['accent']};
+                    border-radius: 12px;
+                }}
+            """)
+        if hasattr(self, 'lbl_hud_title'):
+            self.lbl_hud_title.setText(f"📜 <b style='color: {t['accent']};'>TELEPROMPTER</b>")
+        if hasattr(self, 'sentence_box'):
+            self.sentence_box.setStyleSheet(f"background: {t['surface']}; border: 1px solid {t['border_subtle']}; border-radius: 8px; padding: 8px;")
+        if hasattr(self, 'btn_next'):
+            self.btn_next.setStyleSheet(f"background: {t['accent']}; color: {t['accent_text']}; border: none; border-radius: 5px; padding: 5px 14px; font-size: 11px; font-weight: 900;")
+
 class GrandCalculatorOverlay(QWidget):
     closed = Signal()
 
@@ -369,6 +563,16 @@ class GrandCalculatorOverlay(QWidget):
         self.setWindowTitle("LSPD Dienst-Rechner - 1:1 Grandkasten")
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Dialog)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
+
+        # Prompter State
+        self.prompter_step = 0
+        self.prompter_current_template = "Miranda-Warnung (Standard)"
+        self.prompter_font_size = 20
+        self.attorney_timer_seconds = 300
+        self.attorney_timer_running = False
+        self.attorney_timer = QTimer(self)
+        self.attorney_timer.timeout.connect(self._on_attorney_tick)
+        self.floating_prompter = FloatingPrompterHUD(self, self.theme_data)
 
         self.init_ui()
         self.resize_to_screen()
@@ -565,11 +769,15 @@ class GrandCalculatorOverlay(QWidget):
         self.tab_bussgeld.setStyleSheet("background: transparent; border: none;")
         self.tab_tow = QWidget()
         self.tab_tow.setStyleSheet("background: transparent; border: none;")
+        self.tab_prompter = QWidget()
+        self.tab_prompter.setStyleSheet("background: transparent; border: none;")
         self.tabs.addTab(self.tab_bussgeld, "⚖️ Bußgeld- & Wanteds-Rechner")
         self.tabs.addTab(self.tab_tow, "🚙 TOW Rechner")
+        self.tabs.addTab(self.tab_prompter, "📜 Teleprompter & Rechte")
 
         self.setup_bussgeld_tab()
         self.setup_tow_tab()
+        self.setup_prompter_tab()
 
     # --- TAB 1: BUßGELD & WANTEDS RECHNER ---
     def setup_bussgeld_tab(self):
@@ -1400,6 +1608,536 @@ class GrandCalculatorOverlay(QWidget):
         self.lbl_tow_bussgeld.setText("Bußgeld: $ 0")
         self.tow_akte.clear()
 
+    # --- TAB 3: TELEPROMPTER & RECHTE ---
+    def setup_prompter_tab(self):
+        t = self.theme_data
+        layout = QHBoxLayout(self.tab_prompter)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(16)
+
+        # LEFT COLUMN (320px): Vorlagen & Einstellungen & Anwalts-Timer
+        left_box = QVBoxLayout()
+        left_box.setSpacing(12)
+
+        # Frame 1: Vorlagen & Mini-HUD
+        self.p_box_templates = QFrame()
+        self.p_box_templates.setStyleSheet(f"background-color: {t['surface']}; border: 1px solid {t['border_subtle']}; border-radius: 10px; padding: 12px;")
+        f1_lay = QVBoxLayout(self.p_box_templates)
+        f1_lay.setSpacing(10)
+
+        lbl_tpl_title = QLabel("BELEHRUNGS-VORLAGEN")
+        lbl_tpl_title.setStyleSheet(f"color: {t['text_muted']}; font-size: 11px; font-weight: 800; letter-spacing: 1.5px;")
+        f1_lay.addWidget(lbl_tpl_title)
+
+        self.combo_prompter_tpl = QComboBox()
+        for name in PROMPTER_TEMPLATES.keys():
+            self.combo_prompter_tpl.addItem(name)
+        self.combo_prompter_tpl.currentTextChanged.connect(self.prompter_on_template_change)
+        f1_lay.addWidget(self.combo_prompter_tpl)
+
+        self.btn_open_floating = QPushButton("📌 Schwebendes Mini-HUD öffnen (F10)")
+        self.btn_open_floating.setCursor(Qt.PointingHandCursor)
+        self.btn_open_floating.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {t['card_bg']};
+                color: {t['accent']};
+                border: 1px solid {t['accent']};
+                border-radius: 6px;
+                padding: 8px;
+                font-weight: bold;
+                font-size: 12px;
+            }}
+            QPushButton:hover {{
+                background-color: {t['card_hover']};
+            }}
+        """)
+        self.btn_open_floating.clicked.connect(self.toggle_floating_prompter)
+        f1_lay.addWidget(self.btn_open_floating)
+
+        # Font-Size Slider
+        lbl_font = QLabel("Schriftgröße (Prompter):")
+        lbl_font.setStyleSheet(f"color: {t['text_muted']}; font-size: 11px;")
+        f1_lay.addWidget(lbl_font)
+
+        font_row = QHBoxLayout()
+        self.slider_font = QSlider(Qt.Horizontal)
+        self.slider_font.setRange(14, 30)
+        self.slider_font.setValue(self.prompter_font_size)
+        self.lbl_font_val = QLabel(f"{self.prompter_font_size}px")
+        self.lbl_font_val.setFixedWidth(35)
+        self.slider_font.valueChanged.connect(self.prompter_on_font_slider)
+        font_row.addWidget(self.slider_font)
+        font_row.addWidget(self.lbl_font_val)
+        f1_lay.addLayout(font_row)
+
+        left_box.addWidget(self.p_box_templates)
+
+        # Frame 2: Anwalts-Timer (5-Minuten Frist)
+        self.p_box_timer = QFrame()
+        self.p_box_timer.setStyleSheet(f"background-color: {t['surface']}; border: 1px solid {t['border_subtle']}; border-radius: 10px; padding: 12px;")
+        f2_lay = QVBoxLayout(self.p_box_timer)
+        f2_lay.setSpacing(8)
+
+        lbl_timer_title = QLabel("⚖️ ANWALTS-WARTEFRIST (5 MIN.)")
+        lbl_timer_title.setAlignment(Qt.AlignCenter)
+        lbl_timer_title.setStyleSheet(f"color: {t['text_muted']}; font-size: 11px; font-weight: 800; letter-spacing: 1.5px;")
+        f2_lay.addWidget(lbl_timer_title)
+
+        self.lbl_attorney_time = QLabel("05:00")
+        self.lbl_attorney_time.setAlignment(Qt.AlignCenter)
+        self.lbl_attorney_time.setStyleSheet("font-size: 30px; font-weight: 900; color: #38bdf8; font-family: monospace; padding: 4px 0;")
+        f2_lay.addWidget(self.lbl_attorney_time)
+
+        self.progress_attorney = QProgressBar()
+        self.progress_attorney.setRange(0, 300)
+        self.progress_attorney.setValue(300)
+        self.progress_attorney.setTextVisible(False)
+        self.progress_attorney.setFixedHeight(6)
+        self.progress_attorney.setStyleSheet("""
+            QProgressBar {
+                background: #181822;
+                border-radius: 3px;
+                border: none;
+            }
+            QProgressBar::chunk {
+                background: #38bdf8;
+                border-radius: 3px;
+            }
+        """)
+        f2_lay.addWidget(self.progress_attorney)
+
+        timer_btns = QHBoxLayout()
+        self.btn_timer_toggle = QPushButton("▶ Timer Starten")
+        self.btn_timer_toggle.setCursor(Qt.PointingHandCursor)
+        self.btn_timer_toggle.setStyleSheet("""
+            QPushButton {
+                background-color: #2563eb;
+                color: #ffffff;
+                font-weight: bold;
+                border-radius: 6px;
+                padding: 7px;
+                font-size: 12px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #1d4ed8;
+            }
+        """)
+        self.btn_timer_toggle.clicked.connect(self.toggle_attorney_timer)
+        timer_btns.addWidget(self.btn_timer_toggle, stretch=2)
+
+        self.btn_timer_reset = QPushButton("↺ Reset")
+        self.btn_timer_reset.setCursor(Qt.PointingHandCursor)
+        self.btn_timer_reset.setStyleSheet(f"background: {t['card_bg']}; color: {t['text_muted']}; border: 1px solid {t['border_subtle']}; border-radius: 6px; padding: 7px; font-size: 12px;")
+        self.btn_timer_reset.clicked.connect(self.reset_attorney_timer)
+        timer_btns.addWidget(self.btn_timer_reset, stretch=1)
+        f2_lay.addLayout(timer_btns)
+
+        # Quick Vermerk Buttons
+        lbl_vermerk_title = QLabel("<span style='color: #94a3b8; font-size: 10px; font-weight: bold;'>MDT-AKTENVERMERK BEI FRIST:</span>")
+        f2_lay.addWidget(lbl_vermerk_title)
+
+        self.btn_vermerk_expired = QPushButton("📋 Vermerk: Anwalt nicht erschienen")
+        self.btn_vermerk_expired.setCursor(Qt.PointingHandCursor)
+        self.btn_vermerk_expired.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {t['card_bg']};
+                color: #fb923c;
+                border: 1px solid #7c2d12;
+                border-radius: 6px;
+                padding: 6px;
+                font-size: 11px;
+                font-weight: bold;
+                text-align: left;
+            }}
+            QPushButton:hover {{
+                background-color: {t['card_hover']};
+            }}
+        """)
+        self.btn_vermerk_expired.clicked.connect(lambda: self.copy_attorney_vermerk("expired"))
+        f2_lay.addWidget(self.btn_vermerk_expired)
+
+        self.btn_vermerk_arrived = QPushButton("📋 Vermerk: Anwalt eingetroffen")
+        self.btn_vermerk_arrived.setCursor(Qt.PointingHandCursor)
+        self.btn_vermerk_arrived.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {t['card_bg']};
+                color: #4ade80;
+                border: 1px solid #14532d;
+                border-radius: 6px;
+                padding: 6px;
+                font-size: 11px;
+                font-weight: bold;
+                text-align: left;
+            }}
+            QPushButton:hover {{
+                background-color: {t['card_hover']};
+            }}
+        """)
+        self.btn_vermerk_arrived.clicked.connect(lambda: self.copy_attorney_vermerk("arrived"))
+        f2_lay.addWidget(self.btn_vermerk_arrived)
+
+        left_box.addWidget(self.p_box_timer)
+        left_box.addStretch()
+        layout.addLayout(left_box, stretch=35)
+
+        # RIGHT COLUMN: Prompter Stage
+        right_box = QVBoxLayout()
+        right_box.setSpacing(10)
+
+        # Stage Header
+        stage_head = QHBoxLayout()
+        self.lbl_stage_title = QLabel("🛡️ Miranda-Warnung (Standard)")
+        self.lbl_stage_title.setStyleSheet(f"font-size: 16px; font-weight: 900; color: {t['accent']};")
+        stage_head.addWidget(self.lbl_stage_title)
+        stage_head.addStretch()
+
+        self.lbl_step_progress = QLabel("Satz 1 von 5")
+        self.lbl_step_progress.setStyleSheet(f"font-size: 12px; font-weight: bold; color: {t['text_muted']}; background: {t['card_bg']}; border: 1px solid {t['border_subtle']}; border-radius: 4px; padding: 4px 10px;")
+        stage_head.addWidget(self.lbl_step_progress)
+
+        btn_reset_prompter = QPushButton("🔄 Von vorn")
+        btn_reset_prompter.setCursor(Qt.PointingHandCursor)
+        btn_reset_prompter.setStyleSheet(f"background: {t['card_bg']}; color: {t['text_muted']}; border: 1px solid {t['border_subtle']}; border-radius: 4px; padding: 4px 8px; font-size: 11px;")
+        btn_reset_prompter.clicked.connect(self.prompter_reset)
+        stage_head.addWidget(btn_reset_prompter)
+        right_box.addLayout(stage_head)
+
+        # Scroll area for sentence list
+        self.prompter_scroll = QScrollArea()
+        self.prompter_scroll.setWidgetResizable(True)
+        self.prompter_scroll.setStyleSheet("background: transparent; border: none;")
+        self.prompter_scroll.viewport().setStyleSheet("background: transparent; border: none;")
+
+        self.prompter_container = QWidget()
+        self.prompter_container.setStyleSheet("background: transparent; border: none;")
+        self.prompter_layout = QVBoxLayout(self.prompter_container)
+        self.prompter_layout.setContentsMargins(4, 4, 10, 4)
+        self.prompter_layout.setSpacing(10)
+
+        self.prompter_scroll.setWidget(self.prompter_container)
+        right_box.addWidget(self.prompter_scroll, stretch=1)
+
+        # Stage Action Bar
+        act_bar = QHBoxLayout()
+        act_bar.setSpacing(10)
+
+        self.btn_p_prev = QPushButton("⏮ Vorheriger")
+        self.btn_p_prev.setCursor(Qt.PointingHandCursor)
+        self.btn_p_prev.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {t['card_bg']};
+                color: {t['text']};
+                border: 1px solid {t['border_subtle']};
+                border-radius: 6px;
+                padding: 10px 16px;
+                font-weight: bold;
+                font-size: 13px;
+            }}
+            QPushButton:hover {{
+                background-color: {t['card_hover']};
+            }}
+        """)
+        self.btn_p_prev.clicked.connect(self.prompter_prev)
+        act_bar.addWidget(self.btn_p_prev)
+
+        self.btn_p_copy_cur = QPushButton("📋 Satz kopieren (Chat)")
+        self.btn_p_copy_cur.setCursor(Qt.PointingHandCursor)
+        self.btn_p_copy_cur.setStyleSheet("""
+            QPushButton {
+                background-color: #0284c7;
+                color: #ffffff;
+                border: none;
+                border-radius: 6px;
+                padding: 10px 16px;
+                font-weight: bold;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #0369a1;
+            }
+        """)
+        self.btn_p_copy_cur.clicked.connect(self.prompter_copy_current)
+        act_bar.addWidget(self.btn_p_copy_cur)
+
+        self.btn_p_copy_all = QPushButton("📋 Alles kopieren")
+        self.btn_p_copy_all.setCursor(Qt.PointingHandCursor)
+        self.btn_p_copy_all.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {t['card_bg']};
+                color: {t['text_muted']};
+                border: 1px solid {t['border_subtle']};
+                border-radius: 6px;
+                padding: 10px 14px;
+                font-size: 12px;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: {t['card_hover']};
+                color: #ffffff;
+            }}
+        """)
+        self.btn_p_copy_all.clicked.connect(self.prompter_copy_all)
+        act_bar.addWidget(self.btn_p_copy_all)
+
+        self.btn_p_next = QPushButton("⏭ Weiter (Leertaste / Enter)")
+        self.btn_p_next.setCursor(Qt.PointingHandCursor)
+        self.btn_p_next.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {t['accent']};
+                color: {t['accent_text']};
+                border: none;
+                border-radius: 6px;
+                padding: 10px 22px;
+                font-weight: 900;
+                font-size: 13px;
+            }}
+            QPushButton:hover {{
+                filter: brightness(1.15);
+            }}
+        """)
+        self.btn_p_next.clicked.connect(self.prompter_next)
+        act_bar.addWidget(self.btn_p_next, stretch=1)
+
+        right_box.addLayout(act_bar)
+        layout.addLayout(right_box, stretch=65)
+
+        self.render_prompter_sentences()
+
+    def render_prompter_sentences(self):
+        while self.prompter_layout.count():
+            item = self.prompter_layout.takeAt(0)
+            w = item.widget()
+            if w:
+                w.deleteLater()
+
+        sentences = PROMPTER_TEMPLATES.get(self.prompter_current_template, [])
+        total = len(sentences)
+        t = self.theme_data
+
+        if hasattr(self, 'lbl_stage_title'):
+            self.lbl_stage_title.setText(f"🛡️ {self.prompter_current_template}")
+        if hasattr(self, 'lbl_step_progress'):
+            self.lbl_step_progress.setText(f"Satz {self.prompter_step + 1} von {max(1, total)}")
+
+        if hasattr(self, 'floating_prompter') and sentences:
+            cur_s = sentences[min(self.prompter_step, total - 1)]
+            self.floating_prompter.lbl_sentence.setText(cur_s)
+            self.floating_prompter.lbl_hud_step.setText(f"[{self.prompter_step + 1}/{total}]")
+            if self.floating_prompter.combo_hud_template.currentText() != self.prompter_current_template:
+                self.floating_prompter.combo_hud_template.blockSignals(True)
+                self.floating_prompter.combo_hud_template.setCurrentText(self.prompter_current_template)
+                self.floating_prompter.combo_hud_template.blockSignals(False)
+
+        for idx, sentence in enumerate(sentences):
+            card = QFrame()
+            is_active = (idx == self.prompter_step)
+            is_past = (idx < self.prompter_step)
+
+            if is_active:
+                card.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {t['card_active_bg']};
+                        border: 2px solid {t['accent']};
+                        border-radius: 10px;
+                        padding: 12px 16px;
+                    }}
+                """)
+            elif is_past:
+                card.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {t['surface']};
+                        border: 1px solid {t['border_subtle']};
+                        border-radius: 8px;
+                        padding: 10px 14px;
+                    }}
+                """)
+            else:
+                card.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {t['card_bg']};
+                        border: 1px solid {t['border_subtle']};
+                        border-radius: 8px;
+                        padding: 10px 14px;
+                    }}
+                """)
+
+            c_lay = QHBoxLayout(card)
+            c_lay.setContentsMargins(6, 4, 6, 4)
+            c_lay.setSpacing(12)
+
+            if is_past:
+                lbl_icon = QLabel("✓")
+                lbl_icon.setStyleSheet("color: #4ade80; font-size: 15px; font-weight: 900;")
+            elif is_active:
+                lbl_icon = QLabel("▶")
+                lbl_icon.setStyleSheet(f"color: {t['accent']}; font-size: 16px; font-weight: 900;")
+            else:
+                lbl_icon = QLabel(f"{idx + 1}.")
+                lbl_icon.setStyleSheet("color: #64748b; font-size: 12px; font-weight: bold;")
+            lbl_icon.setFixedWidth(24)
+            c_lay.addWidget(lbl_icon)
+
+            lbl_text = QLabel(sentence)
+            lbl_text.setWordWrap(True)
+            if is_active:
+                lbl_text.setStyleSheet(f"color: {t['text']}; font-size: {self.prompter_font_size}px; font-weight: bold; line-height: 1.35;")
+            elif is_past:
+                lbl_text.setStyleSheet("color: #64748b; font-size: 13px; font-weight: 500;")
+            else:
+                lbl_text.setStyleSheet("color: #475569; font-size: 13px; font-weight: 500;")
+            c_lay.addWidget(lbl_text, stretch=1)
+
+            def make_click_handler(target_idx):
+                def handler(event):
+                    self.prompter_step = target_idx
+                    self.render_prompter_sentences()
+                return handler
+
+            card.mousePressEvent = make_click_handler(idx)
+            card.setCursor(Qt.PointingHandCursor)
+            self.prompter_layout.addWidget(card)
+
+        self.prompter_layout.addStretch()
+
+    def prompter_next(self):
+        sentences = PROMPTER_TEMPLATES.get(self.prompter_current_template, [])
+        if self.prompter_step < len(sentences) - 1:
+            self.prompter_step += 1
+            self.render_prompter_sentences()
+
+    def prompter_prev(self):
+        if self.prompter_step > 0:
+            self.prompter_step -= 1
+            self.render_prompter_sentences()
+
+    def prompter_reset(self):
+        self.prompter_step = 0
+        self.render_prompter_sentences()
+
+    def prompter_copy_current(self):
+        sentences = PROMPTER_TEMPLATES.get(self.prompter_current_template, [])
+        if sentences and 0 <= self.prompter_step < len(sentences):
+            text = sentences[self.prompter_step]
+            clipboard = QApplication.clipboard()
+            clipboard.setText(text)
+            if hasattr(self, 'btn_p_copy_cur'):
+                self.btn_p_copy_cur.setText("✅ Kopiert!")
+                QTimer.singleShot(1200, lambda: self.btn_p_copy_cur.setText("📋 Satz kopieren (Chat)"))
+            if hasattr(self, 'floating_prompter') and hasattr(self.floating_prompter, 'btn_copy'):
+                self.floating_prompter.btn_copy.setText("✅ Kopiert!")
+                QTimer.singleShot(1200, lambda: self.floating_prompter.btn_copy.setText("📋 Kopieren"))
+
+    def prompter_copy_all(self):
+        sentences = PROMPTER_TEMPLATES.get(self.prompter_current_template, [])
+        if sentences:
+            text = " ".join(sentences)
+            clipboard = QApplication.clipboard()
+            clipboard.setText(text)
+            if hasattr(self, 'btn_p_copy_all'):
+                self.btn_p_copy_all.setText("✅ Alles kopiert!")
+                QTimer.singleShot(1200, lambda: self.btn_p_copy_all.setText("📋 Alles kopieren"))
+
+    def prompter_on_template_change(self, name):
+        if name in PROMPTER_TEMPLATES:
+            self.prompter_current_template = name
+            self.prompter_step = 0
+            if hasattr(self, 'combo_prompter_tpl') and self.combo_prompter_tpl.currentText() != name:
+                self.combo_prompter_tpl.blockSignals(True)
+                self.combo_prompter_tpl.setCurrentText(name)
+                self.combo_prompter_tpl.blockSignals(False)
+            self.render_prompter_sentences()
+
+    def prompter_on_font_slider(self, val):
+        self.prompter_font_size = val
+        if hasattr(self, 'lbl_font_val'):
+            self.lbl_font_val.setText(f"{val}px")
+        self.render_prompter_sentences()
+
+    def toggle_floating_prompter(self):
+        if hasattr(self, 'floating_prompter'):
+            if self.floating_prompter.isVisible():
+                self.floating_prompter.hide()
+            else:
+                screen = QApplication.primaryScreen().geometry()
+                w = self.floating_prompter.width()
+                x = (screen.width() - w) // 2
+                y = 50
+                self.floating_prompter.move(x, y)
+                self.floating_prompter.show()
+                self.floating_prompter.raise_()
+                self.floating_prompter.activateWindow()
+
+    def toggle_attorney_timer(self):
+        if self.attorney_timer_running:
+            self.attorney_timer.stop()
+            self.attorney_timer_running = False
+            self.btn_timer_toggle.setText("▶ Timer Fortsetzen")
+            self.btn_timer_toggle.setStyleSheet("background-color: #2563eb; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 7px; font-size: 12px; border: none;")
+        else:
+            self.attorney_timer.start(1000)
+            self.attorney_timer_running = True
+            self.btn_timer_toggle.setText("⏸ Pause")
+            self.btn_timer_toggle.setStyleSheet("background-color: #eab308; color: #000000; font-weight: bold; border-radius: 6px; padding: 7px; font-size: 12px; border: none;")
+
+    def reset_attorney_timer(self):
+        self.attorney_timer.stop()
+        self.attorney_timer_running = False
+        self.attorney_timer_seconds = 300
+        self.btn_timer_toggle.setText("▶ Timer Starten")
+        self.btn_timer_toggle.setStyleSheet("background-color: #2563eb; color: #ffffff; font-weight: bold; border-radius: 6px; padding: 7px; font-size: 12px; border: none;")
+        self.lbl_attorney_time.setText("05:00")
+        self.lbl_attorney_time.setStyleSheet("font-size: 30px; font-weight: 900; color: #38bdf8; font-family: monospace; padding: 4px 0;")
+        self.progress_attorney.setValue(300)
+        if hasattr(self, 'floating_prompter'):
+            self.floating_prompter.lbl_hud_timer.setText("⏱️ 05:00")
+            self.floating_prompter.lbl_hud_timer.setStyleSheet(f"background: {self.theme_data['card_bg']}; color: #38bdf8; border: 1px solid {self.theme_data['border_subtle']}; border-radius: 5px; padding: 5px 8px; font-size: 11px; font-weight: bold;")
+
+    def _on_attorney_tick(self):
+        if self.attorney_timer_seconds > 0:
+            self.attorney_timer_seconds -= 1
+            mins = self.attorney_timer_seconds // 60
+            secs = self.attorney_timer_seconds % 60
+            time_str = f"{mins:02d}:{secs:02d}"
+            self.lbl_attorney_time.setText(time_str)
+            self.progress_attorney.setValue(self.attorney_timer_seconds)
+            if hasattr(self, 'floating_prompter'):
+                self.floating_prompter.lbl_hud_timer.setText(f"⏱️ {time_str}")
+
+            if self.attorney_timer_seconds == 0:
+                self.attorney_timer.stop()
+                self.attorney_timer_running = False
+                self.lbl_attorney_time.setText("00:00 (Frist um!)")
+                self.lbl_attorney_time.setStyleSheet("font-size: 24px; font-weight: 900; color: #ef4444; font-family: monospace; padding: 4px 0;")
+                if hasattr(self, 'floating_prompter'):
+                    self.floating_prompter.lbl_hud_timer.setText("⚠️ 00:00!")
+                    self.floating_prompter.lbl_hud_timer.setStyleSheet("background: #450a0a; color: #f87171; border: 1px solid #ef4444; border-radius: 5px; padding: 5px 8px; font-size: 11px; font-weight: bold;")
+                try:
+                    import winsound
+                    winsound.Beep(1200, 250)
+                    winsound.Beep(1600, 350)
+                except Exception:
+                    pass
+
+    def copy_attorney_vermerk(self, mode):
+        now = datetime.datetime.now()
+        date_str = now.strftime("%d.%m %H:%M")
+        if mode == "expired":
+            txt = f"{date_str} - Anwalt verlangt, 5-Minuten-Wartefrist ergebnislos verstrichen"
+        else:
+            txt = f"{date_str} - Anwalt vor Ort erschienen - Akteneinsicht gewährt"
+
+        clipboard = QApplication.clipboard()
+        clipboard.setText(txt)
+        if mode == "expired" and hasattr(self, 'btn_vermerk_expired'):
+            orig = self.btn_vermerk_expired.text()
+            self.btn_vermerk_expired.setText("✅ Vermerk kopiert!")
+            QTimer.singleShot(1500, lambda: self.btn_vermerk_expired.setText(orig))
+        elif mode == "arrived" and hasattr(self, 'btn_vermerk_arrived'):
+            orig = self.btn_vermerk_arrived.text()
+            self.btn_vermerk_arrived.setText("✅ Vermerk kopiert!")
+            QTimer.singleShot(1500, lambda: self.btn_vermerk_arrived.setText(orig))
+
     # --- THEME SWITCHING (LIVE) ---
     def on_theme_changed_from_ui(self, theme_name):
         self.update_theme(theme_name)
@@ -1506,12 +2244,31 @@ class GrandCalculatorOverlay(QWidget):
             self.tab_bussgeld.setStyleSheet("background: transparent; border: none;")
         if hasattr(self, 'tab_tow'):
             self.tab_tow.setStyleSheet("background: transparent; border: none;")
+        if hasattr(self, 'tab_prompter'):
+            self.tab_prompter.setStyleSheet("background: transparent; border: none;")
+        if hasattr(self, 'p_box_templates'):
+            self.p_box_templates.setStyleSheet(f"background-color: {t['surface']}; border: 1px solid {t['border_subtle']}; border-radius: 10px; padding: 12px;")
+        if hasattr(self, 'p_box_timer'):
+            self.p_box_timer.setStyleSheet(f"background-color: {t['surface']}; border: 1px solid {t['border_subtle']}; border-radius: 10px; padding: 12px;")
+        if hasattr(self, 'floating_prompter'):
+            self.floating_prompter.update_theme(t)
+        if hasattr(self, 'prompter_layout'):
+            self.render_prompter_sentences()
 
     # --- KEY & EVENT HANDLERS ---
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key_Escape, Qt.Key_F12):
             self.hide()
             event.accept()
+        elif hasattr(self, 'tabs') and self.tabs.currentIndex() == 2 and not self.search_input.hasFocus():
+            if event.key() in (Qt.Key_Space, Qt.Key_Right, Qt.Key_Return, Qt.Key_Enter):
+                self.prompter_next()
+                event.accept()
+            elif event.key() in (Qt.Key_Left, Qt.Key_Backspace):
+                self.prompter_prev()
+                event.accept()
+            else:
+                super().keyPressEvent(event)
         else:
             super().keyPressEvent(event)
 

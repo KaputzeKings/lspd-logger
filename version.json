@@ -1,5 +1,5 @@
 {
-    "version": "1.2.7",
-    "changelog": "🛡️ Update v1.2.7 - Fix: Alle weißen Flächen & Streifen im Dienst-Rechner restlos entfernt:\n- QScrollArea & Content-Container Hintergrund auf transparent & dunkles Theme fixiert (kein Windows-System-Weiß mehr hinter Kategorien oder zwischen Karten)\n- QPalette und StyledBackground Absicherung für Windows Light-Theme\n- TOW Rechner exakt 4 Geschwindigkeits-Stufen nach StVO §8 ($5.000 / $10.000 / $15.000 / $20.000)\n- Farbanpassung mit Schwarz-Grau-Weiß (Monochrome) Preset",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.2.7/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.2.8",
+    "changelog": "📜 Update v1.2.8 - Neuer LSPD Teleprompter & Rechte-Assistent:\n- Neuer Teleprompter-Tab im Dienst-Rechner (F12) und schwebendes Mini-HUD per Hotkey [F10]\n- 7 integrierte Belehrungs-Vorlagen (Miranda-Warnung Standard/Wiederholung, Verkehrskontrolle, Durchsuchungsbelehrung, Platzverweis, Drogentest, §35 Reue)\n- Satz-für-Satz Navigation per Tastatur (Leertaste / Enter) mit 1-Klick Kopieren für Ingame-Chat\n- Integrierter 5-Minuten Anwalts-Timer mit akustischem Signal und 1-Klick MDT-Aktenvermerken\n- Prompter-Schriftgröße stufenlos anpassbar",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.2.8/LSPD_Log_Assistent_Paket.zip"
 }
