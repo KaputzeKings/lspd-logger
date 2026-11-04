@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKey
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.2.4"
+CURRENT_VERSION = "1.2.5"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -60,6 +60,32 @@ def adjust_color(hex_color, factor):
     return hex_color
 
 THEMES = {
+    "Schwarz-Grau-Weiß (Monochrome)": {
+        "bg": "#0a0a0a",
+        "card_bg": "#141416",
+        "border": "#6b7280",
+        "accent": "#4b5563",
+        "accent_hover": "#9ca3af",
+        "accent_pressed": "#374151",
+        "text": "#ffffff",
+        "text_muted": "#9ca3af",
+        "btn_bg": "#1f1f23",
+        "btn_hover": "#2e2e36",
+        "thumb_bg": "#050505"
+    },
+    "Grandkasten Cyberpunk": {
+        "bg": "#0a0a0c",
+        "card_bg": "#13141a",
+        "border": "#00d2ff",
+        "accent": "#0077b6",
+        "accent_hover": "#00d2ff",
+        "accent_pressed": "#023e8a",
+        "text": "#f3f4f6",
+        "text_muted": "#94a3b8",
+        "btn_bg": "#181820",
+        "btn_hover": "#22222c",
+        "thumb_bg": "#050505"
+    },
     "Schwarz-Lila (Standard)": {
         "bg": "#0f0c18",
         "card_bg": "#171324",
@@ -1027,6 +1053,22 @@ class SetupDialog(QDialog):
                 break
         grid_hud.addWidget(self.calc_scale_combo, 4, 1)
 
+        grid_hud.addWidget(QLabel("7. F12 Rechner Design:"), 5, 0)
+        self.calc_theme_combo = QComboBox()
+        self.calc_theme_combo.addItems([
+            "Grandkasten Cyberpunk",
+            "Schwarz-Grau-Weiß (Monochrome)",
+            "Schwarz-Lila (Standard)",
+            "LSPD Cyber Blue",
+            "Tactical Stealth Red",
+            "Emerald Special Forces"
+        ])
+        curr_ct = CONFIG.get("calc_theme", "Grandkasten Cyberpunk")
+        c_idx = self.calc_theme_combo.findText(curr_ct)
+        if c_idx >= 0:
+            self.calc_theme_combo.setCurrentIndex(c_idx)
+        grid_hud.addWidget(self.calc_theme_combo, 5, 1)
+
         l_hud.addLayout(grid_hud)
 
         # Opacity Slider
@@ -1100,6 +1142,8 @@ class SetupDialog(QDialog):
         CONFIG["watch_dir"] = self.dir_input.text().strip() or get_default_watch_dir()
         CONFIG["thread_id"] = self.thread_input.text().strip()
         CONFIG["calc_scale"] = float(self.calc_scale_combo.currentData())
+        if hasattr(self, 'calc_theme_combo'):
+            CONFIG["calc_theme"] = self.calc_theme_combo.currentText()
 
         CONFIG["hud"] = {
             "theme": self.theme_combo.currentText(),
@@ -1774,7 +1818,7 @@ def main():
     overlay_signal.key_pressed.connect(overlay.on_hotkey_pressed)
     overlay_signal.update_stats.connect(overlay.update_stats_ui)
 
-    calc_overlay = GrandCalculatorOverlay(get_theme_colors())
+    calc_overlay = GrandCalculatorOverlay(CONFIG.get("calc_theme", "Grandkasten Cyberpunk"))
 
     def toggle_calc():
         log("[Calc] toggle_calc getriggert")
@@ -1795,7 +1839,8 @@ def main():
 
     def reload_hud_theme():
         overlay.apply_theme()
-        calc_overlay.update_theme(get_theme_colors())
+        calc_theme_name = CONFIG.get("calc_theme", "Grandkasten Cyberpunk")
+        calc_overlay.update_theme(calc_theme_name)
         tray.setIcon(create_tray_icon())
         tray.setToolTip(f"LSPD Log Assistent v{CURRENT_VERSION} | Badge: [{CONFIG.get('user_badge')}]")
 
