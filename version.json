@@ -1,5 +1,5 @@
 {
-    "version": "1.2.3",
-    "changelog": "🛡️ Update v1.2.3 - Klick-Übernahme in Aktenvermerk repariert:\n- Fix: Jede Straftaten-Karte ist jetzt komplett anklickbar (wie in Grandkasten) und überträgt sich sofort in den Aktenvermerk\n- Kein Ruckeln oder Scroll-Springen mehr beim Anklicken von Delikten\n- Höchststrafe-Regel (Bußgeld & Wanteds addieren sich nicht)\n- Original 1:1 Grandkasten Format mit ' + ' Trennzeichen\n- Graue Wanteds & Reue (StGB §35) per Klick",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.2.3/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.2.4",
+    "changelog": "🛡️ Update v1.2.4 - 100% Original Grandkasten Design & Klick-Fix:\n- 1:1 Grandkasten Cyberpunk Design: Authentische Farbtöne, Karten, Badges & Sterne-Leiste\n- 104/104 Delikte mit eindeutigen IDs - vollständige und sofortige Klick-Übernahme in den Aktenvermerk\n- Große 5-Sterne Wanteds-Anzeige (Gold für Vergehen, Silber für Systemwanteds)\n- Großes grünes Leucht-Bußgeld ($ 0 bis $ 50.000) nach Höchststrafen-Regel\n- TOW Rechner im Original Dark Navy Design mit Zonen, Gefahren km/h & Wiederholungstäter\n- Sofortiges Kopieren mit Klick auf das grüne Terminal-Feld",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.2.4/LSPD_Log_Assistent_Paket.zip"
 }

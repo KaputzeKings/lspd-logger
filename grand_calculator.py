@@ -28,24 +28,8 @@ def load_grandkasten_db():
             pass
     return {}
 
-def ensure_check_icon():
-    icon_path = os.path.join(BASE_DIR, "check_icon.png")
-    try:
-        pm = QPixmap(20, 20)
-        pm.fill(Qt.transparent)
-        p = QPainter(pm)
-        p.setRenderHint(QPainter.Antialiasing)
-        pen = QPen(QColor('#ffffff'), 2.6)
-        pen.setCapStyle(Qt.RoundCap)
-        pen.setJoinStyle(Qt.RoundJoin)
-        p.setPen(pen)
-        p.drawLine(4, 10, 8, 15)
-        p.drawLine(8, 15, 16, 5)
-        p.end()
-        pm.save(icon_path)
-    except Exception:
-        pass
-    return icon_path.replace("\\", "/")
+def make_item_key(item):
+    return f"{item.get('id', '')}|{item.get('name', '')}"
 
 class ClickableTerminalEdit(QTextEdit):
     clicked = Signal()
@@ -68,6 +52,7 @@ class OffenseCard(QFrame):
         self.info = item.get("info", "") or ""
         self.overlay = overlay
         self.is_selected = False
+        self.voluntary_selected = 0
         self.v_buttons = []
 
         self.setCursor(Qt.PointingHandCursor)
@@ -77,128 +62,172 @@ class OffenseCard(QFrame):
         self.apply_style(False)
 
         c_lay = QVBoxLayout(self)
-        c_lay.setContentsMargins(10, 6, 10, 6)
+        c_lay.setContentsMargins(12, 9, 12, 9)
         c_lay.setSpacing(4)
 
-        # Row 1: Checkbox, Name, Fine, Wanteds
+        # Row 1: Paragraph ID (Cyan), Selection checkmark, License Pill
         row1 = QHBoxLayout()
         row1.setSpacing(8)
 
-        self.cb = QCheckBox(f"<b>{self.item_id}</b> — {self.name}")
-        self.cb.setStyleSheet("font-size: 13px; font-weight: normal; color: #f1f5f9;")
-        self.cb.clicked.connect(self.on_cb_clicked)
-        row1.addWidget(self.cb, stretch=1)
+        self.lbl_id = QLabel(self.item_id)
+        self.lbl_id.setStyleSheet("color: #00d2ff; font-size: 13px; font-weight: bold;")
+        row1.addWidget(self.lbl_id)
 
-        fine_str = f"${self.fine:,.0f}".replace(",", ".")
-        fine_badge = QLabel(fine_str)
-        fine_badge.setStyleSheet("background: #064e3b; color: #34d399; font-weight: bold; border-radius: 4px; padding: 3px 8px; font-size: 12px;")
-        row1.addWidget(fine_badge)
+        self.lbl_check = QLabel("✓")
+        self.lbl_check.setStyleSheet("color: #00d2ff; font-size: 13px; font-weight: 900;")
+        self.lbl_check.setVisible(False)
+        row1.addWidget(self.lbl_check)
 
-        w_str = f"★ {self.wanteds}" if self.wanteds > 0 else "0 Wanteds"
-        w_badge = QLabel(w_str)
-        w_badge.setStyleSheet("background: #78350f; color: #fbbf24; font-weight: bold; border-radius: 4px; padding: 3px 8px; font-size: 12px;")
-        row1.addWidget(w_badge)
+        row1.addStretch()
+
+        if "entziehen" in self.info.lower():
+            badge_text = "⚠️ Führerschein" if "führerschein" in self.info.lower() else "⚠️ Waffenschein"
+            entzug_badge = QLabel(badge_text)
+            entzug_badge.setStyleSheet("""
+                background: #450a0a;
+                color: #f87171;
+                font-weight: bold;
+                border: 1px solid #7f1d1d;
+                border-radius: 4px;
+                padding: 2px 7px;
+                font-size: 10px;
+            """)
+            row1.addWidget(entzug_badge)
 
         c_lay.addLayout(row1)
 
-        # Row 2: Voluntary / Graue Wanteds & License info
-        if self.voluntary_w > 0 or "entziehen" in self.info.lower():
-            row2 = QHBoxLayout()
-            row2.setSpacing(6)
+        # Row 2: Offense Description
+        self.lbl_name = QLabel(self.name)
+        self.lbl_name.setWordWrap(True)
+        self.lbl_name.setStyleSheet("color: #f3f4f6; font-size: 13px; line-height: 1.3;")
+        c_lay.addWidget(self.lbl_name)
+
+        # Row 3: Bottom Row with Wanteds Stars / Gray buttons on Left, Fine on Right
+        row3 = QHBoxLayout()
+        row3.setContentsMargins(0, 3, 0, 0)
+        row3.setSpacing(6)
+
+        # Stars & Voluntary wanteds container
+        stars_container = QHBoxLayout()
+        stars_container.setSpacing(4)
+
+        if self.wanteds == 0 and self.voluntary_w == 0:
+            lbl_none = QLabel("<span style='color: #64748b; font-size: 11px;'>0 Wanteds</span>")
+            stars_container.addWidget(lbl_none)
+        else:
+            # Mandatory gold stars
+            if self.wanteds > 0:
+                stars_gold = "★ " * self.wanteds
+                lbl_gold = QLabel(f"<span style='color: #ffcc00; font-size: 14px; font-weight: bold;'>{stars_gold.strip()}</span>")
+                stars_container.addWidget(lbl_gold)
+
+            # Voluntary gray wanteds selector
             if self.voluntary_w > 0:
-                v_lbl = QLabel(f"<span style='color:#a1a1aa; font-size:11px;'>Graue Wanteds (0-{self.voluntary_w}):</span>")
-                row2.addWidget(v_lbl)
+                lbl_vol = QLabel("<span style='color: #94a3b8; font-size: 10px; margin-left: 2px;'>Grau:</span>")
+                stars_container.addWidget(lbl_vol)
 
                 for count in range(self.voluntary_w + 1):
                     btn_v = QPushButton(str(count))
-                    btn_v.setFixedSize(26, 22)
+                    btn_v.setFixedSize(22, 19)
                     btn_v.setCheckable(True)
                     btn_v.setChecked(count == 0)
                     btn_v.setStyleSheet("""
                         QPushButton {
-                            background: #27142b;
-                            color: #d8b4fe;
-                            border: 1px solid #701a75;
-                            border-radius: 4px;
+                            background: #1e1e28;
+                            color: #94a3b8;
+                            border: 1px solid #334155;
+                            border-radius: 3px;
                             padding: 0px;
-                            font-size: 11px;
+                            font-size: 10px;
+                            font-weight: bold;
+                        }
+                        QPushButton:hover {
+                            background: #2a2a3a;
+                            border-color: #00d2ff;
+                            color: #ffffff;
                         }
                         QPushButton:checked {
-                            background: #a855f7;
-                            color: #ffffff;
-                            font-weight: bold;
+                            background: #00d2ff;
+                            color: #000000;
+                            border-color: #00d2ff;
+                            font-weight: 900;
                         }
                     """)
                     btn_v.clicked.connect(lambda _, c=count: self.on_voluntary_clicked(c))
                     self.v_buttons.append(btn_v)
-                    row2.addWidget(btn_v)
+                    stars_container.addWidget(btn_v)
 
-                if self.voluntary_f > 0:
-                    v_fine_lbl = QLabel(f"<span style='color:#34d399; font-size:11px;'>+${self.voluntary_f:,.0f}/W.</span>".replace(",", "."))
-                    row2.addWidget(v_fine_lbl)
+        row3.addLayout(stars_container)
+        row3.addStretch()
 
-            if "entziehen" in self.info.lower():
-                row2.addStretch()
-                entzug_badge = QLabel(f"⚠️ {self.info}")
-                entzug_badge.setStyleSheet("background: #450a0a; color: #f87171; font-weight: bold; border-radius: 4px; padding: 2px 8px; font-size: 11px;")
-                row2.addWidget(entzug_badge)
+        # Fine Display (Grandkasten Green)
+        fine_str = f"${self.fine:,.0f}".replace(",", ".")
+        self.lbl_fine = QLabel(fine_str)
+        self.lbl_fine.setStyleSheet("""
+            background: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: bold;
+        """)
+        row3.addWidget(self.lbl_fine)
 
-            c_lay.addLayout(row2)
+        c_lay.addLayout(row3)
 
     def apply_style(self, selected):
         self.is_selected = selected
         if selected:
             self.setStyleSheet("""
                 OffenseCard {
-                    background-color: #221338;
-                    border: 2px solid #a855f7;
+                    background-color: rgba(0, 210, 255, 0.10);
+                    border: 2px solid #00d2ff;
                     border-radius: 8px;
                 }
                 OffenseCard:hover {
-                    border: 2px solid #c084fc;
-                    background-color: #2a1845;
+                    background-color: rgba(0, 210, 255, 0.16);
+                    border: 2px solid #38bdf8;
                 }
             """)
+            if hasattr(self, 'lbl_check'):
+                self.lbl_check.setVisible(True)
         else:
             self.setStyleSheet("""
                 OffenseCard {
-                    background-color: #130d22;
-                    border: 1px solid #2e1065;
+                    background-color: #16161c;
+                    border: 1px solid rgba(255, 255, 255, 0.08);
                     border-radius: 8px;
                 }
                 OffenseCard:hover {
-                    border: 1px solid #7c3aed;
-                    background-color: #19122c;
+                    background-color: #1e1e27;
+                    border: 1px solid #00d2ff;
                 }
             """)
+            if hasattr(self, 'lbl_check'):
+                self.lbl_check.setVisible(False)
 
     def set_selected_visual(self, selected):
         self.apply_style(selected)
-        self.cb.blockSignals(True)
-        self.cb.setChecked(selected)
-        self.cb.blockSignals(False)
 
     def set_voluntary_visual(self, count):
+        self.voluntary_selected = count
         for idx, btn in enumerate(self.v_buttons):
             btn.blockSignals(True)
             btn.setChecked(idx == count)
             btn.blockSignals(False)
-
-    def on_cb_clicked(self):
-        # Click on the checkbox itself
-        self.overlay.toggle_offense(self.item)
 
     def on_voluntary_clicked(self, count):
         self.overlay.set_voluntary_wanteds(self.item, count)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            # Check if clicked inside a child push button (voluntary buttons handle themselves)
+            # Check if clicked inside a voluntary push button
             child = self.childAt(event.pos())
             if isinstance(child, QPushButton):
                 super().mousePressEvent(event)
                 return
-            # Otherwise, toggle offense!
+            # Click anywhere else on the card toggles offense!
             self.overlay.toggle_offense(self.item)
             event.accept()
         else:
@@ -213,27 +242,13 @@ class GrandCalculatorOverlay(QWidget):
 
     def __init__(self, theme_colors=None, parent=None):
         super().__init__(parent)
-        self.theme_colors = theme_colors or {
-            "bg": "#0a0614",
-            "card_bg": "#130d22",
-            "border": "#a855f7",
-            "accent": "#7c3aed",
-            "accent_hover": "#9333ea",
-            "text": "#ffffff",
-            "text_muted": "#a1a1aa",
-            "warning": "#f59e0b",
-            "danger": "#ef4444",
-            "success": "#10b981"
-        }
         self.db = load_grandkasten_db()
-        self.selected_items = {} # id -> {"item": item, "voluntary": count}
+        self.selected_items = {} # unique_key -> {"item": item, "voluntary": count}
         self.current_category = "Alle"
         self.search_term = ""
-        self.cards_by_id = {}
+        self.cards_by_key = {}
 
-        self.check_icon_url = ensure_check_icon()
-
-        self.setWindowTitle("LSPD Dienst-Rechner - Strafenkatalog & TOW")
+        self.setWindowTitle("LSPD Dienst-Rechner - 1:1 Grandkasten")
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Dialog)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
 
@@ -242,154 +257,164 @@ class GrandCalculatorOverlay(QWidget):
 
     def resize_to_screen(self):
         screen = QApplication.primaryScreen().geometry()
-        scale = 0.82
+        scale = 0.84
         try:
             from pd_logger_overlay import CONFIG
-            scale = float(CONFIG.get("calc_scale", 0.82))
+            scale = float(CONFIG.get("calc_scale", 0.84))
         except Exception:
             pass
-        w = int(screen.width() * scale)
-        h = int(screen.height() * scale)
+        w = max(1000, int(screen.width() * scale))
+        h = max(680, int(screen.height() * scale))
         x = (screen.width() - w) // 2
         y = (screen.height() - h) // 2
         self.setGeometry(x, y, w, h)
 
     def init_ui(self):
-        c = self.theme_colors
-        self.setStyleSheet(f"""
-            QWidget {{
-                color: {c['text']};
-                font-family: 'Segoe UI', Arial, sans-serif;
-            }}
-            QTabWidget::pane {{
-                border: 1px solid {c['border']};
-                background-color: {c['bg']};
-                border-radius: 8px;
-            }}
-            QTabBar::tab {{
-                background-color: {c['card_bg']};
-                color: {c['text_muted']};
-                border: 1px solid {c['border']};
+        # 100% Original Grandkasten Global Styling
+        self.setStyleSheet("""
+            QWidget {
+                color: #f3f4f6;
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            }
+            QTabWidget::pane {
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                background-color: #0d0d11;
+                border-radius: 10px;
+            }
+            QTabBar::tab {
+                background-color: #16161d;
+                color: #a1a1aa;
+                border: 1px solid rgba(255, 255, 255, 0.10);
                 border-bottom: none;
-                border-top-left-radius: 6px;
-                border-top-right-radius: 6px;
-                padding: 8px 22px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                padding: 9px 24px;
                 font-size: 13px;
                 font-weight: bold;
-                margin-right: 4px;
-            }}
-            QTabBar::tab:selected {{
-                background-color: {c['accent']};
+                margin-right: 5px;
+            }
+            QTabBar::tab:selected {
+                background-color: #00d2ff;
+                color: #000000;
+                font-weight: 900;
+                border-color: #00d2ff;
+            }
+            QLineEdit {
+                background-color: #16161d;
                 color: #ffffff;
-            }}
-            QLineEdit {{
-                background-color: {c['card_bg']};
-                color: {c['text']};
-                border: 1px solid {c['border']};
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 6px;
+                padding: 7px 12px;
+                font-size: 13px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #00d2ff;
+                background-color: #1a1a24;
+            }
+            QComboBox {
+                background-color: #16161d;
+                color: #ffffff;
+                border: 1px solid rgba(255, 255, 255, 0.12);
                 border-radius: 6px;
                 padding: 6px 12px;
                 font-size: 13px;
-            }}
-            QLineEdit:focus {{
-                border: 2px solid {c['accent_hover']};
-            }}
-            QComboBox {{
-                background-color: {c['card_bg']};
-                color: {c['text']};
-                border: 1px solid {c['border']};
-                border-radius: 6px;
-                padding: 6px 10px;
-                font-size: 13px;
-            }}
-            QComboBox QAbstractItemView {{
-                background-color: {c['bg']};
-                color: {c['text']};
-                selection-background-color: {c['accent']};
-            }}
-            QPushButton {{
-                background-color: {c['accent']};
+            }
+            QComboBox:focus {
+                border: 1px solid #00d2ff;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #16161d;
                 color: #ffffff;
-                border-radius: 6px;
-                padding: 7px 16px;
-                font-size: 12px;
-                font-weight: bold;
-                border: 1px solid {c['border']};
-            }}
-            QPushButton:hover {{
-                background-color: {c['accent_hover']};
-            }}
-            QScrollArea {{
+                selection-background-color: #00d2ff;
+                selection-color: #000000;
+                border: 1px solid #27272a;
+            }
+            QScrollArea {
                 border: none;
                 background-color: transparent;
-            }}
-            QScrollBar:vertical {{
+            }
+            QScrollBar:vertical {
                 border: none;
-                background: {c['card_bg']};
+                background: #111116;
                 width: 8px;
                 margin: 0px;
                 border-radius: 4px;
-            }}
-            QScrollBar::handle:vertical {{
-                background: {c['accent']};
+            }
+            QScrollBar::handle:vertical {
+                background: #272733;
                 min-height: 25px;
                 border-radius: 4px;
-            }}
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #00d2ff;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
                 height: 0px;
-            }}
-            QCheckBox {{
-                color: #f1f5f9;
+            }
+            QCheckBox {
+                color: #f3f4f6;
                 font-size: 13px;
                 spacing: 8px;
-            }}
-            QCheckBox::indicator {{
-                width: 20px;
-                height: 20px;
-                border: 2px solid #a855f7;
+            }
+            QCheckBox::indicator {
+                width: 18px;
+                height: 18px;
+                border: 2px solid #4b5563;
                 border-radius: 4px;
-                background-color: #1a1528;
-            }}
-            QCheckBox::indicator:hover {{
-                border: 2px solid #c084fc;
-                background-color: #261b3d;
-            }}
-            QCheckBox::indicator:checked {{
-                background-color: #9333ea;
-                border: 2px solid #ffffff;
-                image: url('{self.check_icon_url}');
-            }}
+                background-color: #16161d;
+            }
+            QCheckBox::indicator:hover {
+                border-color: #00d2ff;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #00d2ff;
+                border-color: #00d2ff;
+            }
         """)
 
         main_frame = QFrame(self)
         main_frame.setObjectName("mainFrame")
-        main_frame.setStyleSheet(f"""
-            QFrame#mainFrame {{
-                background-color: {c['bg']};
-                border: 2px solid {c['border']};
+        main_frame.setStyleSheet("""
+            QFrame#mainFrame {
+                background-color: #0a0a0c;
+                border: 2px solid rgba(0, 210, 255, 0.4);
                 border-radius: 12px;
-            }}
+            }
         """)
-        
+
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(0, 0, 0, 0)
         outer_layout.addWidget(main_frame)
 
         frame_layout = QVBoxLayout(main_frame)
-        frame_layout.setContentsMargins(16, 12, 16, 16)
+        frame_layout.setContentsMargins(18, 14, 18, 16)
         frame_layout.setSpacing(10)
 
-        # Header Bar
+        # Header Bar (Grandkasten Cyberpunk Look)
         header = QHBoxLayout()
-        title_lbl = QLabel("🛡️ <span style='font-size: 16px; font-weight: bold;'>LSPD Dienst-Rechner</span> <span style='color:#a855f7; font-size:12px;'>(Grandkasten Bußgeld-, Wanteds- & TOW-Rechner)</span>")
+        title_lbl = QLabel("🛡️ <span style='font-size: 16px; font-weight: 900; color: #ffffff;'>GRANDKASTEN</span> <span style='color: #00d2ff; font-size: 13px; font-weight: bold;'>DIENST-RECHNER</span> <span style='color: #71717a; font-size: 11px;'>| Bußgeld, Wanteds & TOW</span>")
         header.addWidget(title_lbl)
         header.addStretch()
 
-        help_lbl = QLabel("<span style='color:#a1a1aa; font-size:11px;'>Drücke <b>[F12]</b> oder <b>[ESC]</b> zum Schließen</span>")
+        help_lbl = QLabel("<span style='color: #94a3b8; font-size: 11px;'>Drücke <b>[F12]</b> oder <b>[ESC]</b> zum Schließen</span>")
         header.addWidget(help_lbl)
 
         btn_close = QPushButton("✕")
         btn_close.setFixedSize(28, 28)
-        btn_close.setStyleSheet("background-color: #ef4444; border: none; font-size: 13px; font-weight: bold; padding: 0px;")
+        btn_close.setStyleSheet("""
+            QPushButton {
+                background-color: #ef4444;
+                color: #ffffff;
+                border: none;
+                font-size: 13px;
+                font-weight: bold;
+                border-radius: 6px;
+                padding: 0px;
+            }
+            QPushButton:hover {
+                background-color: #dc2626;
+            }
+        """)
         btn_close.clicked.connect(self.hide)
         header.addWidget(btn_close)
         frame_layout.addLayout(header)
@@ -408,10 +433,9 @@ class GrandCalculatorOverlay(QWidget):
 
     # --- TAB 1: BUßGELD & WANTEDS RECHNER ---
     def setup_bussgeld_tab(self):
-        c = self.theme_colors
         layout = QHBoxLayout(self.tab_bussgeld)
         layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(14)
+        layout.setSpacing(16)
 
         # LEFT SIDE: Catalog & Search (60%)
         left_box = QVBoxLayout()
@@ -426,13 +450,26 @@ class GrandCalculatorOverlay(QWidget):
 
         btn_clear_search = QPushButton("✕")
         btn_clear_search.setFixedWidth(32)
+        btn_clear_search.setStyleSheet("""
+            QPushButton {
+                background: #1e1e28;
+                border: 1px solid #334155;
+                color: #94a3b8;
+                font-weight: bold;
+                border-radius: 6px;
+            }
+            QPushButton:hover {
+                background: #334155;
+                color: #ffffff;
+            }
+        """)
         btn_clear_search.clicked.connect(lambda: self.search_input.clear())
         search_lay.addWidget(btn_clear_search)
         left_box.addLayout(search_lay)
 
-        # Category Filter Buttons
+        # Category Filter Pills (Grandkasten 1:1 rounded pills)
         self.cat_scroll = QScrollArea()
-        self.cat_scroll.setFixedHeight(42)
+        self.cat_scroll.setFixedHeight(44)
         self.cat_scroll.setWidgetResizable(True)
         cat_widget = QWidget()
         self.cat_lay = QHBoxLayout(cat_widget)
@@ -445,20 +482,8 @@ class GrandCalculatorOverlay(QWidget):
             b = QPushButton(cat_name)
             b.setCheckable(True)
             b.setChecked(cat_name == "Alle")
-            b.setStyleSheet(f"""
-                QPushButton {{
-                    background: #171324;
-                    border: 1px solid #4c1d95;
-                    border-radius: 12px;
-                    padding: 4px 12px;
-                    font-size: 11px;
-                }}
-                QPushButton:checked {{
-                    background: {c['accent']};
-                    color: #ffffff;
-                    border: 1px solid {c['border']};
-                }}
-            """)
+            b.setCursor(Qt.PointingHandCursor)
+            self.style_cat_btn(b, cat_name == "Alle")
             b.clicked.connect(lambda checked, name=cat_name: self.filter_category(name))
             self.cat_buttons[cat_name] = b
             self.cat_lay.addWidget(b)
@@ -471,95 +496,162 @@ class GrandCalculatorOverlay(QWidget):
         self.offenses_scroll.setWidgetResizable(True)
         self.offenses_container = QWidget()
         self.offenses_layout = QVBoxLayout(self.offenses_container)
-        self.offenses_layout.setContentsMargins(0, 0, 4, 0)
-        self.offenses_layout.setSpacing(6)
+        self.offenses_layout.setContentsMargins(0, 0, 6, 0)
+        self.offenses_layout.setSpacing(8)
         self.offenses_scroll.setWidget(self.offenses_container)
         left_box.addWidget(self.offenses_scroll)
 
         layout.addLayout(left_box, stretch=60)
 
-        # RIGHT SIDE: Summary, Inputs & Aktenvermerk (40%)
+        # RIGHT SIDE: Grandkasten Live Dashboard & Aktenvermerk (40%)
         right_box = QVBoxLayout()
-        right_box.setSpacing(10)
+        right_box.setSpacing(12)
 
-        # Live Stats Box
-        stats_frame = QFrame()
-        stats_frame.setStyleSheet(f"background-color: {c['card_bg']}; border: 1px solid {c['border']}; border-radius: 8px; padding: 10px;")
-        stats_lay = QVBoxLayout(stats_frame)
-        stats_lay.setSpacing(6)
+        # Glass Box 1: Gesamtstrafe & Big Star Rating
+        top_frame = QFrame()
+        top_frame.setStyleSheet("""
+            QFrame {
+                background-color: #13141a;
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-radius: 10px;
+                padding: 12px;
+            }
+        """)
+        top_lay = QVBoxLayout(top_frame)
+        top_lay.setSpacing(6)
 
-        s_title = QLabel("📊 <b>Aktuelle Strafen-Berechnung</b>")
-        s_title.setStyleSheet("font-size: 14px; color: #d8b4fe;")
-        stats_lay.addWidget(s_title)
+        lbl_strafe_title = QLabel("GESAMTSTRAFE (HÖCHSTSTRAFE)")
+        lbl_strafe_title.setAlignment(Qt.AlignCenter)
+        lbl_strafe_title.setStyleSheet("color: #71717a; font-size: 11px; font-weight: 800; letter-spacing: 2px;")
+        top_lay.addWidget(lbl_strafe_title)
 
-        grid = QGridLayout()
-        grid.addWidget(QLabel("Bußgeld (Höchststrafe):"), 0, 0)
+        # Grandkasten Glowing Money Display
         self.lbl_total_fine = QLabel("$ 0")
-        self.lbl_total_fine.setStyleSheet("font-size: 16px; font-weight: bold; color: #4ade80;")
-        grid.addWidget(self.lbl_total_fine, 0, 1)
+        self.lbl_total_fine.setAlignment(Qt.AlignCenter)
+        self.lbl_total_fine.setStyleSheet("""
+            font-size: 28px;
+            font-weight: 900;
+            color: #4ade80;
+            padding: 2px 0;
+        """)
+        top_lay.addWidget(self.lbl_total_fine)
 
-        grid.addWidget(QLabel("Wanteds (Höchste Tat):"), 1, 0)
-        self.lbl_total_wanteds = QLabel("0 Wanteds")
-        self.lbl_total_wanteds.setStyleSheet("font-size: 16px; font-weight: bold; color: #fbbf24;")
-        grid.addWidget(self.lbl_total_wanteds, 1, 1)
+        # Grandkasten Big Star Rating (5 Stars)
+        self.lbl_star_row = QLabel("★ ★ ★ ★ ★")
+        self.lbl_star_row.setAlignment(Qt.AlignCenter)
+        self.lbl_star_row.setStyleSheet("font-size: 26px; font-weight: bold; color: #272733;")
+        top_lay.addWidget(self.lbl_star_row)
 
-        stats_lay.addLayout(grid)
+        self.lbl_wanteds_text = QLabel("0 Wanteds")
+        self.lbl_wanteds_text.setAlignment(Qt.AlignCenter)
+        self.lbl_wanteds_text.setStyleSheet("color: #ffcc00; font-size: 13px; font-weight: bold;")
+        top_lay.addWidget(self.lbl_wanteds_text)
 
-        # Warning badges on screen (NOT in akte)
-        self.lbl_warning_badges = QLabel("")
-        self.lbl_warning_badges.setStyleSheet("color: #ef4444; font-size: 12px; font-weight: bold; background: #3b0707; border: 1px solid #b91c1c; border-radius: 6px; padding: 6px;")
-        self.lbl_warning_badges.setVisible(False)
-        stats_lay.addWidget(self.lbl_warning_badges)
+        # Grandkasten Warning Box (Zusatzinfos)
+        self.lbl_warning_box = QLabel("")
+        self.lbl_warning_box.setWordWrap(True)
+        self.lbl_warning_box.setStyleSheet("""
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            font-size: 12px;
+            font-weight: bold;
+            border-left: 4px solid #ef4444;
+            border-radius: 4px;
+            padding: 8px;
+        """)
+        self.lbl_warning_box.setVisible(False)
+        top_lay.addWidget(self.lbl_warning_box)
 
-        right_box.addWidget(stats_frame)
+        right_box.addWidget(top_frame)
 
-        # Akten-Optionen
+        # Glass Box 2: Optionen für den Aktenvermerk
         opts_frame = QFrame()
-        opts_frame.setStyleSheet(f"background-color: {c['card_bg']}; border: 1px solid {c['border']}; border-radius: 8px; padding: 10px;")
+        opts_frame.setStyleSheet("""
+            QFrame {
+                background-color: #13141a;
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-radius: 10px;
+                padding: 12px;
+            }
+        """)
         opts_lay = QVBoxLayout(opts_frame)
-        opts_lay.setSpacing(6)
+        opts_lay.setSpacing(8)
 
-        opts_title = QLabel("⚙️ <b>Optionen für den Aktenvermerk</b>")
-        opts_title.setStyleSheet("font-size: 13px; color: #d8b4fe;")
-        opts_lay.addWidget(opts_title)
-
-        opts_lay.addWidget(QLabel("TV-Abtransport / Beamter (optional):"))
-        self.input_officer = QLineEdit()
-        self.input_officer.setPlaceholderText("z.B. @LSPD Alex Springfield")
-        self.input_officer.textChanged.connect(self.recalculate)
-        opts_lay.addWidget(self.input_officer)
-
-        opts_lay.addWidget(QLabel("Vorhandene Systemwanteds (optional):"))
-        self.input_system_wanteds = QLineEdit()
-        self.input_system_wanteds.setPlaceholderText("z.B. 2")
-        self.input_system_wanteds.textChanged.connect(self.recalculate)
-        opts_lay.addWidget(self.input_system_wanteds)
-
-        self.cb_reue = QCheckBox("🤝 Reue / Kooperation (StGB §35)")
-        self.cb_reue.setStyleSheet("font-size: 12px; color: #f472b6; font-weight: bold;")
-        self.cb_reue.toggled.connect(self.recalculate)
-        opts_lay.addWidget(self.cb_reue)
-
-        self.cb_repeat = QCheckBox("⚠️ Wiederholungstäter (StVO §25 lit. 2)")
+        # Switches / Toggles (Wiederholungstäter & §35 Reue)
+        toggles_lay = QHBoxLayout()
+        self.cb_repeat = QCheckBox("⚠️ Wiederholungstäter (StVO)")
         self.cb_repeat.setStyleSheet("font-size: 12px; color: #fb923c; font-weight: bold;")
         self.cb_repeat.toggled.connect(self.recalculate)
-        opts_lay.addWidget(self.cb_repeat)
+        toggles_lay.addWidget(self.cb_repeat)
+
+        self.cb_reue = QCheckBox("🤝 §35 Reue (-2 Wanteds)")
+        self.cb_reue.setStyleSheet("font-size: 12px; color: #a855f7; font-weight: bold;")
+        self.cb_reue.toggled.connect(self.recalculate)
+        toggles_lay.addWidget(self.cb_reue)
+        opts_lay.addLayout(toggles_lay)
+
+        # Grid for Systemwanteds & Abtransport
+        grid_lay = QGridLayout()
+        grid_lay.setSpacing(8)
+
+        lbl_sys = QLabel("SYSTEMWANTEDS:")
+        lbl_sys.setStyleSheet("color: #71717a; font-size: 10px; font-weight: bold;")
+        grid_lay.addWidget(lbl_sys, 0, 0)
+
+        self.input_system_wanteds = QLineEdit()
+        self.input_system_wanteds.setPlaceholderText("0")
+        self.input_system_wanteds.textChanged.connect(self.recalculate)
+        grid_lay.addWidget(self.input_system_wanteds, 1, 0)
+
+        lbl_orga = QLabel("ABTRANSPORT DURCH:")
+        lbl_orga.setStyleSheet("color: #71717a; font-size: 10px; font-weight: bold;")
+        grid_lay.addWidget(lbl_orga, 0, 1)
+
+        self.combo_orga = QComboBox()
+        self.combo_orga.addItems(["- Orga -", "LSPD", "SAHP", "NG", "USSS", "FIB", "GOV"])
+        self.combo_orga.setCurrentText("LSPD")
+        self.combo_orga.currentTextChanged.connect(self.recalculate)
+        grid_lay.addWidget(self.combo_orga, 1, 1)
+
+        opts_lay.addLayout(grid_lay)
+
+        # Officer & Plate Inputs
+        officer_lay = QHBoxLayout()
+        self.input_officer = QLineEdit()
+        self.input_officer.setPlaceholderText("Name des Beamten (z.B. Alex Springfield)")
+        self.input_officer.textChanged.connect(self.recalculate)
+        officer_lay.addWidget(self.input_officer)
+
+        self.input_plate = QLineEdit()
+        self.input_plate.setPlaceholderText("Kennzeichen (optional)")
+        self.input_plate.textChanged.connect(self.recalculate)
+        officer_lay.addWidget(self.input_plate)
+        opts_lay.addLayout(officer_lay)
 
         right_box.addWidget(opts_frame)
 
-        # Aktenvermerk Terminal Text Area (Exact Grandkasten Green Terminal Font)
+        # Glass Box 3: Aktenvermerk Terminal & Copy Button
         akte_frame = QFrame()
-        akte_frame.setStyleSheet(f"background-color: {c['card_bg']}; border: 1px solid {c['border']}; border-radius: 8px; padding: 10px;")
+        akte_frame.setStyleSheet("""
+            QFrame {
+                background-color: #13141a;
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                border-radius: 10px;
+                padding: 12px;
+            }
+        """)
         akte_lay = QVBoxLayout(akte_frame)
-        akte_lay.setSpacing(6)
+        akte_lay.setSpacing(8)
 
-        a_title = QLabel("📝 <b>Generierter Aktenvermerk</b> (1:1 Grandkasten)")
-        a_title.setStyleSheet("font-size: 13px; color: #d8b4fe;")
-        akte_lay.addWidget(a_title)
+        lbl_akte_title = QLabel("AKTENVERMERK")
+        lbl_akte_title.setStyleSheet("color: #a1a1aa; font-size: 11px; font-weight: bold; letter-spacing: 1px;")
+        akte_lay.addWidget(lbl_akte_title)
 
+        # 1:1 Grandkasten Terminal Aktenvermerk
         self.txt_aktenvermerk = ClickableTerminalEdit()
         self.txt_aktenvermerk.setReadOnly(True)
         self.txt_aktenvermerk.setFixedHeight(75)
+        self.txt_aktenvermerk.setPlaceholderText("Bitte Tatbestände wählen...")
         self.txt_aktenvermerk.setStyleSheet("""
             QTextEdit {
                 background: #000000;
@@ -571,21 +663,55 @@ class GrandCalculatorOverlay(QWidget):
                 font-weight: bold;
                 padding: 8px;
             }
+            QTextEdit:hover {
+                border-color: #00d2ff;
+            }
         """)
         self.txt_aktenvermerk.clicked.connect(self.copy_aktenvermerk)
         akte_lay.addWidget(self.txt_aktenvermerk)
 
-        lbl_hint_copy = QLabel("<span style='color:#a1a1aa; font-size:10px;'>Klicke auf das grüne Feld oder den Button unten zum Kopieren</span>")
+        lbl_hint_copy = QLabel("<span style='color: #71717a; font-size: 10px;'>Klicken zum Kopieren</span>")
+        lbl_hint_copy.setAlignment(Qt.AlignRight)
         akte_lay.addWidget(lbl_hint_copy)
 
         btn_row = QHBoxLayout()
         self.btn_copy_akte = QPushButton("📋 Aktenvermerk kopieren")
-        self.btn_copy_akte.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #059669, stop:1 #10b981); color: #ffffff; font-size: 13px; font-weight: bold; padding: 8px;")
+        self.btn_copy_akte.setCursor(Qt.PointingHandCursor)
+        self.btn_copy_akte.setStyleSheet("""
+            QPushButton {
+                background-color: #10b981;
+                color: #ffffff;
+                font-size: 13px;
+                font-weight: bold;
+                border-radius: 6px;
+                padding: 9px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #059669;
+            }
+        """)
         self.btn_copy_akte.clicked.connect(self.copy_aktenvermerk)
         btn_row.addWidget(self.btn_copy_akte, stretch=2)
 
-        btn_reset = QPushButton("🔄 Zurücksetzen")
-        btn_reset.setStyleSheet("background: #27142b; border: 1px solid #701a75; color: #f472b6; padding: 8px; font-weight: bold;")
+        # Grandkasten Reset Button (Red Gradient)
+        btn_reset = QPushButton("Alles Zurücksetzen")
+        btn_reset.setCursor(Qt.PointingHandCursor)
+        btn_reset.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ef4444, stop:1 #991b1b);
+                color: #ffffff;
+                font-size: 12px;
+                font-weight: bold;
+                border-radius: 6px;
+                padding: 9px;
+                border: none;
+                text-transform: uppercase;
+            }
+            QPushButton:hover {
+                filter: brightness(1.2);
+            }
+        """)
         btn_reset.clicked.connect(self.reset_calculator)
         btn_row.addWidget(btn_reset, stretch=1)
         akte_lay.addLayout(btn_row)
@@ -595,16 +721,47 @@ class GrandCalculatorOverlay(QWidget):
 
         layout.addLayout(right_box, stretch=40)
 
-        # Build cards once
+        # Build cards once with unique keys
         self.build_offenses_list()
 
+    def style_cat_btn(self, btn, is_active):
+        if is_active:
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #00d2ff;
+                    color: #000000;
+                    font-weight: bold;
+                    border: 1px solid #00d2ff;
+                    border-radius: 14px;
+                    padding: 5px 14px;
+                    font-size: 11px;
+                }
+            """)
+        else:
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #16161d;
+                    color: #a1a1aa;
+                    font-weight: normal;
+                    border: 1px solid rgba(255, 255, 255, 0.10);
+                    border-radius: 14px;
+                    padding: 5px 14px;
+                    font-size: 11px;
+                }
+                QPushButton:hover {
+                    background-color: #22222d;
+                    color: #ffffff;
+                    border-color: #00d2ff;
+                }
+            """)
+
     def build_offenses_list(self):
-        self.cards_by_id = {}
+        self.cards_by_key = {}
         for cat, items in self.db.items():
             for item in items:
-                item_id = item.get("id", "")
+                key = make_item_key(item)
                 card = OffenseCard(item, self)
-                self.cards_by_id[item_id] = card
+                self.cards_by_key[key] = card
                 self.offenses_layout.addWidget(card)
 
         self.offenses_layout.addStretch()
@@ -630,8 +787,8 @@ class GrandCalculatorOverlay(QWidget):
                     cat_matches = cur_cat in cat_lower
 
             for item in items:
-                item_id = item.get("id", "")
-                card = self.cards_by_id.get(item_id)
+                key = make_item_key(item)
+                card = self.cards_by_key.get(key)
                 if not card:
                     continue
 
@@ -651,7 +808,7 @@ class GrandCalculatorOverlay(QWidget):
     def filter_category(self, cat_name):
         self.current_category = cat_name
         for name, b in self.cat_buttons.items():
-            b.setChecked(name == cat_name)
+            self.style_cat_btn(b, name == cat_name)
         self.filter_offenses()
 
     def on_search_changed(self, text):
@@ -659,15 +816,15 @@ class GrandCalculatorOverlay(QWidget):
         self.filter_offenses()
 
     def toggle_offense(self, item):
-        item_id = item.get("id")
-        if item_id in self.selected_items:
-            del self.selected_items[item_id]
+        key = make_item_key(item)
+        if key in self.selected_items:
+            del self.selected_items[key]
             is_sel = False
         else:
-            self.selected_items[item_id] = {"item": item, "voluntary": 0}
+            self.selected_items[key] = {"item": item, "voluntary": 0}
             is_sel = True
 
-        card = self.cards_by_id.get(item_id)
+        card = self.cards_by_key.get(key)
         if card:
             card.set_selected_visual(is_sel)
             if not is_sel:
@@ -676,13 +833,13 @@ class GrandCalculatorOverlay(QWidget):
         self.recalculate()
 
     def set_voluntary_wanteds(self, item, count):
-        item_id = item.get("id")
-        if item_id not in self.selected_items:
-            self.selected_items[item_id] = {"item": item, "voluntary": count}
+        key = make_item_key(item)
+        if key not in self.selected_items:
+            self.selected_items[key] = {"item": item, "voluntary": count}
         else:
-            self.selected_items[item_id]["voluntary"] = count
+            self.selected_items[key]["voluntary"] = count
 
-        card = self.cards_by_id.get(item_id)
+        card = self.cards_by_key.get(key)
         if card:
             card.set_selected_visual(True)
             card.set_voluntary_visual(count)
@@ -699,19 +856,18 @@ class GrandCalculatorOverlay(QWidget):
         most_severe = None
         max_base_wanteds = -1
 
-        for item_id, data in self.selected_items.items():
+        for key, data in self.selected_items.items():
             item = data["item"]
-            vol_count = data.get("voluntary", 0)
             base_wanteds = item.get("wanteds", 0) or item.get("mandatoryWanteds", 0) or 0
             fine = item.get("fine", 0) or 0
 
-            offense_ids.append(item_id)
+            offense_ids.append(item.get("id"))
 
             if base_wanteds > max_base_wanteds or (base_wanteds == max_base_wanteds and fine > (most_severe.get("fine", 0) if most_severe else 0)):
                 max_base_wanteds = base_wanteds
                 most_severe = item
 
-            # License warnings apply across all selected offenses
+            # License warnings
             info = item.get("info", "")
             if "waffenschein" in info.lower():
                 warnings.add("⚠️ Waffenschein muss entzogen werden!")
@@ -719,8 +875,8 @@ class GrandCalculatorOverlay(QWidget):
                 warnings.add("⚠️ Führerschein muss entzogen werden!")
 
         if most_severe:
-            item_id = most_severe.get("id")
-            vol_count = self.selected_items.get(item_id, {}).get("voluntary", 0)
+            ms_key = make_item_key(most_severe)
+            vol_count = self.selected_items.get(ms_key, {}).get("voluntary", 0)
             base_fine = most_severe.get("fine", 0) or 0
             vol_fine = most_severe.get("voluntaryFine", 0) or 0
 
@@ -728,8 +884,7 @@ class GrandCalculatorOverlay(QWidget):
             base_w = most_severe.get("wanteds", 0) or most_severe.get("mandatoryWanteds", 0) or 0
             max_wanteds = base_w + vol_count
         else:
-            # Fallback
-            for item_id, data in self.selected_items.items():
+            for key, data in self.selected_items.items():
                 item = data["item"]
                 vol_count = data.get("voluntary", 0)
                 base_w = item.get("wanteds", 0) or item.get("mandatoryWanteds", 0) or 0
@@ -741,18 +896,17 @@ class GrandCalculatorOverlay(QWidget):
                     max_wanteds = item_wanteds
 
         # Check for StVO presence
-        has_stvo = any(oid.startswith("StVO") for oid in offense_ids)
-        if hasattr(self, 'cb_repeat'):
-            self.cb_repeat.setEnabled(has_stvo)
-            if not has_stvo:
-                self.cb_repeat.setChecked(False)
+        has_stvo = any(oid.startswith("StVO") for oid in offense_ids if oid)
+        self.cb_repeat.setEnabled(has_stvo)
+        if not has_stvo:
+            self.cb_repeat.setChecked(False)
 
         # Wiederholungstäter doubles fine on StVO
-        if hasattr(self, 'cb_repeat') and self.cb_repeat.isChecked() and has_stvo:
+        if self.cb_repeat.isChecked() and has_stvo:
             max_fine *= 2
 
-        # Check if Reue is allowed (cannot use Reue on severe crimes)
-        prevents_reue = any(oid in ["StGB §25", "§6 StPO", "StPO §6", "StGB §4.1", "StGB §27"] for oid in offense_ids)
+        # Check if Reue is allowed
+        prevents_reue = any(oid in ["StGB §25", "§6 StPO", "StPO §6", "StGB §4.1", "StGB §27"] for oid in offense_ids if oid)
         if prevents_reue:
             self.cb_reue.setEnabled(False)
             self.cb_reue.setChecked(False)
@@ -774,36 +928,58 @@ class GrandCalculatorOverlay(QWidget):
 
         total_wanteds = final_wanteds + sys_wanteds
 
-        # Update Live Labels
+        # Update Grandkasten Money Display
         self.lbl_total_fine.setText(f"${max_fine:,.0f}".replace(",", "."))
+
+        # Update Grandkasten 5 Big Stars
+        # Active gold stars for crime wanteds, silver for system wanteds, dark gray for empty
+        star_html = ""
+        total_slots = max(5, total_wanteds)
+        for i in range(total_slots):
+            if i < final_wanteds:
+                star_html += "<span style='color: #ffcc00;'>★</span> "
+            elif i < total_wanteds:
+                star_html += "<span style='color: #94a3b8;'>★</span> "
+            else:
+                star_html += "<span style='color: #272733;'>★</span> "
+
+        self.lbl_star_row.setText(star_html.strip())
+
+        # Wanteds subtext
         if sys_wanteds > 0:
-            self.lbl_total_wanteds.setText(f"{total_wanteds} Wanteds ({final_wanteds} Tat + {sys_wanteds} Sys)")
+            self.lbl_wanteds_text.setText(f"{total_wanteds} Wanteds ({final_wanteds} Tat + {sys_wanteds} Sys)")
         else:
-            star_str = "★ " * final_wanteds if final_wanteds > 0 else ""
-            self.lbl_total_wanteds.setText(f"{final_wanteds} Wanteds  {star_str}")
+            self.lbl_wanteds_text.setText(f"{final_wanteds} Wanteds" if final_wanteds > 0 else "0 Wanteds")
 
+        # Warning box
         if warnings:
-            self.lbl_warning_badges.setText("<br>".join(warnings))
-            self.lbl_warning_badges.setVisible(True)
+            self.lbl_warning_box.setText("<br>".join(warnings))
+            self.lbl_warning_box.setVisible(True)
         else:
-            self.lbl_warning_badges.setVisible(False)
-            self.lbl_warning_badges.setText("")
+            self.lbl_warning_box.setVisible(False)
+            self.lbl_warning_box.setText("")
 
-        # Build Aktenvermerk (Exact 1:1 Grandkasten Format)
-        if not offense_ids and sys_wanteds == 0 and not self.input_officer.text().strip():
+        # Build Aktenvermerk (1:1 Grandkasten Format)
+        plate_str = self.input_plate.text().strip()
+        officer_name = self.input_officer.text().strip()
+        orga_val = self.combo_orga.currentText()
+        if orga_val == "- Orga -":
+            orga_val = ""
+
+        if not offense_ids and sys_wanteds == 0 and not officer_name and not plate_str:
             self.txt_aktenvermerk.setPlainText("")
             return
 
         now = datetime.datetime.now()
         date_prefix = now.strftime("%d.%m %H:%M")
 
-        # Parts joined by ' + '
-        parts = list(offense_ids) if offense_ids else []
+        # Paragraphs joined by ' + '
+        parts = [oid for oid in offense_ids if oid]
 
         if self.cb_reue.isChecked():
             parts.append("StGB §35")
 
-        if hasattr(self, 'cb_repeat') and self.cb_repeat.isChecked() and has_stvo:
+        if self.cb_repeat.isChecked() and has_stvo:
             parts.append("StVO §25 lit. 2")
 
         if sys_wanteds > 0:
@@ -812,12 +988,19 @@ class GrandCalculatorOverlay(QWidget):
         crimes_part = " + ".join(parts) if parts else "..."
         akte = f"{date_prefix} - {crimes_part}"
 
-        officer = self.input_officer.text().strip()
-        if officer:
-            if officer.startswith("@"):
-                akte += f" {officer}"
+        # Officer tag
+        if officer_name:
+            if orga_val and orga_val != "- Orga -":
+                akte += f" @{orga_val} {officer_name}"
             else:
-                akte += f" @{officer}"
+                if officer_name.startswith("@"):
+                    akte += f" {officer_name}"
+                else:
+                    akte += f" @{officer_name}"
+
+        # Plate tag
+        if plate_str:
+            akte += f" - {plate_str}"
 
         self.txt_aktenvermerk.setPlainText(akte)
 
@@ -831,31 +1014,31 @@ class GrandCalculatorOverlay(QWidget):
 
     def reset_calculator(self):
         self.selected_items.clear()
-        for card in self.cards_by_id.values():
+        for card in self.cards_by_key.values():
             card.reset()
         self.search_input.clear()
         self.input_officer.clear()
+        self.input_plate.clear()
         self.input_system_wanteds.clear()
         self.cb_reue.setChecked(False)
-        if hasattr(self, 'cb_repeat'):
-            self.cb_repeat.setChecked(False)
+        self.cb_repeat.setChecked(False)
         self.recalculate()
 
-    # --- TAB 2: TOW RECHNER (1:1 Grandkasten) ---
+    # --- TAB 2: TOW RECHNER (1:1 Grandkasten & Screenshot) ---
     def setup_tow_tab(self):
-        c = self.theme_colors
         layout = QVBoxLayout(self.tab_tow)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
 
+        # Exact Dark Navy Frame from User Screenshot
         card = QFrame()
-        card.setStyleSheet(f"""
-            QFrame {{
-                background-color: {c['card_bg']};
-                border: 1px solid {c['border']};
+        card.setStyleSheet("""
+            QFrame {
+                background-color: #1e243b;
+                border: 1px solid #2e3a59;
                 border-radius: 8px;
                 padding: 16px;
-            }}
+            }
         """)
         c_lay = QVBoxLayout(card)
         c_lay.setSpacing(12)
@@ -871,41 +1054,45 @@ class GrandCalculatorOverlay(QWidget):
         grid.addWidget(QLabel("Kennzeichen:"), 0, 0)
         self.tow_plate = QLineEdit()
         self.tow_plate.setPlaceholderText("ABC-123")
+        self.tow_plate.setStyleSheet("background-color: #14192b; border: 1px solid #2b3655; color: #ffffff;")
         grid.addWidget(self.tow_plate, 0, 1)
 
         grid.addWidget(QLabel("Ort:"), 0, 2)
         self.tow_location = QLineEdit()
         self.tow_location.setPlaceholderText("z.B. Market")
+        self.tow_location.setStyleSheet("background-color: #14192b; border: 1px solid #2b3655; color: #ffffff;")
         grid.addWidget(self.tow_location, 0, 3)
 
         # Row 2: Zone & Gefahren
         grid.addWidget(QLabel("Zone:"), 1, 0)
         self.tow_zone = QComboBox()
-        self.tow_zone.addItem("Verkehrsberuhigte Bereiche (50 km/h)", 50)
+        self.tow_zone.setStyleSheet("background-color: #14192b; border: 1px solid #2b3655; color: #ffffff;")
         self.tow_zone.addItem("Innerorts (150 km/h)", 150)
+        self.tow_zone.addItem("Verkehrsberuhigte Bereiche (50 km/h)", 50)
         self.tow_zone.addItem("Außerorts (200 km/h)", 200)
-        self.tow_zone.addItem("Freeway (300 km/h)", 300)
         self.tow_zone.addItem("Highway (350 km/h)", 350)
-        self.tow_zone.setCurrentIndex(1) # Default 150 km/h
+        self.tow_zone.addItem("Freeway (300 km/h)", 300)
         grid.addWidget(self.tow_zone, 1, 1)
 
         grid.addWidget(QLabel("Gefahren:"), 1, 2)
         self.tow_speed = QLineEdit()
         self.tow_speed.setPlaceholderText("km/h")
+        self.tow_speed.setStyleSheet("background-color: #14192b; border: 1px solid #2b3655; color: #ffffff;")
         grid.addWidget(self.tow_speed, 1, 3)
 
         c_lay.addLayout(grid)
 
         # Row 3: Wiederholungstäter Checkbox
         self.tow_repeat = QCheckBox("⚠️ Wiederholungstäter (StVO §25 lit. 2)")
-        self.tow_repeat.setStyleSheet("font-size: 13px; font-weight: bold; color: #fb923c;")
+        self.tow_repeat.setStyleSheet("font-size: 13px; font-weight: bold; color: #f97316;")
         c_lay.addWidget(self.tow_repeat)
 
-        # Row 4: Berechnen Button
+        # Row 4: Berechnen Button (Exact Blue Button)
         self.btn_tow_calc = QPushButton("Berechnen")
+        self.btn_tow_calc.setCursor(Qt.PointingHandCursor)
         self.btn_tow_calc.setStyleSheet("""
             QPushButton {
-                background-color: #3b82f6;
+                background-color: #2563eb;
                 color: #ffffff;
                 font-size: 14px;
                 font-weight: bold;
@@ -914,15 +1101,15 @@ class GrandCalculatorOverlay(QWidget):
                 border: none;
             }
             QPushButton:hover {
-                background-color: #2563eb;
+                background-color: #1d4ed8;
             }
         """)
         self.btn_tow_calc.clicked.connect(self.calculate_tow)
         c_lay.addWidget(self.btn_tow_calc)
 
-        # Row 5: Results Frame
+        # Row 5: Results Frame (Dark navy container)
         res_frame = QFrame()
-        res_frame.setStyleSheet("background: #090614; border: 1px solid #1e293b; border-radius: 6px; padding: 10px;")
+        res_frame.setStyleSheet("background: #14192b; border: 1px solid #222b44; border-radius: 6px; padding: 10px;")
         res_lay = QVBoxLayout(res_frame)
         res_lay.setSpacing(6)
 
@@ -948,16 +1135,17 @@ class GrandCalculatorOverlay(QWidget):
 
         c_lay.addWidget(res_frame)
 
-        # Row 6: Kopieren & Reset Buttons
+        # Row 6: Kopieren & Reset Buttons (Exact Green & Blue-Slate)
         row_btn = QHBoxLayout()
         self.btn_tow_copy = QPushButton("📋 Kopieren")
+        self.btn_tow_copy.setCursor(Qt.PointingHandCursor)
         self.btn_tow_copy.setStyleSheet("""
             QPushButton {
                 background-color: #10b981;
                 color: #ffffff;
                 font-size: 13px;
                 font-weight: bold;
-                padding: 8px;
+                padding: 9px;
                 border-radius: 6px;
                 border: none;
             }
@@ -968,19 +1156,20 @@ class GrandCalculatorOverlay(QWidget):
         self.btn_tow_copy.clicked.connect(self.copy_tow)
         row_btn.addWidget(self.btn_tow_copy, stretch=1)
 
-        self.btn_tow_reset = QPushButton("🔄 Reset")
+        self.btn_tow_reset = QPushButton("Reset")
+        self.btn_tow_reset.setCursor(Qt.PointingHandCursor)
         self.btn_tow_reset.setStyleSheet("""
             QPushButton {
-                background-color: #1e293b;
+                background-color: #1e243b;
                 border: 1px solid #3b82f6;
-                color: #60a5fa;
+                color: #ffffff;
                 font-size: 13px;
-                padding: 8px;
+                padding: 9px;
                 border-radius: 6px;
                 font-weight: bold;
             }
             QPushButton:hover {
-                background-color: #334155;
+                background-color: #2e3a59;
             }
         """)
         self.btn_tow_reset.clicked.connect(self.reset_tow)
@@ -1057,7 +1246,7 @@ class GrandCalculatorOverlay(QWidget):
         self.tow_location.clear()
         self.tow_speed.clear()
         self.tow_repeat.setChecked(False)
-        self.tow_zone.setCurrentIndex(1)
+        self.tow_zone.setCurrentIndex(0)
         self.lbl_tow_bussgeld.setText("Bußgeld: $ 0")
         self.tow_akte.clear()
 
@@ -1085,6 +1274,5 @@ class GrandCalculatorOverlay(QWidget):
         self.activateWindow()
         self.search_input.setFocus()
 
-    def update_theme(self, theme_colors):
-        self.theme_colors = theme_colors
-        self.init_ui()
+    def update_theme(self, theme_colors=None):
+        pass
