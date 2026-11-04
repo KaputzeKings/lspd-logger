@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKey
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.2.1"
+CURRENT_VERSION = "1.2.2"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -1728,7 +1728,8 @@ def start_keyboard_listener():
                     overlay_signal.key_pressed.emit(c)
             elif key == keyboard.Key.esc:
                 overlay_signal.key_pressed.emit("esc")
-            elif key == keyboard.Key.f12:
+            elif key == keyboard.Key.f12 or str(key) == 'Key.f12' or getattr(key, 'name', '') == 'f12':
+                log("[Keyboard] F12 Taste erkannt -> Toggle Rechner")
                 overlay_signal.toggle_calculator.emit()
         except Exception:
             pass
@@ -1776,10 +1777,19 @@ def main():
     calc_overlay = GrandCalculatorOverlay(get_theme_colors())
 
     def toggle_calc():
-        if calc_overlay.isVisible():
-            calc_overlay.hide()
-        else:
-            calc_overlay.show_calculator()
+        log("[Calc] toggle_calc getriggert")
+        try:
+            if calc_overlay.isVisible():
+                calc_overlay.hide()
+            else:
+                if hasattr(calc_overlay, 'show_calculator'):
+                    calc_overlay.show_calculator()
+                elif hasattr(calc_overlay, 'show_overlay'):
+                    calc_overlay.show_overlay()
+                else:
+                    calc_overlay.show()
+        except Exception as e:
+            log(f"[Calc Error] {e}")
 
     overlay_signal.toggle_calculator.connect(toggle_calc)
 

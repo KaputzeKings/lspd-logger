@@ -987,6 +987,9 @@ class GrandCalculatorOverlay(QWidget):
         else:
             self.show_overlay()
 
+    def show_calculator(self):
+        self.show_overlay()
+
     def show_overlay(self):
         self.resize_to_screen()
         self.show()
