@@ -1,0 +1,1017 @@
+{
+  "Straßenverkehrsordnung (StVO)": [
+    {
+      "id": "StVO §2",
+      "name": "Gefährdung anderer Verkehrsteilnehmer",
+      "fine": 10000,
+      "wanteds": 0,
+      "mandatory": false,
+      "info": "Führerschein entziehen",
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §4",
+      "name": "Missachtung des Rechtsfahrgebots",
+      "fine": 8000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §5",
+      "name": "Überschreitung der Fahrzeugkapazität",
+      "fine": 5000,
+      "wanteds": 0,
+      "mandatory": false,
+      "info": "Führerschein entziehen",
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §6",
+      "name": "Fahren mit demoliertem Fahrzeug",
+      "fine": 2000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §7",
+      "name": "Fahren ohne Licht (Dunkelheit/Wetter)",
+      "fine": 5000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §8",
+      "name": "Geschwindigkeitsüberschreitung 10 - 40 km/h",
+      "fine": 5000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §8",
+      "name": "Geschwindigkeitsüberschreitung 41 - 60 km/h",
+      "fine": 10000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §8",
+      "name": "Geschwindigkeitsüberschreitung 61 - 100 km/h",
+      "fine": 15000,
+      "wanteds": 0,
+      "mandatory": false,
+      "info": "Führerschein entziehen",
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §8",
+      "name": "Geschwindigkeitsüberschreitung ab 101 km/h",
+      "fine": 20000,
+      "wanteds": 0,
+      "mandatory": false,
+      "info": "Führerschein entziehen",
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §9 Art. 3",
+      "name": "Fahren ohne gültige Zulassung",
+      "fine": 10000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §10 Art. 1",
+      "name": "Missachten von Rechts vor Links",
+      "fine": 1000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §10 Art. 2",
+      "name": "Missachtung von Verkehrsschildern",
+      "fine": 2000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §10 Art. 4",
+      "name": "Fahren ohne genügend Tankkapazität",
+      "fine": 10000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §10 Art. 6",
+      "name": "Nutzung eines Mobilgeräts am Steuer",
+      "fine": 3000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §10 Art. 7",
+      "name": "Lärmbelästigung / unnötiges Hupen",
+      "fine": 20000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §10 Art. 9(1)",
+      "name": "Überholen auf der rechten Fahrbahn",
+      "fine": 5000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §10 Art. 12",
+      "name": "Fahren abseits von gekennzeichneten Wegen",
+      "fine": 8000,
+      "wanteds": 0,
+      "mandatory": false,
+      "info": "Führerschein entziehen",
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §10 Art. 16",
+      "name": "Fahren auf der entgegengesetzten Fahrtrichtung",
+      "fine": 15000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §12.1",
+      "name": "Falsch Parken / Halten",
+      "fine": 10000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §12.3",
+      "name": "Bergung aus nicht befahrbarem Gelände",
+      "fine": 20000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0,
+      "info": "Bergung aus schwer zugänglichem Gelände, z. B. Gebirge, Strand oder Wasser."
+    },
+    {
+      "id": "StVO §17 Art 1+2",
+      "name": "Fahren in berauschtem Zustand",
+      "fine": 10000,
+      "wanteds": 0,
+      "mandatory": false,
+      "voluntaryWanteds": 2,
+      "info": "Führerschein entziehen",
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StVO §19",
+      "name": "Fahren ohne Erste-Hilfe-Kit (Kofferraum)",
+      "fine": 5000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §20",
+      "name": "Fahren ohne Gurt (nicht angeschnallt)",
+      "fine": 5000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §24",
+      "name": "Fahrerflucht",
+      "fine": 10000,
+      "wanteds": 1,
+      "mandatory": true,
+      "info": "Führerschein entziehen",
+      "mandatoryWanteds": 1,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §26",
+      "name": "Abschleppkosten",
+      "fine": 15000,
+      "fineOptions": [
+        15000,
+        20000
+      ],
+      "wanteds": 0,
+      "mandatory": false,
+      "info": "15.000 $: roter Bordstein, Bushaltestelle, Grünflächen/Wald, Privatgrundstück, Behinderung von Fuß-/Straßenverkehr, Freeway/Highway, zugeparkte Einfahrten. 20.000 $: Greenzone, staatliches Gelände/Postamt, Tatverdächtiger, KFZ ohne Kennzeichen, schwer zugängliches Gelände.",
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §27",
+      "name": "Fahren ohne KFZ Versicherung",
+      "fine": 20000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §28",
+      "name": "Sharing-Cars mit Anti-Radar nicht aus dem Verkehr gezogen",
+      "fine": 30000,
+      "wanteds": 3,
+      "mandatory": true,
+      "info": "Führerschein entziehen",
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StVO §10 Art. 8",
+      "name": "Helmpflicht",
+      "fine": 1000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    }
+  ],
+  "Psychische & Physische Integrität (StGB)": [
+    {
+      "id": "StGB §3.1",
+      "name": "Beleidigung",
+      "fine": 10000,
+      "wanteds": 0,
+      "voluntaryWanteds": 1,
+      "mandatory": false,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StGB §3.2",
+      "name": "Belästigung",
+      "fine": 10000,
+      "wanteds": 0,
+      "voluntaryWanteds": 1,
+      "mandatory": false,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StGB §3.3",
+      "name": "Drohung",
+      "fine": 5000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §4.1",
+      "name": "Versuchter Mord / Mord",
+      "fine": 30000,
+      "wanteds": 4,
+      "mandatory": true,
+      "mandatoryWanteds": 4,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §4.2",
+      "name": "Körperverletzung",
+      "fine": 15000,
+      "wanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 2,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §4.3",
+      "name": "Körperverletzung mit Todesfolge",
+      "fine": 20000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §4.4",
+      "name": "Gewaltsame Drohung",
+      "fine": 5000,
+      "wanteds": 1,
+      "voluntaryWanteds": 1,
+      "voluntaryFine": 5000,
+      "mandatory": true,
+      "mandatoryWanteds": 1
+    },
+    {
+      "id": "StGB §4.5",
+      "name": "Fahrlässige Tötung",
+      "fine": 20000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §5",
+      "name": "Sexuelle Belästigung",
+      "fine": 30000,
+      "wanteds": 1,
+      "voluntaryWanteds": 2,
+      "voluntaryFine": 10000,
+      "mandatory": true,
+      "mandatoryWanteds": 1
+    },
+    {
+      "id": "StGB §20",
+      "name": "Sachbeschädigung",
+      "fine": 5000,
+      "wanteds": 0,
+      "voluntaryWanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 0,
+      "voluntaryFine": 5000
+    },
+    {
+      "id": "StGB §21",
+      "name": "Unterlassene Hilfeleistung",
+      "fine": 5000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §26",
+      "name": "Prostitution",
+      "fine": 10000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §27",
+      "name": "Freiheitsberaubung / Geiselnahme / Entführung",
+      "fine": 30000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §28",
+      "name": "Errichtung von Straßenbarrikaden",
+      "fine": 10000,
+      "wanteds": 0,
+      "voluntaryWanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 0,
+      "voluntaryFine": 10000
+    },
+    {
+      "id": "StGB §31",
+      "name": "Verhalten in der Öffentlichkeit",
+      "fine": 5000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §32",
+      "name": "Rassismus / Nachstellung (Stalking)",
+      "fine": 15000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §38",
+      "name": "Fischwilderei",
+      "fine": 5000,
+      "wanteds": 0,
+      "voluntaryWanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StGB §39",
+      "name": "Verleumdung",
+      "fine": 30000,
+      "wanteds": 0,
+      "voluntaryWanteds": 3,
+      "mandatory": false,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StGB §42",
+      "name": "Erpressung",
+      "fine": 45000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §43",
+      "name": "Androhung einer Straftat",
+      "fine": 20000,
+      "wanteds": 0,
+      "voluntaryWanteds": 3,
+      "voluntaryFine": 5000,
+      "mandatory": true,
+      "mandatoryWanteds": 0
+    }
+  ],
+  "Wirtschaftskriminalität (StGB)": [
+    {
+      "id": "StGB §6 / §9",
+      "name": "Diebstahl / Betrug",
+      "fine": 5000,
+      "wanteds": 0,
+      "voluntaryWanteds": 3,
+      "voluntaryFine": 5000,
+      "mandatory": true,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StGB §7",
+      "name": "Fahrzeug Diebstahl",
+      "fine": 10000,
+      "wanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 2,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §10.1",
+      "name": "Besitz illegaler Gegenstände",
+      "fine": 10000,
+      "wanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 2,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §11",
+      "name": "Raub",
+      "fine": 25000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §12.1",
+      "name": "Geschäfts Raub / Ammu Rob",
+      "fine": 35000,
+      "wanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 2,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §12.4",
+      "name": "Saftladen Raub",
+      "fine": 10000,
+      "wanteds": 1,
+      "voluntaryWanteds": 0,
+      "voluntaryFine": 0,
+      "mandatory": true,
+      "mandatoryWanteds": 1
+    },
+    {
+      "id": "StGB §12.3",
+      "name": "ATM Raub",
+      "fine": 5000,
+      "wanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 1,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §13",
+      "name": "Einbruch",
+      "fine": 15000,
+      "wanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 2,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §14",
+      "name": "Steuerhinterziehung",
+      "fine": 50000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §30",
+      "name": "Hausfriedensbruch",
+      "fine": 25000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §41.1",
+      "name": "Besitz staatliches Eigentum (Waffen)",
+      "fine": 50000,
+      "wanteds": 3,
+      "mandatory": true,
+      "info": "Waffenschein entziehen",
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §41.2",
+      "name": "Besitz staatliches Eigentum (Gegenstände)",
+      "fine": 50000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    }
+  ],
+  "Umgang mit Beamten (StGB)": [
+    {
+      "id": "StGB §15.1",
+      "name": "Nichtbefolgen einer amtlichen Anweisung",
+      "fine": 10000,
+      "wanteds": 0,
+      "voluntaryWanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StGB §15.2",
+      "name": "Entziehung polizeilicher Maßnahmen",
+      "fine": 10000,
+      "wanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 2,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §15.3",
+      "name": "Behinderung eines Beamten bei der Arbeit",
+      "fine": 10000,
+      "wanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 1,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §15.6",
+      "name": "Behinderung des EMS bei der Arbeit",
+      "fine": 10000,
+      "wanteds": 0,
+      "voluntaryWanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StGB §15.4",
+      "name": "Bestechung von Beamten",
+      "fine": 10000,
+      "wanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 2,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §15.5",
+      "name": "Widerstand gegen Vollstreckungsbeamte",
+      "fine": 20000,
+      "wanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 2,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §15.7",
+      "name": "Nicht ausweisen bei Maßnahme",
+      "fine": 15000,
+      "wanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 1,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §16",
+      "name": "Befreiung von Gefangenen",
+      "fine": 30000,
+      "wanteds": 3,
+      "voluntaryWanteds": 2,
+      "voluntaryFine": 10000,
+      "mandatory": true,
+      "mandatoryWanteds": 3
+    },
+    {
+      "id": "StGB §19",
+      "name": "Falsche Namensangabe",
+      "fine": 10000,
+      "wanteds": 0,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StGB §23",
+      "name": "Missbrauch von Notruf",
+      "fine": 30000,
+      "wanteds": 0,
+      "voluntaryWanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "StGB §24",
+      "name": "Amtsanmaßung",
+      "fine": 25000,
+      "wanteds": 2,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 2
+    },
+    {
+      "id": "StGB §29",
+      "name": "Missachtung eines Platzverweises",
+      "fine": 20000,
+      "wanteds": 1,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 1
+    }
+  ],
+  "Waffengesetz (WaffG)": [
+    {
+      "id": "WaffG §1",
+      "name": "Besitz legaler Waffen ohne Waffenschein",
+      "fine": 10000,
+      "mandatoryWanteds": 1,
+      "voluntaryWanteds": 1,
+      "voluntaryFine": 10000,
+      "mandatory": false
+    },
+    {
+      "id": "WaffG §5.1",
+      "name": "Besitz illegaler Waffen",
+      "fine": 20000,
+      "wanteds": 2,
+      "voluntaryWanteds": 1,
+      "voluntaryFine": 10000,
+      "mandatory": true,
+      "info": "Waffenschein entziehen!",
+      "mandatoryWanteds": 2
+    },
+    {
+      "id": "WaffG §8.1",
+      "name": "Offenes Tragen einer Waffe",
+      "fine": 5000,
+      "wanteds": 0,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "info": "Waffenschein entziehen!",
+      "mandatoryWanteds": 0,
+      "voluntaryFine": 5000
+    },
+    {
+      "id": "WaffG §8.2",
+      "name": "Tragen einer Waffe in staatl. Einrichtungen",
+      "fine": 5000,
+      "wanteds": 0,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "info": "Waffenschein entziehen!",
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "WaffG §11",
+      "name": "Ungesetzlicher Waffenhandel (An- & Verkauf)",
+      "fine": 25000,
+      "wanteds": 3,
+      "mandatory": true,
+      "info": "Waffenschein entziehen!",
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    }
+  ],
+  "Sperrzonen / Absperrungen / Kapitalverbrechen (StGB)": [
+    {
+      "id": "StGB §17",
+      "name": "Durchbrechen von Absperrungen",
+      "fine": 15000,
+      "wanteds": 1,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 1
+    },
+    {
+      "id": "StGB §18",
+      "name": "Unbefugtes Betreten militärischer Gelände",
+      "fine": 50000,
+      "wanteds": 5,
+      "mandatory": true,
+      "mandatoryWanteds": 5,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "StGB §18.1",
+      "name": "Unerlaubtes Betreten von Sperrzonen",
+      "fine": 25000,
+      "wanteds": 2,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 2
+    },
+    {
+      "id": "StGB §18.1",
+      "name": "Unerlaubtes Befahren von Sperrzonen",
+      "fine": 25000,
+      "wanteds": 2,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "info": "Führerschein entziehen",
+      "mandatoryWanteds": 2
+    },
+    {
+      "id": "StGB §25",
+      "name": "Terrorismus (Deckt alle Strafen ab)",
+      "fine": 25000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    }
+  ],
+  "Betäubungsmittelgesetz (BtMG)": [
+    {
+      "id": "BtMG §2.1",
+      "name": "Kokainbesitz Klein ab 11 - 30",
+      "fine": 15000,
+      "wanteds": 0,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "BtMG §2.1",
+      "name": "Marihuanabesitz Klein 21 - 30",
+      "fine": 15000,
+      "wanteds": 0,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 0
+    },
+    {
+      "id": "BtMG §2.1",
+      "name": "Drogenbesitz Mittel ab 31 - 50",
+      "fine": 20000,
+      "wanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 1,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "BtMG §2.1",
+      "name": "Drogenbesitz Groß 50+",
+      "fine": 30000,
+      "wanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 2,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "BtMG §2.2",
+      "name": "Drogenhandel (An- & Verkauf)",
+      "fine": 30000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0,
+      "info": "Marihuanahandel: erst ab 20 Gramm laut Katalognotiz."
+    },
+    {
+      "id": "BtMG §2.1",
+      "name": "Drogen Herstellung",
+      "fine": 30000,
+      "wanteds": 3,
+      "mandatory": true,
+      "mandatoryWanteds": 3,
+      "voluntaryWanteds": 0
+    },
+    {
+      "id": "BtMG §3",
+      "name": "Verkauf von Medizinprodukten bis 20 Gegenstände",
+      "fine": 10000,
+      "wanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 1,
+      "voluntaryWanteds": 0,
+      "medicalSaleValue": true,
+      "info": "Zusätzlich die für die Medizinprodukte verlangte Summe eintragen."
+    },
+    {
+      "id": "BtMG §3",
+      "name": "Verkauf von Medizinprodukten bis 50 Gegenstände",
+      "fine": 20000,
+      "wanteds": 1,
+      "voluntaryWanteds": 1,
+      "mandatory": true,
+      "mandatoryWanteds": 1,
+      "medicalSaleValue": true,
+      "info": "Zusätzlich die für die Medizinprodukte verlangte Summe eintragen."
+    },
+    {
+      "id": "BtMG §3",
+      "name": "Verkauf von Medizinprodukten ab 51 Gegenstände",
+      "fine": 25000,
+      "wanteds": 1,
+      "voluntaryWanteds": 2,
+      "mandatory": true,
+      "mandatoryWanteds": 1,
+      "medicalSaleValue": true,
+      "info": "Zusätzlich die für die Medizinprodukte verlangte Summe eintragen."
+    }
+  ],
+  "Strafprozessordnung (StPO)": [
+    {
+      "id": "§6 StPO",
+      "name": "Bußgelder nicht bezahlt (500k voll)",
+      "fine": 0,
+      "wanteds": 5,
+      "mandatory": true,
+      "mandatoryWanteds": 5,
+      "voluntaryWanteds": 0
+    }
+  ],
+  "Beamtendienstgesetzbuch (BDG)": [
+    {
+      "id": "BDG §2",
+      "name": "Verhaltenskodex",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §3",
+      "name": "Dienstpflichten des Beamten",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §7",
+      "name": "Bestechlichkeit",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §8",
+      "name": "Vorteilsannahme & Vorteilsgewährung",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §9",
+      "name": "Verleitung eines Untergebenen/Kollegen zur Straftat",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §10",
+      "name": "Unterlassen der Diensthandlung",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §11",
+      "name": "Falschbeurkundung im Amt",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "StGB §40",
+      "name": "Weitergabe von Staatseigentum",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §13",
+      "name": "Hochverrat im öffentlichen Dienst",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §14",
+      "name": "Umgehung von Strafprozessen",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §15",
+      "name": "Verschwörung",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    },
+    {
+      "id": "BDG §16",
+      "name": "Schmuggel",
+      "fine": 0,
+      "fineMaximum": 50000,
+      "wanteds": 0,
+      "mandatory": false,
+      "mandatoryWanteds": 0,
+      "voluntaryWanteds": 5,
+      "info": "Ermessensbußgeld bis 50.000 $; Betrag im Ergebnis einstellen."
+    }
+  ]
+}

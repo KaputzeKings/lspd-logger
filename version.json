@@ -1,5 +1,5 @@
 {
-    "version": "1.1.1",
-    "changelog": "- Automatischer GitHub-Updater direkt verknüpft (keine manuelle Link-Eingabe)\n- Neuer Log-Typ: Streifenpartner mitnehmen (1 Bild)\n- Zählt Streifenpartner (0/2) live im Zwischenstand mit\n- Voll anpassbares HUD: 5 Farbthemen + Eigene Farben (Color Picker)\n- HUD-Skalierung, Position, Schriftart & Transparenz",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.1.1/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.2.0",
+    "changelog": "🚀 Großes Update: Bußgeld-, Wanteds- & TOW-Rechner (F12)!\n- Taste [F12] öffnet den neuen Dienst-Rechner (80% Bildschirmgröße)\n- Tab 1: Vollständiger GrandRP DE1 Strafenkatalog mit Live-Suche & Kategorien\n- Graue Wanteds per Klick auswählbar (+ Bußgeld-Erhöhung nach Grandkasten)\n- Wanteds addieren sich nicht: Nur das höchste Delikt zählt!\n- Live-Warnungen für Führerschein- & Waffenschein-Entzug\n- Tab 2: Offizieller TOW-Rechner nach Grandkasten (Geschwindigkeits- & Zonen-Berechnung, Wiederholungstäter StVO §25 lit. 2)\n- 1-Klick Aktenvermerk kopieren für MDT & Discord",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.2.0/LSPD_Log_Assistent_Paket.zip"
 }

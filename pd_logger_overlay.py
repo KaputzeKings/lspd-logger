@@ -16,13 +16,15 @@ import numpy as np
 from PySide6.QtWidgets import (
     QApplication, QWidget, QDialog, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
     QFrame, QGridLayout, QLineEdit, QFileDialog, QMessageBox, QSystemTrayIcon, QMenu,
-    QProgressBar, QTextEdit, QTabWidget, QComboBox, QSlider, QColorDialog
+    QProgressBar, QTextEdit, QTabWidget, QComboBox, QSlider, QColorDialog, QScrollArea,
+    QCheckBox
 )
 from PySide6.QtCore import Qt, QTimer, Signal, QObject
-from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction
+from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKeyEvent
 from pynput import keyboard
+from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.1.1"
+CURRENT_VERSION = "1.2.0"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -457,22 +459,27 @@ def is_newer_version(remote, local):
         return False
 
 def check_remote_version(custom_url=None):
-    url = (custom_url or CONFIG.get("update_url", "") or DEFAULT_UPDATE_URL).strip()
-    if not url:
+    raw_url = (custom_url or CONFIG.get("update_url", "") or DEFAULT_UPDATE_URL).strip()
+    if not raw_url:
         return None
     
-    if re.match(r'^[a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\.]+$', url):
-        url = f"https://api.github.com/repos/{url}/releases/latest"
+    url = raw_url
+    gh_match = re.search(r'github\.com/([^/]+)/([^/]+)', raw_url)
+    if gh_match and "api.github.com" not in raw_url and "raw.githubusercontent.com" not in raw_url:
+        owner = gh_match.group(1)
+        repo = gh_match.group(2).replace(".git", "").split("/")[0]
+        url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
+    elif re.match(r'^[a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\.]+$', raw_url):
+        url = f"https://api.github.com/repos/{raw_url}/releases/latest"
 
     try:
         headers = {"User-Agent": "LSPD-Log-Assistent"}
         res = requests.get(url, headers=headers, timeout=5)
-        if res.status_code != 200:
-            # Fallback to raw version.json if releases is 404 or not published yet
+        if res.status_code != 200 or "<html" in res.text[:200].lower():
             fallback_url = "https://raw.githubusercontent.com/KaputzeKings/lspd-logger/main/version.json"
             if url != fallback_url:
                 res = requests.get(fallback_url, headers=headers, timeout=5)
-            if res.status_code != 200:
+            if res.status_code != 200 or "<html" in res.text[:200].lower():
                 return None
         data = res.json()
         
@@ -504,48 +511,22 @@ def check_remote_version(custom_url=None):
         log(f"[Updater Check] {e}")
         return None
 
-def apply_update_and_restart(dest_file, is_zip):
+def apply_update_and_restart(source_folder, temp_dir):
     import subprocess
-    temp_dir = os.path.dirname(dest_file)
     app_dir = BASE_DIR
     exe_name = "LSPD_Log_Assistent.exe"
     bat_path = os.path.join(temp_dir, "apply_update.bat")
 
     script = f"""@echo off
-setlocal enabledelayedexpansion
-title LSPD Log Assistent - Update wird installiert...
-echo ===================================================
-echo       LSPD Log Assistent - Update-Installation
-echo ===================================================
-echo.
-echo Bitte kurz warten, das Update wird eingespielt...
-
-timeout /t 2 /nobreak >nul
+taskkill /f /im {exe_name} >nul 2>&1
+timeout /t 1 /nobreak >nul
 
 if exist "{app_dir}\\config.json" (
     copy /y "{app_dir}\\config.json" "{temp_dir}\\config_backup.json" >nul
 )
-"""
-    if is_zip:
-        script += f"""
-powershell -Command "Expand-Archive -Path '{dest_file}' -DestinationPath '{temp_dir}\\extracted' -Force"
-if exist "{temp_dir}\\extracted\\LSPD_Log_Assistent\\{exe_name}" (
-    xcopy /e /y /q "{temp_dir}\\extracted\\LSPD_Log_Assistent\\*" "{app_dir}\\"
-) else if exist "{temp_dir}\\extracted\\LSPD_Log_Assistent_Paket\\{exe_name}" (
-    xcopy /e /y /q "{temp_dir}\\extracted\\LSPD_Log_Assistent_Paket\\*" "{app_dir}\\"
-) else (
-    xcopy /e /y /q "{temp_dir}\\extracted\\*" "{app_dir}\\"
-)
-rmdir /s /q "{temp_dir}\\extracted" 2>nul
-del /f /q "{dest_file}" 2>nul
-"""
-    else:
-        script += f"""
-copy /y "{dest_file}" "{app_dir}\\{exe_name}" >nul
-del /f /q "{dest_file}" 2>nul
-"""
 
-    script += f"""
+xcopy /e /y /q "{source_folder}\\*" "{app_dir}\\"
+
 if exist "{temp_dir}\\config_backup.json" (
     copy /y "{temp_dir}\\config_backup.json" "{app_dir}\\config.json" >nul
     del /f /q "{temp_dir}\\config_backup.json" 2>nul
@@ -558,9 +539,9 @@ exit
         with open(bat_path, "w", encoding="utf-8") as f:
             f.write(script)
         log(f"[Updater] Starte Update-Script: {bat_path}")
-        subprocess.Popen(["cmd.exe", "/c", bat_path], shell=True, creationflags=0x00000010)
-        time.sleep(0.5)
-        QApplication.quit()
+        subprocess.Popen(["cmd.exe", "/c", bat_path], shell=True, creationflags=0x00000008)
+        time.sleep(0.3)
+        os._exit(0)
     except Exception as e:
         log(f"[Apply Update Error] {e}")
 
@@ -599,8 +580,10 @@ class OverlaySignal(QObject):
     update_stats = Signal(dict)
     open_settings = Signal()
     show_update_dialog = Signal(dict)
+    show_msg = Signal(str, str, str)
     update_progress = Signal(int, str)
     reload_theme = Signal()
+    toggle_calculator = Signal()
 
 overlay_signal = OverlaySignal()
 
@@ -752,7 +735,7 @@ class UpdateDialog(QDialog):
                         f.write(chunk)
                         downloaded += len(chunk)
                         if total_size > 0:
-                            pct = int((downloaded / total_size) * 100)
+                            pct = int((downloaded / total_size) * 85)
                             mb_down = downloaded / (1024 * 1024)
                             mb_tot = total_size / (1024 * 1024)
                             overlay_signal.update_progress.emit(pct, f"Heruntergeladen: {mb_down:.1f} MB / {mb_tot:.1f} MB ({pct}%)")
@@ -760,9 +743,31 @@ class UpdateDialog(QDialog):
                             mb_down = downloaded / (1024 * 1024)
                             overlay_signal.update_progress.emit(50, f"Heruntergeladen: {mb_down:.1f} MB...")
 
-            overlay_signal.update_progress.emit(100, "Download fertig! Installiere Update & starte neu...")
-            time.sleep(1.0)
-            apply_update_and_restart(dest_file, is_zip)
+            overlay_signal.update_progress.emit(90, "Entpacke Update-Dateien...")
+            extracted_dir = os.path.join(temp_dir, "extracted")
+            if os.path.exists(extracted_dir):
+                import shutil
+                shutil.rmtree(extracted_dir, ignore_errors=True)
+            os.makedirs(extracted_dir, exist_ok=True)
+
+            if is_zip:
+                import zipfile
+                with zipfile.ZipFile(dest_file, 'r') as zip_ref:
+                    zip_ref.extractall(extracted_dir)
+                source_folder = extracted_dir
+                for sub in os.listdir(extracted_dir):
+                    sub_path = os.path.join(extracted_dir, sub)
+                    if os.path.isdir(sub_path) and os.path.exists(os.path.join(sub_path, "LSPD_Log_Assistent.exe")):
+                        source_folder = sub_path
+                        break
+            else:
+                source_folder = extracted_dir
+                import shutil
+                shutil.copy(dest_file, os.path.join(source_folder, "LSPD_Log_Assistent.exe"))
+
+            overlay_signal.update_progress.emit(100, "Update bereit! Starte neu...")
+            time.sleep(0.5)
+            apply_update_and_restart(source_folder, temp_dir)
 
         except Exception as e:
             log(f"[Updater Download Error] {e}")
@@ -998,6 +1003,19 @@ class SetupDialog(QDialog):
                 break
         grid_hud.addWidget(self.font_size_combo, 3, 1)
 
+        grid_hud.addWidget(QLabel("6. F12 Rechner Größe:"), 4, 0)
+        self.calc_scale_combo = QComboBox()
+        self.calc_scale_combo.addItem("Kompakt (75%)", 0.75)
+        self.calc_scale_combo.addItem("Standard (82%)", 0.82)
+        self.calc_scale_combo.addItem("Groß (88%)", 0.88)
+        self.calc_scale_combo.addItem("Sehr groß (95%)", 0.95)
+        c_scale = float(CONFIG.get("calc_scale", 0.82))
+        for i in range(self.calc_scale_combo.count()):
+            if abs(self.calc_scale_combo.itemData(i) - c_scale) < 0.02:
+                self.calc_scale_combo.setCurrentIndex(i)
+                break
+        grid_hud.addWidget(self.calc_scale_combo, 4, 1)
+
         l_hud.addLayout(grid_hud)
 
         # Opacity Slider
@@ -1070,6 +1088,7 @@ class SetupDialog(QDialog):
         CONFIG["user_badge"] = self.badge_input.text().strip()
         CONFIG["watch_dir"] = self.dir_input.text().strip() or get_default_watch_dir()
         CONFIG["thread_id"] = self.thread_input.text().strip()
+        CONFIG["calc_scale"] = float(self.calc_scale_combo.currentData())
 
         CONFIG["hud"] = {
             "theme": self.theme_combo.currentText(),
@@ -1698,6 +1717,8 @@ def start_keyboard_listener():
                     overlay_signal.key_pressed.emit(c)
             elif key == keyboard.Key.esc:
                 overlay_signal.key_pressed.emit("esc")
+            elif key == keyboard.Key.f12:
+                overlay_signal.toggle_calculator.emit()
         except Exception:
             pass
 
@@ -1741,8 +1762,19 @@ def main():
     overlay_signal.key_pressed.connect(overlay.on_hotkey_pressed)
     overlay_signal.update_stats.connect(overlay.update_stats_ui)
 
+    calc_overlay = GrandCalculatorOverlay(get_theme_colors())
+
+    def toggle_calc():
+        if calc_overlay.isVisible():
+            calc_overlay.hide()
+        else:
+            calc_overlay.show_calculator()
+
+    overlay_signal.toggle_calculator.connect(toggle_calc)
+
     def reload_hud_theme():
         overlay.apply_theme()
+        calc_overlay.update_theme(get_theme_colors())
         tray.setIcon(create_tray_icon())
         tray.setToolTip(f"LSPD Log Assistent v{CURRENT_VERSION} | Badge: [{CONFIG.get('user_badge')}]")
 
@@ -1763,6 +1795,34 @@ def main():
         UpdateDialog(info).exec()
 
     overlay_signal.show_update_dialog.connect(handle_show_update)
+
+    def handle_show_msg(title, text, mtype):
+        box = QMessageBox()
+        box.setWindowTitle(title)
+        box.setText(text)
+        colors = get_theme_colors()
+        box.setStyleSheet(f"""
+            QMessageBox {{
+                background-color: {colors['bg']};
+                color: {colors['text']};
+            }}
+            QLabel {{
+                color: {colors['text']};
+                font-size: 12px;
+            }}
+            QPushButton {{
+                background-color: {colors['accent']};
+                color: #ffffff;
+                border-radius: 4px;
+                padding: 6px 16px;
+                font-weight: bold;
+            }}
+        """)
+        box.setIcon(QMessageBox.Information if mtype == "info" else QMessageBox.Warning)
+        box.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
+        box.exec()
+
+    overlay_signal.show_msg.connect(handle_show_msg)
 
     # System Tray Icon
     tray = QSystemTrayIcon(create_tray_icon(), app)
@@ -1809,6 +1869,10 @@ def main():
     act_test.triggered.connect(trigger_test_overlay)
     tray_menu.addAction(act_test)
 
+    act_calc = QAction("⚖️ Bußgeld- & TOW-Rechner (F12)", tray_menu)
+    act_calc.triggered.connect(toggle_calc)
+    tray_menu.addAction(act_calc)
+
     act_summary = QAction("📊 Zwischenstand jetzt senden", tray_menu)
     act_summary.triggered.connect(overlay.handle_send_summary)
     tray_menu.addAction(act_summary)
@@ -1820,9 +1884,17 @@ def main():
             if info and info.get("has_update"):
                 overlay_signal.show_update_dialog.emit(info)
             elif info:
-                tray.showMessage("LSPD Update", f"Du nutzt bereits die neueste Version (v{CURRENT_VERSION})!", QSystemTrayIcon.Information, 3000)
+                overlay_signal.show_msg.emit(
+                    "LSPD Update",
+                    f"✅ <b>Du nutzt bereits die aktuellste Version (v{CURRENT_VERSION})!</b><br><br>Es ist kein neues Update erforderlich.",
+                    "info"
+                )
             else:
-                tray.showMessage("LSPD Update", "Kein Update verfügbar oder Server nicht erreichbar.", QSystemTrayIcon.Warning, 3000)
+                overlay_signal.show_msg.emit(
+                    "LSPD Update",
+                    "⚠️ <b>Update-Prüfung fehlgeschlagen.</b><br><br>Konnte keine Verbindung zum GitHub-Server herstellen.",
+                    "warn"
+                )
         threading.Thread(target=run_check, daemon=True).start()
 
     act_update = QAction("🔄 Nach Updates suchen", tray_menu)
