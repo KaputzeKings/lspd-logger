@@ -38,10 +38,10 @@ CALC_THEMES = {
         "card_bg": "#16161c",
         "card_hover": "#1e1e27",
         "border": "#00d2ff",
-        "border_subtle": "rgba(255, 255, 255, 0.10)",
+        "border_subtle": "#252530",
         "accent": "#00d2ff",
         "accent_text": "#000000",
-        "card_active_bg": "rgba(0, 210, 255, 0.12)",
+        "card_active_bg": "#0c2538",
         "card_active_border": "#00d2ff",
         "text": "#f3f4f6",
         "text_muted": "#94a3b8",
@@ -55,10 +55,10 @@ CALC_THEMES = {
         "card_bg": "#18181b",
         "card_hover": "#27272a",
         "border": "#71717a",
-        "border_subtle": "rgba(255, 255, 255, 0.12)",
+        "border_subtle": "#2a2a32",
         "accent": "#e4e4e7",
         "accent_text": "#000000",
-        "card_active_bg": "rgba(255, 255, 255, 0.10)",
+        "card_active_bg": "#222228",
         "card_active_border": "#ffffff",
         "text": "#ffffff",
         "text_muted": "#a1a1aa",
@@ -72,10 +72,10 @@ CALC_THEMES = {
         "card_bg": "#19122c",
         "card_hover": "#221338",
         "border": "#a855f7",
-        "border_subtle": "rgba(168, 85, 247, 0.25)",
+        "border_subtle": "#2e1245",
         "accent": "#a855f7",
         "accent_text": "#ffffff",
-        "card_active_bg": "rgba(168, 85, 247, 0.15)",
+        "card_active_bg": "#241038",
         "card_active_border": "#c084fc",
         "text": "#f5f3ff",
         "text_muted": "#d8b4fe",
@@ -89,10 +89,10 @@ CALC_THEMES = {
         "card_bg": "#111f3d",
         "card_hover": "#172b54",
         "border": "#38bdf8",
-        "border_subtle": "rgba(56, 189, 248, 0.25)",
+        "border_subtle": "#16284a",
         "accent": "#38bdf8",
         "accent_text": "#000000",
-        "card_active_bg": "rgba(56, 189, 248, 0.15)",
+        "card_active_bg": "#102342",
         "card_active_border": "#38bdf8",
         "text": "#f0f9ff",
         "text_muted": "#7dd3fc",
@@ -106,10 +106,10 @@ CALC_THEMES = {
         "card_bg": "#220e11",
         "card_hover": "#311419",
         "border": "#ef4444",
-        "border_subtle": "rgba(239, 68, 68, 0.25)",
+        "border_subtle": "#381014",
         "accent": "#ef4444",
         "accent_text": "#ffffff",
-        "card_active_bg": "rgba(239, 68, 68, 0.15)",
+        "card_active_bg": "#2e0c10",
         "card_active_border": "#f87171",
         "text": "#ffffff",
         "text_muted": "#fca5a5",
@@ -123,10 +123,10 @@ CALC_THEMES = {
         "card_bg": "#0f2817",
         "card_hover": "#163a22",
         "border": "#10b981",
-        "border_subtle": "rgba(16, 185, 129, 0.25)",
+        "border_subtle": "#12331c",
         "accent": "#10b981",
         "accent_text": "#000000",
-        "card_active_bg": "rgba(16, 185, 129, 0.15)",
+        "card_active_bg": "#0d2615",
         "card_active_border": "#34d399",
         "text": "#ffffff",
         "text_muted": "#6ee7b7",
@@ -269,9 +269,9 @@ class OffenseCard(QFrame):
         fine_str = f"${self.fine:,.0f}".replace(",", ".")
         self.lbl_fine = QLabel(fine_str)
         self.lbl_fine.setStyleSheet("""
-            background: rgba(34, 197, 94, 0.12);
+            background-color: #052e16;
             color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.3);
+            border: 1px solid #166534;
             border-radius: 4px;
             padding: 2px 8px;
             font-size: 12px;
