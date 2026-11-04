@@ -1,5 +1,5 @@
 {
-    "version": "1.3.0",
-    "changelog": "🚀 Update v1.3.0 - Grandkasten 3-Spalten Design & Weißer Rahmen Bugfix:\n- 1:1 Grandkasten Karten-Design: Offense-Karten im echten 3-Spalten-Raster mit exakter Typografie, Paragraphen-Blau, lila Leuchtrahmen bei Auswahl und cleanen grünen Dollarbeträgen\n- Bugfix Weißer Rahmen / Balken: Native Windows 3D-Sunken-Frames und ungestylte Scrollbars vollständig eliminiert – keine störenden weißen Linien mehr auf hellen Windows-Designs!\n- Stern-Favoriten auf jeder Karte: Wichtige Tatbestände können mit dem Stern markiert werden\n- StVO §8 Geschwindigkeitsüberschreitung korrigiert: Genau 4 Stufen (10-40: $5k, 41-60: $10k, 61-100: $15k, ab 101: $20k) ohne fehlerhaften Führerscheinentzug\n- Intelligente Suche & 3s Teleprompter Auto-Play integriert",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.3.0/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.3.1",
+    "changelog": "🚀 Update v1.3.1 - Automatische Rechtebelehrung & Auto-Close:\n- Richtige Miranda-Rechte aktualisiert (Schweigen, Anwalt ab 2 Wanteds, Pflichtverteidiger, Judikative Exekutivbeamter, >25min Frist, Verständnisfrage)\n- Automatischer Auto-Play Start: Beim Öffnen des Teleprompter-HUDs (F10) startet der 3-Sekunden Auto-Play automatisch\n- Auto-Close nach 1 Durchlauf: Nach dem letzten Satz schließt sich das HUD automatisch von selbst",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.3.1/LSPD_Log_Assistent_Paket.zip"
 }

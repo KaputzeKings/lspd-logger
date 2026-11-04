@@ -147,19 +147,21 @@ CALC_THEMES = {
 
 PROMPTER_TEMPLATES = {
     "Miranda-Warnung (Standard)": [
-        "Sie haben das Recht zu schweigen.",
-        "Alles, was Sie sagen, kann und wird vor Gericht gegen Sie verwendet werden.",
-        "Sie haben das Recht auf einen Anwalt.",
-        "Sollten Sie sich keinen Anwalt leisten können, wird Ihnen vom Staat ein Pflichtverteidiger gestellt, insofern einer verfügbar ist.",
-        "Haben Sie Ihre Rechte verstanden?"
+        "Sie haben das Recht zu schweigen, alles was Sie sagen kann und wird gegen Sie verwendet werden.",
+        "Ab 2 Wanteds haben Sie das Recht auf einen staatlich anerkannten Anwalt, den Sie selbst benennen müssen.",
+        "Wenn kein Anwalt verfügbar ist, wird Ihnen ein Pflichtverteidiger gestellt.",
+        "Die Judikative übernimmt der Exekutivbeamte.",
+        "Wenn ein Anwalt hinzugezogen wird, kann es länger als 25 Minuten dauern.",
+        "Haben Sie ihre Rechte verstanden?"
     ],
     "Miranda-Warnung (Wiederholung)": [
         "Ich wiederhole Ihre Rechte ein zweites und letztes Mal:",
-        "Sie haben das Recht zu schweigen.",
-        "Alles, was Sie sagen, kann und wird vor Gericht gegen Sie verwendet werden.",
-        "Sie haben das Recht auf einen Anwalt.",
-        "Sollten Sie sich keinen Anwalt leisten können, wird Ihnen ein Pflichtverteidiger gestellt.",
-        "Haben Sie Ihre Rechte nun verstanden?"
+        "Sie haben das Recht zu schweigen, alles was Sie sagen kann und wird gegen Sie verwendet werden.",
+        "Ab 2 Wanteds haben Sie das Recht auf einen staatlich anerkannten Anwalt, den Sie selbst benennen müssen.",
+        "Wenn kein Anwalt verfügbar ist, wird Ihnen ein Pflichtverteidiger gestellt.",
+        "Die Judikative übernimmt der Exekutivbeamte.",
+        "Wenn ein Anwalt hinzugezogen wird, kann es länger als 25 Minuten dauern.",
+        "Haben Sie ihre Rechte nun verstanden?"
     ],
     "Allgemeine Verkehrskontrolle": [
         "Guten Tag, Los Santos Police Department.",
@@ -494,10 +496,10 @@ class FloatingPrompterHUD(QWidget):
         s_lay = QVBoxLayout(self.sentence_box)
         s_lay.setContentsMargins(8, 6, 8, 6)
 
-        self.lbl_sentence = QLabel("Sie haben das Recht zu schweigen.")
+        self.lbl_sentence = QLabel("Sie haben das Recht zu schweigen, alles was Sie sagen kann und wird gegen Sie verwendet werden.")
         self.lbl_sentence.setWordWrap(True)
         self.lbl_sentence.setAlignment(Qt.AlignCenter)
-        self.lbl_sentence.setStyleSheet(f"color: {t['text']}; font-size: 15px; font-weight: 700; line-height: 1.3;")
+        self.lbl_sentence.setStyleSheet(f"color: {t['text']}; font-size: 14px; font-weight: 700; line-height: 1.3;")
         s_lay.addWidget(self.lbl_sentence)
 
         c_lay.addWidget(self.sentence_box, stretch=1)
@@ -561,11 +563,19 @@ class FloatingPrompterHUD(QWidget):
         elif event.key() == Qt.Key_C:
             self.main_calc.prompter_copy_current()
             event.accept()
+        elif event.key() == Qt.Key_A:
+            self.main_calc.toggle_autoplay()
+            event.accept()
         elif event.key() in (Qt.Key_Escape, Qt.Key_F10):
             self.hide()
             event.accept()
         else:
             super().keyPressEvent(event)
+
+    def hideEvent(self, event):
+        if hasattr(self, 'main_calc'):
+            self.main_calc.stop_autoplay()
+        super().hideEvent(event)
 
     def update_theme(self, theme_data):
         self.theme_data = theme_data
@@ -2136,15 +2146,31 @@ class GrandCalculatorOverlay(QWidget):
         if self.prompter_step < len(sentences) - 1:
             self.prompter_step += 1
             self.render_prompter_sentences()
+            if self.prompter_autoplay_running:
+                self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
+                self._update_autoplay_buttons()
+        else:
+            if self.prompter_autoplay_running:
+                self.stop_autoplay()
+                self.prompter_step = 0
+                self.render_prompter_sentences()
+                if hasattr(self, 'floating_prompter') and self.floating_prompter.isVisible():
+                    self.floating_prompter.hide()
 
     def prompter_prev(self):
         if self.prompter_step > 0:
             self.prompter_step -= 1
             self.render_prompter_sentences()
+            if self.prompter_autoplay_running:
+                self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
+                self._update_autoplay_buttons()
 
     def prompter_reset(self):
         self.prompter_step = 0
         self.render_prompter_sentences()
+        if self.prompter_autoplay_running:
+            self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
+            self._update_autoplay_buttons()
 
     def prompter_copy_current(self):
         sentences = PROMPTER_TEMPLATES.get(self.prompter_current_template, [])
@@ -2177,6 +2203,13 @@ class GrandCalculatorOverlay(QWidget):
                 self.combo_prompter_tpl.blockSignals(True)
                 self.combo_prompter_tpl.setCurrentText(name)
                 self.combo_prompter_tpl.blockSignals(False)
+            if hasattr(self, 'floating_prompter') and hasattr(self.floating_prompter, 'combo_hud_template'):
+                if self.floating_prompter.combo_hud_template.currentText() != name:
+                    self.floating_prompter.combo_hud_template.blockSignals(True)
+                    self.floating_prompter.combo_hud_template.setCurrentText(name)
+                    self.floating_prompter.combo_hud_template.blockSignals(False)
+            if self.prompter_autoplay_running:
+                self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
             self.render_prompter_sentences()
 
     def prompter_on_font_slider(self, val):
@@ -2189,7 +2222,10 @@ class GrandCalculatorOverlay(QWidget):
         if hasattr(self, 'floating_prompter'):
             if self.floating_prompter.isVisible():
                 self.floating_prompter.hide()
+                self.stop_autoplay()
             else:
+                self.prompter_step = 0
+                self.render_prompter_sentences()
                 screen = QApplication.primaryScreen().geometry()
                 w = self.floating_prompter.width()
                 x = (screen.width() - w) // 2
@@ -2198,6 +2234,7 @@ class GrandCalculatorOverlay(QWidget):
                 self.floating_prompter.show()
                 self.floating_prompter.raise_()
                 self.floating_prompter.activateWindow()
+                self.start_autoplay()
 
     def toggle_autoplay(self):
         if self.prompter_autoplay_running:
@@ -2241,10 +2278,15 @@ class GrandCalculatorOverlay(QWidget):
             sentences = PROMPTER_TEMPLATES.get(self.prompter_current_template, [])
             if self.prompter_step < len(sentences) - 1:
                 self.prompter_next()
+                self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
             else:
+                # Finished first complete run! Close HUD automatically.
+                self.stop_autoplay()
                 self.prompter_step = 0
                 self.render_prompter_sentences()
-            self.prompter_autoplay_countdown = self.prompter_autoplay_seconds
+                if hasattr(self, 'floating_prompter') and self.floating_prompter.isVisible():
+                    self.floating_prompter.hide()
+                return
         self._update_autoplay_buttons()
 
     def toggle_attorney_timer(self):
