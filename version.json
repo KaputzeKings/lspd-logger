@@ -1,5 +1,5 @@
 {
-    "version": "1.2.0",
-    "changelog": "🚀 Großes Update: Bußgeld-, Wanteds- & TOW-Rechner (F12)!\n- Taste [F12] öffnet den neuen Dienst-Rechner (80% Bildschirmgröße)\n- Tab 1: Vollständiger GrandRP DE1 Strafenkatalog mit Live-Suche & Kategorien\n- Graue Wanteds per Klick auswählbar (+ Bußgeld-Erhöhung nach Grandkasten)\n- Wanteds addieren sich nicht: Nur das höchste Delikt zählt!\n- Live-Warnungen für Führerschein- & Waffenschein-Entzug\n- Tab 2: Offizieller TOW-Rechner nach Grandkasten (Geschwindigkeits- & Zonen-Berechnung, Wiederholungstäter StVO §25 lit. 2)\n- 1-Klick Aktenvermerk kopieren für MDT & Discord",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.2.0/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.2.1",
+    "changelog": "🛡️ Update v1.2.1 - 100% Grandkasten Aktenvermerk, Höchststrafe & Bugfixes:\n- Höchststrafe-Regel: Bußgeld & Wanteds addieren sich nicht – es zählt immer nur das höchste Delikt (1:1 Grandkasten)!\n- Aktenvermerk im originalen Grandkasten-Format (Verknüpfung mit ' + ', Reue als ' + StGB §35', Systemwanteds als ' + X Systemwanteds')\n- Checkboxen jetzt perfekt sichtbar mit leuchtendem lila Rand und weißem Häkchen\n- 'Zurücksetzen' leert alle Eingaben und setzt Bußgeld & Wanteds sofort auf 0 zurück\n- Fix [Errno 13] Permission Denied beim Herunterladen von Updates auf anderen PCs",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.2.1/LSPD_Log_Assistent_Paket.zip"
 }

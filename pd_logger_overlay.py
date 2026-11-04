@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKey
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.2.0"
+CURRENT_VERSION = "1.2.1"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -714,12 +714,21 @@ class UpdateDialog(QDialog):
     def _download_worker(self, download_url):
         import tempfile
         try:
-            temp_dir = os.path.join(tempfile.gettempdir(), "lspd_update")
-            os.makedirs(temp_dir, exist_ok=True)
+            try:
+                temp_dir = tempfile.mkdtemp(prefix="lspd_upd_")
+            except Exception:
+                temp_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), f"lspd_upd_{int(time.time())}")
+                os.makedirs(temp_dir, exist_ok=True)
             
             is_zip = download_url.lower().endswith(".zip") or ".zip?" in download_url.lower()
             fname = "update.zip" if is_zip else "LSPD_Log_Assistent_new.exe"
             dest_file = os.path.join(temp_dir, fname)
+
+            if os.path.exists(dest_file):
+                try:
+                    os.remove(dest_file)
+                except Exception:
+                    dest_file = os.path.join(temp_dir, f"update_{int(time.time())}.zip" if is_zip else f"LSPD_Log_Assistent_{int(time.time())}.exe")
 
             res = requests.get(download_url, stream=True, timeout=30)
             if res.status_code != 200:
@@ -730,7 +739,7 @@ class UpdateDialog(QDialog):
             downloaded = 0
 
             with open(dest_file, "wb") as f:
-                for chunk in res.iter_content(chunk_size=1024 * 64):
+                for chunk in res.iter_content(chunk_size=1024 * 128):
                     if chunk:
                         f.write(chunk)
                         downloaded += len(chunk)
@@ -770,15 +779,17 @@ class UpdateDialog(QDialog):
             apply_update_and_restart(source_folder, temp_dir)
 
         except Exception as e:
-            log(f"[Updater Download Error] {e}")
-            overlay_signal.update_progress.emit(-1, f"Fehler: {str(e)[:40]}")
+            import traceback
+            log(f"[Updater Download Error] {traceback.format_exc()}")
+            overlay_signal.update_progress.emit(-1, f"Fehler: {str(e)}")
 
     def on_progress(self, pct, status):
+        self.status_label.setWordWrap(True)
         if pct >= 0:
             self.progress_bar.setValue(pct)
             self.status_label.setText(status)
         else:
-            self.status_label.setText(status)
+            self.status_label.setText(str(status))
             self.btn_update.setEnabled(True)
             self.btn_later.setEnabled(True)
 
