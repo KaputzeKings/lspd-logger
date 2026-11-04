@@ -1,0 +1,11 @@
+build/
+dist/
+dist_lean/
+__pycache__/
+*.log
+*.tmp
+temp/
+*.spec
+config.json
+logger_state.json
+midnight_state.json
