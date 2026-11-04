@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QCheckBox, QButtonGroup, QRadioButton
 )
 from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint
-from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKeyEvent, QPen
+from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKeyEvent, QPen, QPalette
 
 def get_base_dir():
     if getattr(sys, 'frozen', False):
@@ -390,6 +390,12 @@ class GrandCalculatorOverlay(QWidget):
     def init_ui(self):
         t = self.theme_data
 
+        p = self.palette()
+        p.setColor(QPalette.Window, QColor(t['bg']))
+        p.setColor(QPalette.Base, QColor(t['bg']))
+        p.setColor(QPalette.AlternateBase, QColor(t['surface']))
+        self.setPalette(p)
+
         self.setStyleSheet(f"""
             QWidget {{
                 color: {t['text']};
@@ -448,9 +454,10 @@ class GrandCalculatorOverlay(QWidget):
                 selection-color: {t['accent_text']};
                 border: 1px solid {t['border_subtle']};
             }}
-            QScrollArea {{
-                border: none;
+            QScrollArea, QScrollArea > QWidget, QScrollArea > QWidget > QWidget, QScrollArea::viewport {{
+                background: transparent;
                 background-color: transparent;
+                border: none;
             }}
             QScrollBar:vertical {{
                 border: none;
@@ -555,7 +562,9 @@ class GrandCalculatorOverlay(QWidget):
         frame_layout.addWidget(self.tabs)
 
         self.tab_bussgeld = QWidget()
+        self.tab_bussgeld.setStyleSheet("background: transparent; border: none;")
         self.tab_tow = QWidget()
+        self.tab_tow.setStyleSheet("background: transparent; border: none;")
         self.tabs.addTab(self.tab_bussgeld, "⚖️ Bußgeld- & Wanteds-Rechner")
         self.tabs.addTab(self.tab_tow, "🚙 TOW Rechner")
 
@@ -603,8 +612,14 @@ class GrandCalculatorOverlay(QWidget):
         self.cat_scroll = QScrollArea()
         self.cat_scroll.setFixedHeight(44)
         self.cat_scroll.setWidgetResizable(True)
-        cat_widget = QWidget()
-        self.cat_lay = QHBoxLayout(cat_widget)
+        self.cat_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.cat_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.cat_scroll.setStyleSheet("background: transparent; border: none;")
+        self.cat_scroll.viewport().setStyleSheet("background: transparent; border: none;")
+
+        self.cat_widget = QWidget()
+        self.cat_widget.setStyleSheet("background: transparent; border: none;")
+        self.cat_lay = QHBoxLayout(self.cat_widget)
         self.cat_lay.setContentsMargins(0, 0, 0, 0)
         self.cat_lay.setSpacing(6)
 
@@ -620,13 +635,16 @@ class GrandCalculatorOverlay(QWidget):
             self.cat_buttons[cat_name] = b
             self.cat_lay.addWidget(b)
         self.cat_lay.addStretch()
-        self.cat_scroll.setWidget(cat_widget)
+        self.cat_scroll.setWidget(self.cat_widget)
         left_box.addWidget(self.cat_scroll)
 
         # Offenses scroll area
         self.offenses_scroll = QScrollArea()
         self.offenses_scroll.setWidgetResizable(True)
+        self.offenses_scroll.setStyleSheet("background: transparent; border: none;")
+        self.offenses_scroll.viewport().setStyleSheet("background: transparent; border: none;")
         self.offenses_container = QWidget()
+        self.offenses_container.setStyleSheet("background: transparent; border: none;")
         self.offenses_layout = QVBoxLayout(self.offenses_container)
         self.offenses_layout.setContentsMargins(0, 0, 6, 0)
         self.offenses_layout.setSpacing(8)
@@ -1463,6 +1481,31 @@ class GrandCalculatorOverlay(QWidget):
         if hasattr(self, 'cards_by_key'):
             for card in self.cards_by_key.values():
                 card.apply_style(card.is_selected)
+
+        # Re-enforce dark palette & transparent containers
+        try:
+            p = self.palette()
+            p.setColor(QPalette.Window, QColor(t['bg']))
+            p.setColor(QPalette.Base, QColor(t['bg']))
+            p.setColor(QPalette.AlternateBase, QColor(t['surface']))
+            self.setPalette(p)
+        except Exception:
+            pass
+
+        if hasattr(self, 'cat_scroll'):
+            self.cat_scroll.setStyleSheet("background: transparent; border: none;")
+            self.cat_scroll.viewport().setStyleSheet("background: transparent; border: none;")
+        if hasattr(self, 'cat_widget'):
+            self.cat_widget.setStyleSheet("background: transparent; border: none;")
+        if hasattr(self, 'offenses_scroll'):
+            self.offenses_scroll.setStyleSheet("background: transparent; border: none;")
+            self.offenses_scroll.viewport().setStyleSheet("background: transparent; border: none;")
+        if hasattr(self, 'offenses_container'):
+            self.offenses_container.setStyleSheet("background: transparent; border: none;")
+        if hasattr(self, 'tab_bussgeld'):
+            self.tab_bussgeld.setStyleSheet("background: transparent; border: none;")
+        if hasattr(self, 'tab_tow'):
+            self.tab_tow.setStyleSheet("background: transparent; border: none;")
 
     # --- KEY & EVENT HANDLERS ---
     def keyPressEvent(self, event: QKeyEvent):

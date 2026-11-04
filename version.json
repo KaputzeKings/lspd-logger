@@ -1,5 +1,5 @@
 {
-    "version": "1.2.6",
-    "changelog": "🛡️ Update v1.2.6 - Fix: Weiße Randlinien entfernt (GPU/DPI Border Bug behoben) & TOW Rechner 4-Stufen StVO §8:\n- Fix: Lästige weiße Rahmenlinien um Karten, Buttons & Panels auf bestimmten Windows-Setups vollständig entfernt\n- Exakte 4-Stufen-Berechnung im TOW Rechner ($5k/$10k/$15k/$20k) nach StVO §8\n- Live-Theme-Umschaltung für den Dienst-Rechner mit Schwarz-Grau-Weiß Voreinstellung",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.2.6/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.2.7",
+    "changelog": "🛡️ Update v1.2.7 - Fix: Alle weißen Flächen & Streifen im Dienst-Rechner restlos entfernt:\n- QScrollArea & Content-Container Hintergrund auf transparent & dunkles Theme fixiert (kein Windows-System-Weiß mehr hinter Kategorien oder zwischen Karten)\n- QPalette und StyledBackground Absicherung für Windows Light-Theme\n- TOW Rechner exakt 4 Geschwindigkeits-Stufen nach StVO §8 ($5.000 / $10.000 / $15.000 / $20.000)\n- Farbanpassung mit Schwarz-Grau-Weiß (Monochrome) Preset",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.2.7/LSPD_Log_Assistent_Paket.zip"
 }
