@@ -1,12 +1,5 @@
 {
-    "version": "1.4.5",
-    "release_date": "2026-11-05",
-    "changelog": [
-        "Vollständiges Unslop-Redesign: Alle 4 Hauptmodule (Ingame-HUD, Einstellungen, Bußgeld-Rechner & Teleprompter) nach den 9 Unslop-Prinzipien überarbeitet",
-        "Emoji- & Slop-Bereinigung: Komplette Entfernung dekorativer Emojis aus Buttons, Menüs, Kartenköpfen, Badges und Notifications",
-        "Elegante Typografie & Tabular Nums: Nativ gebundelte Inter-Schriftart, tabellarische Ziffern für Fines, Timer und Statistiken",
-        "Monochrome & Dot-Status: Ruhiges Obsidian-Design (#161616), klare dezente Status-Dots (●) für Kategorien, 1px Hairline-Borders (#262628)",
-        "Teleprompter & F10 HUD: Ruhige Obsidian-Bedienelemente, Mint-Auto-Play-Button, gelber Anwalts-Timer, nahtlose Tastatur-Steuerung",
-        "Vorher/Nachher Story-Video: Hochauflösender Video-Vergleich des Morphing-Prozesses auf dem Desktop bereitgestellt"
-    ]
+    "version": "1.4.0",
+    "changelog": "🛡️ Update v1.4.0 - Monochrome Grandkasten Einstellungsmenü & F12-Fix:\n- Reines Schwarz-Weiß-Grau (Monochrome) Design: Einstellungen vollständig überarbeitet in edlem, aufgeräumtem Card-Design ohne störende Farbtöne.\n- 3 übersichtliche Tabs: 'Dienst & Discord', 'Grandkasten Rechner & F10' und 'Ingame-HUD & Audio'.\n- F12 Rechner fixiert: Feste, zentrierte Bildschirmposition – versehentliches Verschieben per Mausklick ist vollständig deaktiviert.\n- Dokumentation aktualisiert: Vollständiges README mit allen Hotkeys, Funktionen und Richtlinien.",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.0/LSPD_Log_Assistent_Paket.zip"
 }
