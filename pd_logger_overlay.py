@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKey
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.4.0"
+CURRENT_VERSION = "1.4.1"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -412,6 +412,16 @@ def calculate_zwischenstand(token=None, thread_id=None):
             'Inhaftierungen': 0,
             'Streifenpartner': 0
         }
+        detailed_counts = {
+            'Inhaftierung': 0,
+            'Global': 0,
+            'Local': 0,
+            'Event': 0,
+            'Shoprob': 0,
+            'FZ Raid': 0,
+            'Streifenpartner': 0
+        }
+        highest_prefix = {k: 0 for k in detailed_counts}
 
         for m in messages:
             content = m.get('content', '').strip()
@@ -431,19 +441,52 @@ def calculate_zwischenstand(token=None, thread_id=None):
                 continue
 
             clean = re.sub(r'<@!?[0-9]+>', '', content).strip().lower()
+            match_num = re.match(r'^([0-9]+)\s*[\.\-\)]?\s*(.*)', clean)
+            prefix_num = int(match_num.group(1)) if match_num else 0
 
             if 'event' in clean:
                 counts['Events'] += 1
+                detailed_counts['Event'] += 1
+                if prefix_num > highest_prefix['Event']:
+                    highest_prefix['Event'] = prefix_num
             elif 'fz' in clean or 'fort zancudo' in clean:
                 counts['FZ-Raid'] += 1
+                detailed_counts['FZ Raid'] += 1
+                if prefix_num > highest_prefix['FZ Raid']:
+                    highest_prefix['FZ Raid'] = prefix_num
             elif any(k in clean for k in ['shop', 'ammu', 'geisel']):
                 counts['Shoprob etc.'] += 1
+                detailed_counts['Shoprob'] += 1
+                if prefix_num > highest_prefix['Shoprob']:
+                    highest_prefix['Shoprob'] = prefix_num
             elif 'inhaftierung' in clean or 'knast' in clean or 'sg' in clean or re.search(r'\binh\b', clean) or clean.startswith('inh'):
                 counts['Inhaftierungen'] += 1
+                detailed_counts['Inhaftierung'] += 1
+                if prefix_num > highest_prefix['Inhaftierung']:
+                    highest_prefix['Inhaftierung'] = prefix_num
             elif any(k in clean for k in ['streifenpartner', 'partner', 'rookie']):
                 counts['Streifenpartner'] += 1
-            elif any(k in clean for k in ['global', 'local']) or re.search(r'\b(gl|lo)\b', clean):
+                detailed_counts['Streifenpartner'] += 1
+                if prefix_num > highest_prefix['Streifenpartner']:
+                    highest_prefix['Streifenpartner'] = prefix_num
+            elif 'global' in clean or re.search(r'\bgl\b', clean):
                 counts['GL/LO'] += 1
+                detailed_counts['Global'] += 1
+                if prefix_num > highest_prefix['Global']:
+                    highest_prefix['Global'] = prefix_num
+            elif 'local' in clean or re.search(r'\blo\b', clean):
+                counts['GL/LO'] += 1
+                detailed_counts['Local'] += 1
+                if prefix_num > highest_prefix['Local']:
+                    highest_prefix['Local'] = prefix_num
+
+        next_numbers = {}
+        for cat in detailed_counts:
+            cnt = max(detailed_counts[cat], highest_prefix[cat])
+            next_numbers[cat] = cnt + 1
+
+        counts['next_numbers'] = next_numbers
+        counts['detailed_counts'] = detailed_counts
 
         formatted = (
             "Zwischenstand:\n"
@@ -1400,7 +1443,17 @@ class PDOverlayWindow(QWidget):
         super().__init__()
         self.current_screenshot = None
         self.pending_two_shot = self.load_pending_state()
+        self.next_numbers = {
+            'Inhaftierung': 1,
+            'Global': 1,
+            'Local': 1,
+            'Event': 1,
+            'Shoprob': 1,
+            'FZ Raid': 1,
+            'Streifenpartner': 1
+        }
         self.init_ui()
+        threading.Thread(target=self._fetch_stats_async, daemon=True).start()
 
     def load_pending_state(self):
         if os.path.exists(STATE_FILE):
@@ -1475,33 +1528,33 @@ class PDOverlayWindow(QWidget):
         self.grid = QGridLayout()
         self.grid.setSpacing(5)
 
-        self.btn_inhaftierung = QPushButton("[1] 🟢 Inhaftierung")
-        self.btn_inhaftierung.clicked.connect(lambda: self.handle_action("Inhaftierung", 1))
+        self.btn_inhaftierung = QPushButton("[1] 🟢 1. Inhaftierung")
+        self.btn_inhaftierung.clicked.connect(lambda: self.handle_action("Inhaftierung", "Inhaftierung"))
         self.grid.addWidget(self.btn_inhaftierung, 0, 0)
 
-        self.btn_global = QPushButton("[2] 🔴 Global")
-        self.btn_global.clicked.connect(lambda: self.handle_action("Global", 1))
+        self.btn_global = QPushButton("[2] 🔴 1. Global")
+        self.btn_global.clicked.connect(lambda: self.handle_action("Global", "Global"))
         self.grid.addWidget(self.btn_global, 0, 1)
 
-        self.btn_local = QPushButton("[3] 🔵 Local")
-        self.btn_local.clicked.connect(lambda: self.handle_action("Local", 1))
+        self.btn_local = QPushButton("[3] 🔵 1. Local")
+        self.btn_local.clicked.connect(lambda: self.handle_action("Local", "Local"))
         self.grid.addWidget(self.btn_local, 1, 0)
 
-        self.btn_event = QPushButton("[4] 🟣 Event")
+        self.btn_event = QPushButton("[4] 🟣 1. Event (1/2 Start)")
         self.btn_event.clicked.connect(lambda: self.handle_event_action("Event"))
         self.grid.addWidget(self.btn_event, 1, 1)
 
-        self.btn_shoprob = QPushButton("[5] 🟠 Shoprob")
-        self.btn_shoprob.clicked.connect(lambda: self.handle_shoprob_action("Ammu-Rob"))
+        self.btn_shoprob = QPushButton("[5] 🟠 1. Shoprob (1/2 Start)")
+        self.btn_shoprob.clicked.connect(lambda: self.handle_shoprob_action("Shoprob"))
         self.grid.addWidget(self.btn_shoprob, 2, 0)
 
-        self.btn_fz = QPushButton("[6] 🪖 FZ-Raid")
+        self.btn_fz = QPushButton("[6] 🪖 1. FZ-Raid (1/2 Start)")
         self.btn_fz.clicked.connect(lambda: self.handle_fz_action("FZ Raid"))
         self.grid.addWidget(self.btn_fz, 2, 1)
 
         # NEW ACTION: Streifenpartner mitnehmen!
-        self.btn_streifenpartner = QPushButton("[7] 👥 Streifenpartner")
-        self.btn_streifenpartner.clicked.connect(lambda: self.handle_action("Streifenpartner mitnehmen", 1))
+        self.btn_streifenpartner = QPushButton("[7] 👥 1. Streifenpartner")
+        self.btn_streifenpartner.clicked.connect(lambda: self.handle_action("Streifenpartner", "Streifenpartner"))
         self.grid.addWidget(self.btn_streifenpartner, 3, 0, 1, 2)
 
         self.card_layout.addLayout(self.grid)
@@ -1640,8 +1693,65 @@ class PDOverlayWindow(QWidget):
 
         self.reset_button_styles()
 
+    def get_next_number(self, cat):
+        return self.next_numbers.get(cat, 1)
+
+    def update_button_labels(self, recommendation=None):
+        inh_num = self.get_next_number("Inhaftierung")
+        gl_num = self.get_next_number("Global")
+        lo_num = self.get_next_number("Local")
+        ev_num = self.get_next_number("Event")
+        sh_num = self.get_next_number("Shoprob")
+        fz_num = self.get_next_number("FZ Raid")
+        sp_num = self.get_next_number("Streifenpartner")
+
+        self.btn_inhaftierung.setText(f"[1] 🟢 {inh_num}. Inhaftierung")
+        self.btn_global.setText(f"[2] 🔴 {gl_num}. Global")
+        self.btn_local.setText(f"[3] 🔵 {lo_num}. Local")
+
+        if self.pending_two_shot and self.pending_two_shot.get("type") == "Event":
+            self.status_label.setText("⏳ Event: Foto 1 aktiv. Das hier als Foto 2 senden?")
+            self.status_label.setVisible(True)
+            self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (2/2 Senden)")
+            self.highlight_button(self.btn_event, "#c084fc")
+        else:
+            self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (1/2 Start)")
+
+        if self.pending_two_shot and self.pending_two_shot.get("type") == "Ammu-Rob":
+            self.status_label.setText("⏳ Shoprob: Foto 1 aktiv. Das hier als Foto 2 senden?")
+            self.status_label.setVisible(True)
+            self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (2/2 Senden)")
+            self.highlight_button(self.btn_shoprob, "#e67e22")
+        else:
+            self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (1/2 Start)")
+
+        if self.pending_two_shot and self.pending_two_shot.get("type") == "FZ Raid":
+            self.status_label.setText("⏳ FZ-Raid: Foto 1 aktiv. Das hier als Foto 2 senden?")
+            self.status_label.setVisible(True)
+            self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (2/2 Senden)")
+            self.highlight_button(self.btn_fz, "#2ecc71")
+        else:
+            self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (1/2 Start)")
+
+        self.btn_streifenpartner.setText(f"[7] 👥 {sp_num}. Streifenpartner")
+
+        if not self.pending_two_shot:
+            self.status_label.setVisible(False)
+            if recommendation == "inhaftierung":
+                self.highlight_button(self.btn_inhaftierung, "#57f287")
+                self.btn_inhaftierung.setText(f"[1] 🟢 {inh_num}. Inhaftierung ⭐")
+            elif recommendation == "global":
+                self.highlight_button(self.btn_global, "#ed4245")
+                self.btn_global.setText(f"[2] 🔴 {gl_num}. Global ⭐")
+            elif recommendation == "local":
+                self.highlight_button(self.btn_local, "#5865f2")
+                self.btn_local.setText(f"[3] 🔵 {lo_num}. Local ⭐")
+
     def update_stats_ui(self, counts):
         if counts:
+            if 'next_numbers' in counts and isinstance(counts['next_numbers'], dict):
+                self.next_numbers.update(counts['next_numbers'])
+                self.update_button_labels()
             gl = f"{counts.get('GL/LO', 0)}/3"
             sh = f"{counts.get('Shoprob etc.', 0)}/3"
             ev = f"{counts.get('Events', 0)}/5"
@@ -1667,42 +1777,7 @@ class PDOverlayWindow(QWidget):
             self.thumb_label.setPixmap(scaled)
 
         self.reset_button_styles()
-
-        if self.pending_two_shot and self.pending_two_shot.get("type") == "Event":
-            self.status_label.setText("⏳ Event: Foto 1 aktiv. Das hier als Foto 2 senden?")
-            self.status_label.setVisible(True)
-            self.btn_event.setText("[4] 🟣 Event (2/2 Senden)")
-            self.highlight_button(self.btn_event, "#c084fc")
-        else:
-            self.btn_event.setText("[4] 🟣 Event (1/2 Start)")
-
-        if self.pending_two_shot and self.pending_two_shot.get("type") == "Ammu-Rob":
-            self.status_label.setText("⏳ Shoprob: Foto 1 aktiv. Das hier als Foto 2 senden?")
-            self.status_label.setVisible(True)
-            self.btn_shoprob.setText("[5] 🟠 Shoprob (2/2 Senden)")
-            self.highlight_button(self.btn_shoprob, "#e67e22")
-        else:
-            self.btn_shoprob.setText("[5] 🟠 Shoprob (1/2 Start)")
-
-        if self.pending_two_shot and self.pending_two_shot.get("type") == "FZ Raid":
-            self.status_label.setText("⏳ FZ-Raid: Foto 1 aktiv. Das hier als Foto 2 senden?")
-            self.status_label.setVisible(True)
-            self.btn_fz.setText("[6] 🪖 FZ-Raid (2/2 Senden)")
-            self.highlight_button(self.btn_fz, "#2ecc71")
-        else:
-            self.btn_fz.setText("[6] 🪖 FZ-Raid (1/2 Start)")
-
-        if not self.pending_two_shot:
-            self.status_label.setVisible(False)
-            if recommendation == "inhaftierung":
-                self.highlight_button(self.btn_inhaftierung, "#57f287")
-                self.btn_inhaftierung.setText("[1] 🟢 Inhaftierung ⭐")
-            elif recommendation == "global":
-                self.highlight_button(self.btn_global, "#ed4245")
-                self.btn_global.setText("[2] 🔴 Global ⭐")
-            elif recommendation == "local":
-                self.highlight_button(self.btn_local, "#5865f2")
-                self.btn_local.setText("[3] 🔵 Local ⭐")
+        self.update_button_labels(recommendation)
 
         self.notify_label.setVisible(False)
         self.show()
@@ -1717,15 +1792,6 @@ class PDOverlayWindow(QWidget):
             log(f"[Win32 Error] {e}")
 
         threading.Thread(target=self._fetch_stats_async, daemon=True).start()
-
-        try:
-            play_beep(1200, 100)
-        except Exception:
-            pass
-
-        hud_close = int(CONFIG.get("hud", {}).get("auto_close_sec", 25))
-        if hud_close > 0:
-            self.auto_timer.start(hud_close * 1000)
 
     def _fetch_stats_async(self):
         counts, _ = calculate_zwischenstand()
@@ -1747,38 +1813,40 @@ class PDOverlayWindow(QWidget):
                 font-weight: bold;
                 border: 2px solid {border_color};
                 text-align: left;
+                font-family: "{hud.get('font_family', 'Segoe UI')}";
             }}
         """)
 
     def reset_button_styles(self):
         self.btn_inhaftierung.setStyleSheet(self.btn_base_style)
-        self.btn_inhaftierung.setText("[1] 🟢 Inhaftierung")
         self.btn_global.setStyleSheet(self.btn_base_style)
-        self.btn_global.setText("[2] 🔴 Global")
         self.btn_local.setStyleSheet(self.btn_base_style)
-        self.btn_local.setText("[3] 🔵 Local")
         self.btn_event.setStyleSheet(self.btn_base_style)
-        self.btn_event.setText("[4] 🟣 Event")
         self.btn_shoprob.setStyleSheet(self.btn_base_style)
         self.btn_fz.setStyleSheet(self.btn_base_style)
         self.btn_streifenpartner.setStyleSheet(self.btn_base_style)
+        self.update_button_labels()
 
-    def handle_action(self, title, count):
+    def handle_action(self, cat_key, base_title):
+        num = self.get_next_number(cat_key)
+        full_title = f"{num}. {base_title}"
         self.auto_timer.stop()
-        self.show_notification(f"⏳ Sende {title}...")
-        threading.Thread(target=self._send_async, args=(title, [self.current_screenshot]), daemon=True).start()
+        self.show_notification(f"⏳ Sende {full_title}...")
+        threading.Thread(target=self._send_async, args=(cat_key, full_title, [self.current_screenshot]), daemon=True).start()
 
-    def handle_event_action(self, title):
+    def handle_event_action(self, base_title="Event"):
         self.auto_timer.stop()
+        num = self.get_next_number("Event")
+        full_title = f"{num}. Event"
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Event":
             p1 = self.pending_two_shot.get("path")
             p2 = self.current_screenshot
             self.clear_pending_state()
-            self.show_notification("⏳ Sende Event (2 Fotos)...")
-            threading.Thread(target=self._send_async, args=("Event", [p1, p2]), daemon=True).start()
+            self.show_notification(f"⏳ Sende {full_title} (2 Fotos)...")
+            threading.Thread(target=self._send_async, args=("Event", full_title, [p1, p2]), daemon=True).start()
         else:
             self.save_pending_state({"type": "Event", "path": self.current_screenshot, "time": time.time()})
-            self.show_notification("📌 Foto 1 gespeichert! Warte auf Foto 2.")
+            self.show_notification(f"📌 {full_title} (Foto 1/2) gespeichert! Warte auf Foto 2.")
             try:
                 play_beep(900, 80)
                 play_beep(1300, 80)
@@ -1786,17 +1854,19 @@ class PDOverlayWindow(QWidget):
                 pass
             QTimer.singleShot(1800, self.close_overlay)
 
-    def handle_shoprob_action(self, title):
+    def handle_shoprob_action(self, base_title="Shoprob"):
         self.auto_timer.stop()
+        num = self.get_next_number("Shoprob")
+        full_title = f"{num}. Shoprob"
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Ammu-Rob":
             p1 = self.pending_two_shot.get("path")
             p2 = self.current_screenshot
             self.clear_pending_state()
-            self.show_notification("⏳ Sende Shoprob (2 Fotos)...")
-            threading.Thread(target=self._send_async, args=("Ammu-Rob", [p1, p2]), daemon=True).start()
+            self.show_notification(f"⏳ Sende {full_title} (2 Fotos)...")
+            threading.Thread(target=self._send_async, args=("Shoprob", full_title, [p1, p2]), daemon=True).start()
         else:
             self.save_pending_state({"type": "Ammu-Rob", "path": self.current_screenshot, "time": time.time()})
-            self.show_notification("📌 Foto 1 gespeichert! Warte auf Foto 2.")
+            self.show_notification(f"📌 {full_title} (Foto 1/2) gespeichert! Warte auf Foto 2.")
             try:
                 play_beep(900, 80)
                 play_beep(1300, 80)
@@ -1804,17 +1874,19 @@ class PDOverlayWindow(QWidget):
                 pass
             QTimer.singleShot(1800, self.close_overlay)
 
-    def handle_fz_action(self, title):
+    def handle_fz_action(self, base_title="FZ-Raid"):
         self.auto_timer.stop()
+        num = self.get_next_number("FZ Raid")
+        full_title = f"{num}. FZ-Raid"
         if self.pending_two_shot and self.pending_two_shot.get("type") == "FZ Raid":
             p1 = self.pending_two_shot.get("path")
             p2 = self.current_screenshot
             self.clear_pending_state()
-            self.show_notification("⏳ Sende FZ-Raid (2 Fotos)...")
-            threading.Thread(target=self._send_async, args=("FZ Raid", [p1, p2]), daemon=True).start()
+            self.show_notification(f"⏳ Sende {full_title} (2 Fotos)...")
+            threading.Thread(target=self._send_async, args=("FZ Raid", full_title, [p1, p2]), daemon=True).start()
         else:
             self.save_pending_state({"type": "FZ Raid", "path": self.current_screenshot, "time": time.time()})
-            self.show_notification("📌 Foto 1 gespeichert! Warte auf Foto 2.")
+            self.show_notification(f"📌 {full_title} (Foto 1/2) gespeichert! Warte auf Foto 2.")
             try:
                 play_beep(900, 80)
                 play_beep(1300, 80)
@@ -1861,7 +1933,7 @@ class PDOverlayWindow(QWidget):
             self.show_notification("❌ Sende-Fehler!")
             QTimer.singleShot(2500, self.close_overlay)
 
-    def _send_async(self, title, file_paths):
+    def _send_async(self, cat_key, title, file_paths):
         token = get_discord_token()
         if not token:
             self.show_notification("❌ Kein Discord Token gefunden!")
@@ -1876,12 +1948,15 @@ class PDOverlayWindow(QWidget):
 
         success, resp = send_to_discord(token, thread_id, title, file_paths)
         if success:
+            if cat_key in self.next_numbers:
+                self.next_numbers[cat_key] += 1
+                self.update_button_labels()
             try:
                 play_beep(1500, 100)
                 play_beep(1900, 150)
             except Exception:
                 pass
-            self.show_notification("✅ Erfolgreich in Discord gepostet!")
+            self.show_notification(f"✅ {title} erfolgreich gepostet!")
             threading.Thread(target=self._fetch_stats_async, daemon=True).start()
             QTimer.singleShot(1500, self.close_overlay)
         else:
@@ -1902,20 +1977,20 @@ class PDOverlayWindow(QWidget):
             return
         log(f"[Hotkey] Taste gedrückt: {key_char}")
         if key_char == "1":
-            self.handle_action("Inhaftierung", 1)
+            self.handle_action("Inhaftierung", "Inhaftierung")
         elif key_char == "2":
-            self.handle_action("Global", 1)
+            self.handle_action("Global", "Global")
         elif key_char == "3":
-            self.handle_action("Local", 1)
+            self.handle_action("Local", "Local")
         elif key_char == "4":
             self.handle_event_action("Event")
         elif key_char == "5":
-            self.handle_shoprob_action("Ammu-Rob")
+            self.handle_shoprob_action("Shoprob")
         elif key_char == "6":
             self.handle_fz_action("FZ Raid")
         elif key_char == "7":
-            self.handle_action("Streifenpartner mitnehmen", 1)
-        elif key_char in ["8", "z"]:
+            self.handle_action("Streifenpartner", "Streifenpartner")
+        elif key_char in ("8", "z", "Z"):
             self.handle_send_summary()
         elif key_char == "esc":
             self.close_overlay()

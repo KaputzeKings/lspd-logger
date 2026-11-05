@@ -46,7 +46,22 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
 
 ---
 
-### 2. 📜 Teleprompter, Rechtebelehrung & Anwalts-Timer ([F10])
+### 2. 🔢 Fortlaufende Nummerierung für alle Logs (Unendlicher Zähler)
+* **Automatisches Zählen:** Jeder Log-Eintrag wird automatisch mit seiner fortlaufenden Nummer betitelt (z.B. `1. Inhaftierung`, `2. Inhaftierung` ... `12. Inhaftierung`, `13. Inhaftierung` ohne Begrenzung).
+* **Dynamische Live-Buttons:** Die Hotkey-Buttons im Ingame-HUD zeigen sofort die nächste zu vergebende Nummer an (`[1] 🟢 12. Inhaftierung`, `[2] 🔴 9. Global`, etc.).
+* **Discord-Thread-Synchronisation:** Beim Start und nach jedem Post liest das Tool den Discord-Thread aus, erkennt die bisher höchste vergebene Nummer und zählt nahtlos weiter.
+* **Alle Kategorien abgedeckt:**
+  * `Inhaftierung` (z.B. `12. Inhaftierung`)
+  * `Global` (z.B. `9. Global`)
+  * `Local` (z.B. `3. Local`)
+  * `Event` (z.B. `8. Event`)
+  * `Shoprob` (z.B. `4. Shoprob`)
+  * `FZ-Raid` (z.B. `2. FZ-Raid`)
+  * `Streifenpartner` (z.B. `1. Streifenpartner`)
+
+---
+
+### 3. 📜 Teleprompter, Rechtebelehrung & Anwalts-Timer ([F10])
 * **Exakte Miranda-Rechte:**
   1. *Sie haben das Recht zu schweigen, alles was Sie sagen kann und wird gegen Sie verwendet werden.*
   2. *Ab 2 Wanteds haben Sie das Recht auf einen staatlich anerkannten Anwalt, den Sie selbst benennen müssen.*
@@ -62,7 +77,7 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
 
 ---
 
-### 3. ⚙️ Neues Schwarz-Weiß-Grau Einstellungsmenü (Monochrome)
+### 4. ⚙️ Neues Schwarz-Weiß-Grau Einstellungsmenü (Monochrome)
 Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) ist vollständig in einem übersichtlichen, matten **Schwarz-Weiß-Grau (Monochrome)** Design gehalten und in 3 saubere Tabs unterteilt:
 * **Tab 1: 👮 Dienst & Discord:**
   * Reisepassnummer / Badge-ID (Dienstnummer).
@@ -78,7 +93,7 @@ Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) ist vollst
 
 ---
 
-### 4. 🎨 Vollständig anpassbares Design & Themes
+### 5. 🎨 Vollständig anpassbares Design & Themes
 * **Live-Themes:**
   * ⚫ *Schwarz-Grau-Weiß (Monochrome)*
   * 🌐 *Grandkasten Cyberpunk* (Original Grandkasten DE1 Navy / Blue)

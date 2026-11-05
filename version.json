@@ -1,5 +1,5 @@
 {
-    "version": "1.4.0",
-    "changelog": "🛡️ Update v1.4.0 - Monochrome Grandkasten Einstellungsmenü & F12-Fix:\n- Reines Schwarz-Weiß-Grau (Monochrome) Design: Einstellungen vollständig überarbeitet in edlem, aufgeräumtem Card-Design ohne störende Farbtöne.\n- 3 übersichtliche Tabs: 'Dienst & Discord', 'Grandkasten Rechner & F10' und 'Ingame-HUD & Audio'.\n- F12 Rechner fixiert: Feste, zentrierte Bildschirmposition – versehentliches Verschieben per Mausklick ist vollständig deaktiviert.\n- Dokumentation aktualisiert: Vollständiges README mit allen Hotkeys, Funktionen und Richtlinien.",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.0/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.4.1",
+    "changelog": "🛡️ Update v1.4.1 - Fortlaufende Nummerierung für alle Logs:\n- Automatisches Zählen: Alle Log-Einträge zählen jetzt unendlich weiter (z.B. '12. Inhaftierung', '9. Global', '3. Local', '8. Event', etc.).\n- Live-Buttons im Overlay: Die Hotkey-Buttons [1]-[7] zeigen dynamisch direkt die nächste Nummer an.\n- Thread-Synchronisation: Erkennt automatisch bereits gepostete Logs und nummeriert nahtlos weiter.",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.1/LSPD_Log_Assistent_Paket.zip"
 }
