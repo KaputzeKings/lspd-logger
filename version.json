@@ -1,5 +1,5 @@
 {
-    "version": "1.4.1",
-    "changelog": "🛡️ Update v1.4.1 - Fortlaufende Nummerierung für alle Logs:\n- Automatisches Zählen: Alle Log-Einträge zählen jetzt unendlich weiter (z.B. '12. Inhaftierung', '9. Global', '3. Local', '8. Event', etc.).\n- Live-Buttons im Overlay: Die Hotkey-Buttons [1]-[7] zeigen dynamisch direkt die nächste Nummer an.\n- Thread-Synchronisation: Erkennt automatisch bereits gepostete Logs und nummeriert nahtlos weiter.",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.1/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.4.2",
+    "changelog": "🛡️ Update v1.4.2 - Log-Beschriftung, Schriftstil & Letzten Log löschen:\n- Log-Beschriftungen & Formatierung: In den Einstellungen (Tab 2) kann für alle 7 Kategorien frei gewählt werden, wie der Log-Titel beim Senden formatiert wird (mit {nr} als Zähler-Platzhalter).\n- Discord Markdown Schriftstil: Checkboxen für Fett (**Text**), Unterstrichen (__Text__) und Kursiv (*Text*) mit Live-Vorschau.\n- Letzten Log automatisch löschen: Per Knopfdruck ([9] / [ENTF] im HUD oder über das Tray-Menü) kann der letzte gesendete Log automatisch aus Discord gelöscht werden.\n- HUD-Optimierung: Breiteres Kartenlayout und optimierte Button-Labels, sodass keine Texte mehr abgeschnitten werden.",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.2/LSPD_Log_Assistent_Paket.zip"
 }

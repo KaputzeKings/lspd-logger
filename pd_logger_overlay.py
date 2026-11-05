@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKey
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.4.1"
+CURRENT_VERSION = "1.4.2"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -214,6 +214,20 @@ def get_default_config():
         "prompter_seconds": 3,
         "calc_scale": 0.82,
         "calc_theme": "Schwarz-Grau-Weiß (Monochrome)",
+        "log_titles": {
+            "Inhaftierung": "{nr}. Inhaftierung",
+            "Global": "{nr}. Global",
+            "Local": "{nr}. Local",
+            "Event": "{nr}. Event",
+            "Shoprob": "{nr}. Shoprob",
+            "FZ Raid": "{nr}. FZ-Raid",
+            "Streifenpartner": "{nr}. Streifenpartner"
+        },
+        "log_style": {
+            "bold": False,
+            "underline": False,
+            "italic": False
+        },
         "hud": {
             "theme": "Schwarz-Grau-Weiß (Monochrome)",
             "scale": 1.0,
@@ -237,11 +251,96 @@ def load_config():
                 config.update(loaded)
                 if "hud" in loaded and isinstance(loaded["hud"], dict):
                     config["hud"] = {**get_default_config()["hud"], **loaded["hud"]}
+                if "log_titles" in loaded and isinstance(loaded["log_titles"], dict):
+                    config["log_titles"] = {**get_default_config()["log_titles"], **loaded["log_titles"]}
+                if "log_style" in loaded and isinstance(loaded["log_style"], dict):
+                    config["log_style"] = {**get_default_config()["log_style"], **loaded["log_style"]}
         except Exception as e:
             log(f"[Config Load Error] {e}")
     else:
         save_config(config)
     return config
+
+def format_log_title_for_discord(cat_key, base_title, num, config=None):
+    cfg = config or CONFIG
+    titles = cfg.get("log_titles", {})
+    default_tmpl = f"{{nr}}. {base_title}"
+    tmpl = titles.get(cat_key, default_tmpl).strip()
+    if not tmpl:
+        tmpl = default_tmpl
+
+    if "{nr}" in tmpl:
+        text = tmpl.replace("{nr}", str(num))
+    else:
+        text = f"{num}. {tmpl}"
+
+    style = cfg.get("log_style", {})
+    is_italic = bool(style.get("italic", False))
+    is_bold = bool(style.get("bold", False))
+    is_underline = bool(style.get("underline", False))
+
+    if is_italic and is_bold:
+        text = f"***{text}***"
+    elif is_bold:
+        text = f"**{text}**"
+    elif is_italic:
+        text = f"*{text}*"
+
+    if is_underline:
+        text = f"__{text}__"
+
+    return text
+
+def delete_last_discord_log(token=None, thread_id=None):
+    if not token:
+        token = get_discord_token()
+    if not token:
+        return False, "Kein Discord Token gefunden"
+    if not thread_id:
+        thread_id = get_active_thread_id(token)
+    if not thread_id:
+        return False, "Kein Forum-Thread gefunden"
+
+    headers = {"Authorization": token}
+    try:
+        r_me = requests.get("https://discord.com/api/v9/users/@me", headers=headers, timeout=6)
+        my_id = r_me.json().get("id") if r_me.status_code == 200 else None
+    except Exception:
+        my_id = None
+
+    url = f"https://discord.com/api/v9/channels/{thread_id}/messages?limit=25"
+    try:
+        res = requests.get(url, headers=headers, timeout=8)
+        if res.status_code != 200:
+            return False, f"Fehler {res.status_code} beim Abrufen der Nachrichten"
+        
+        msgs = res.json()
+        target_msg = None
+        for m in msgs:
+            if my_id and m.get("author", {}).get("id") != my_id:
+                continue
+            content = m.get("content", "")
+            if "Zwischenstand:" in content or "Uprank-Punktesystem" in content:
+                continue
+            has_media = bool(m.get("attachments")) or ("http://" in content or "https://" in content)
+            if has_media:
+                target_msg = m
+                break
+
+        if not target_msg:
+            return False, "Kein eigener Log-Post im Thread gefunden"
+
+        msg_id = target_msg.get("id")
+        content_preview = target_msg.get("content", "Log-Eintrag")
+        del_url = f"https://discord.com/api/v9/channels/{thread_id}/messages/{msg_id}"
+        del_res = requests.delete(del_url, headers=headers, timeout=8)
+        
+        if del_res.status_code in (200, 204):
+            return True, content_preview
+        else:
+            return False, f"Discord API Fehler {del_res.status_code}"
+    except Exception as e:
+        return False, str(e)
 
 def save_config(config):
     try:
@@ -441,7 +540,8 @@ def calculate_zwischenstand(token=None, thread_id=None):
                 continue
 
             clean = re.sub(r'<@!?[0-9]+>', '', content).strip().lower()
-            match_num = re.match(r'^([0-9]+)\s*[\.\-\)]?\s*(.*)', clean)
+            clean_text = clean.replace('*', '').replace('_', '').replace('~', '').replace('#', '').strip()
+            match_num = re.match(r'^([0-9]+)\s*[\.\-\)]?\s*(.*)', clean_text)
             prefix_num = int(match_num.group(1)) if match_num else 0
 
             if 'event' in clean:
@@ -639,8 +739,8 @@ def calculate_overlay_geometry(scale=1.0, position="Oben Rechts"):
     avail_w = avail.width() if avail else 1920
     avail_h = avail.height() if avail else 1080
 
-    base_w = 350
-    base_h = 530
+    base_w = 415
+    base_h = 595
     w = int(base_w * scale)
     h = int(base_h * scale)
 
@@ -899,7 +999,7 @@ class SetupDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("LSPD Dienst-Assistent - Einstellungen")
-        self.setFixedSize(680, 640)
+        self.setFixedSize(720, 680)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
         self.init_ui()
 
@@ -933,7 +1033,7 @@ class SetupDialog(QDialog):
             QTabBar::tab {
                 background: #141414;
                 color: #888888;
-                padding: 8px 18px;
+                padding: 8px 16px;
                 border-top-left-radius: 5px;
                 border-top-right-radius: 5px;
                 font-weight: bold;
@@ -1142,7 +1242,115 @@ class SetupDialog(QDialog):
         l_serv.addStretch()
         self.tabs.addTab(tab_service, "👮 Dienst & Discord")
 
-        # ==================== TAB 2: Grandkasten Rechner & F10 ====================
+        # ==================== TAB 2: Log-Beschriftung & Stil ====================
+        tab_formatting = QWidget()
+        l_form = QVBoxLayout(tab_formatting)
+        l_form.setContentsMargins(12, 12, 12, 12)
+        l_form.setSpacing(10)
+
+        # Card 1: Schriftstil (Markdown)
+        cf1, cf1_lay = self._create_card("DISCORD SCHRIFTSTIL BEIM SENDEN", "• Markdown-Formatierung")
+        style_cfg = CONFIG.get("log_style", {})
+        
+        chk_lay = QHBoxLayout()
+        chk_lay.setSpacing(16)
+        self.cb_bold = QCheckBox("Fett (**Text**)")
+        self.cb_bold.setChecked(style_cfg.get("bold", False))
+        self.cb_bold.stateChanged.connect(self._update_style_preview)
+        chk_lay.addWidget(self.cb_bold)
+
+        self.cb_underline = QCheckBox("Unterstrichen (__Text__)")
+        self.cb_underline.setChecked(style_cfg.get("underline", False))
+        self.cb_underline.stateChanged.connect(self._update_style_preview)
+        chk_lay.addWidget(self.cb_underline)
+
+        self.cb_italic = QCheckBox("Kursiv (*Text*)")
+        self.cb_italic.setChecked(style_cfg.get("italic", False))
+        self.cb_italic.stateChanged.connect(self._update_style_preview)
+        chk_lay.addWidget(self.cb_italic)
+        chk_lay.addStretch()
+        cf1_lay.addLayout(chk_lay)
+
+        # Live Preview Box
+        preview_box = QFrame()
+        preview_box.setStyleSheet("background: #0d0d0d; border: 1px solid #333333; border-radius: 5px; padding: 8px;")
+        pv_lay = QHBoxLayout(preview_box)
+        pv_lay.setContentsMargins(8, 4, 8, 4)
+        pv_ico = QLabel("💬")
+        pv_ico.setStyleSheet("font-size: 14px; border: none;")
+        pv_lay.addWidget(pv_ico)
+        self.lbl_style_preview = QLabel()
+        self.lbl_style_preview.setStyleSheet("border: none; font-size: 12px;")
+        pv_lay.addWidget(self.lbl_style_preview, 1)
+        cf1_lay.addWidget(preview_box)
+        l_form.addWidget(cf1)
+
+        # Card 2: Titel-Vorlagen der Kategorien
+        cf2, cf2_lay = self._create_card("LOG-BESCHRIFTUNGEN DER KATEGORIEN", "• Platzhalter {nr} = Zähler")
+        h_tmpl = QLabel("💡 Verwende <b>{nr}</b> als Platzhalter für die fortlaufende Nummer (z. B. <i>{nr}. Inhaftierung</i> oder <i>Inhaftierung #{nr}</i>). Im HUD bleibt die Ansicht kurz und sauber.")
+        h_tmpl.setObjectName("hintLabel")
+        h_tmpl.setWordWrap(True)
+        cf2_lay.addWidget(h_tmpl)
+
+        titles_cfg = CONFIG.get("log_titles", {})
+        
+        t_grid = QGridLayout()
+        t_grid.setHorizontalSpacing(14)
+        t_grid.setVerticalSpacing(6)
+
+        t_grid.addWidget(QLabel("🟢 Inhaftierung:"), 0, 0)
+        self.title_inh = QLineEdit()
+        self.title_inh.setText(titles_cfg.get("Inhaftierung", "{nr}. Inhaftierung"))
+        self.title_inh.textChanged.connect(self._update_style_preview)
+        t_grid.addWidget(self.title_inh, 0, 1)
+
+        t_grid.addWidget(QLabel("🔴 Global:"), 1, 0)
+        self.title_global = QLineEdit()
+        self.title_global.setText(titles_cfg.get("Global", "{nr}. Global"))
+        self.title_global.textChanged.connect(self._update_style_preview)
+        t_grid.addWidget(self.title_global, 1, 1)
+
+        t_grid.addWidget(QLabel("🔵 Local:"), 2, 0)
+        self.title_local = QLineEdit()
+        self.title_local.setText(titles_cfg.get("Local", "{nr}. Local"))
+        self.title_local.textChanged.connect(self._update_style_preview)
+        t_grid.addWidget(self.title_local, 2, 1)
+
+        t_grid.addWidget(QLabel("🟣 Event:"), 3, 0)
+        self.title_event = QLineEdit()
+        self.title_event.setText(titles_cfg.get("Event", "{nr}. Event"))
+        self.title_event.textChanged.connect(self._update_style_preview)
+        t_grid.addWidget(self.title_event, 3, 1)
+
+        t_grid.addWidget(QLabel("🟠 Shoprob:"), 4, 0)
+        self.title_shoprob = QLineEdit()
+        self.title_shoprob.setText(titles_cfg.get("Shoprob", "{nr}. Shoprob"))
+        self.title_shoprob.textChanged.connect(self._update_style_preview)
+        t_grid.addWidget(self.title_shoprob, 4, 1)
+
+        t_grid.addWidget(QLabel("🪖 FZ-Raid:"), 5, 0)
+        self.title_fz = QLineEdit()
+        self.title_fz.setText(titles_cfg.get("FZ Raid", "{nr}. FZ-Raid"))
+        self.title_fz.textChanged.connect(self._update_style_preview)
+        t_grid.addWidget(self.title_fz, 5, 1)
+
+        t_grid.addWidget(QLabel("👥 Streifenpartner:"), 6, 0)
+        self.title_partner = QLineEdit()
+        self.title_partner.setText(titles_cfg.get("Streifenpartner", "{nr}. Streifenpartner"))
+        self.title_partner.textChanged.connect(self._update_style_preview)
+        t_grid.addWidget(self.title_partner, 6, 1)
+
+        cf2_lay.addLayout(t_grid)
+
+        btn_reset_titles = QPushButton("🔄 Beschriftungen auf Standard zurücksetzen")
+        btn_reset_titles.clicked.connect(self._reset_titles_to_defaults)
+        cf2_lay.addWidget(btn_reset_titles)
+
+        l_form.addWidget(cf2)
+        l_form.addStretch()
+        self.tabs.addTab(tab_formatting, "📝 Log-Beschriftung & Stil")
+
+        # ==================== TAB 3: Grandkasten Rechner & F10 ====================
         tab_calc = QWidget()
         l_calc = QVBoxLayout(tab_calc)
         l_calc.setContentsMargins(12, 12, 12, 12)
@@ -1236,7 +1444,7 @@ class SetupDialog(QDialog):
         l_calc.addStretch()
         self.tabs.addTab(tab_calc, "⚖️ Grandkasten Rechner & F10")
 
-        # ==================== TAB 3: Ingame-HUD & Audio ====================
+        # ==================== TAB 4: Ingame-HUD & Audio ====================
         tab_hud = QWidget()
         l_hud = QVBoxLayout(tab_hud)
         l_hud.setContentsMargins(12, 12, 12, 12)
@@ -1371,6 +1579,45 @@ class SetupDialog(QDialog):
         bottom_bar.addWidget(self.cancel_btn, 1)
 
         layout.addLayout(bottom_bar)
+        self._update_style_preview()
+
+    def _update_style_preview(self):
+        tmpl = self.title_inh.text().strip() or "{nr}. Inhaftierung"
+        raw = tmpl.replace("{nr}", "12") if "{nr}" in tmpl else f"12. {tmpl}"
+        
+        is_b = self.cb_bold.isChecked()
+        is_u = self.cb_underline.isChecked()
+        is_i = self.cb_italic.isChecked()
+
+        # Build discord representation
+        disc = raw
+        if is_i and is_b: disc = f"***{disc}***"
+        elif is_b: disc = f"**{disc}**"
+        elif is_i: disc = f"*{disc}*"
+        if is_u: disc = f"__{disc}__"
+
+        # Build HTML styling
+        css_styles = []
+        if is_b: css_styles.append("font-weight: bold; color: #ffffff;")
+        else: css_styles.append("font-weight: normal; color: #dddddd;")
+        if is_u: css_styles.append("text-decoration: underline;")
+        if is_i: css_styles.append("font-style: italic;")
+        
+        style_attr = " ".join(css_styles)
+        self.lbl_style_preview.setText(
+            f"<span style='color: #888888;'>Discord-Vorschau:</span> <span style='{style_attr}'>{raw}</span> "
+            f"<span style='color: #666666; font-size: 10px;'>({disc})</span>"
+        )
+
+    def _reset_titles_to_defaults(self):
+        self.title_inh.setText("{nr}. Inhaftierung")
+        self.title_global.setText("{nr}. Global")
+        self.title_local.setText("{nr}. Local")
+        self.title_event.setText("{nr}. Event")
+        self.title_shoprob.setText("{nr}. Shoprob")
+        self.title_fz.setText("{nr}. FZ-Raid")
+        self.title_partner.setText("{nr}. Streifenpartner")
+        self._update_style_preview()
 
     def choose_directory(self):
         curr = self.dir_input.text()
@@ -1412,6 +1659,22 @@ class SetupDialog(QDialog):
         if hasattr(self, 'cb_sound'):
             CONFIG["sound_enabled"] = self.cb_sound.isChecked()
 
+        CONFIG["log_style"] = {
+            "bold": self.cb_bold.isChecked(),
+            "underline": self.cb_underline.isChecked(),
+            "italic": self.cb_italic.isChecked()
+        }
+
+        CONFIG["log_titles"] = {
+            "Inhaftierung": self.title_inh.text().strip() or "{nr}. Inhaftierung",
+            "Global": self.title_global.text().strip() or "{nr}. Global",
+            "Local": self.title_local.text().strip() or "{nr}. Local",
+            "Event": self.title_event.text().strip() or "{nr}. Event",
+            "Shoprob": self.title_shoprob.text().strip() or "{nr}. Shoprob",
+            "FZ Raid": self.title_fz.text().strip() or "{nr}. FZ-Raid",
+            "Streifenpartner": self.title_partner.text().strip() or "{nr}. Streifenpartner"
+        }
+
         CONFIG["hud"] = {
             "theme": self.theme_combo.currentText(),
             "scale": float(self.scale_combo.currentData()),
@@ -1437,7 +1700,6 @@ class SetupDialog(QDialog):
         overlay_signal.reload_theme.emit()
         self.accept()
 
-# Full Customizable Overlay Window
 class PDOverlayWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -1524,9 +1786,9 @@ class PDOverlayWindow(QWidget):
         self.thumb_label.setAlignment(Qt.AlignCenter)
         self.card_layout.addWidget(self.thumb_label)
 
-        # Action Buttons Grid (4 rows x 2 columns)
+        # Action Buttons Grid (3 rows x 2 columns)
         self.grid = QGridLayout()
-        self.grid.setSpacing(5)
+        self.grid.setSpacing(6)
 
         self.btn_inhaftierung = QPushButton("[1] 🟢 1. Inhaftierung")
         self.btn_inhaftierung.clicked.connect(lambda: self.handle_action("Inhaftierung", "Inhaftierung"))
@@ -1540,29 +1802,34 @@ class PDOverlayWindow(QWidget):
         self.btn_local.clicked.connect(lambda: self.handle_action("Local", "Local"))
         self.grid.addWidget(self.btn_local, 1, 0)
 
-        self.btn_event = QPushButton("[4] 🟣 1. Event (1/2 Start)")
+        self.btn_event = QPushButton("[4] 🟣 1. Event (1/2)")
         self.btn_event.clicked.connect(lambda: self.handle_event_action("Event"))
         self.grid.addWidget(self.btn_event, 1, 1)
 
-        self.btn_shoprob = QPushButton("[5] 🟠 1. Shoprob (1/2 Start)")
+        self.btn_shoprob = QPushButton("[5] 🟠 1. Shoprob (1/2)")
         self.btn_shoprob.clicked.connect(lambda: self.handle_shoprob_action("Shoprob"))
         self.grid.addWidget(self.btn_shoprob, 2, 0)
 
-        self.btn_fz = QPushButton("[6] 🪖 1. FZ-Raid (1/2 Start)")
+        self.btn_fz = QPushButton("[6] 🪖 1. FZ-Raid (1/2)")
         self.btn_fz.clicked.connect(lambda: self.handle_fz_action("FZ Raid"))
         self.grid.addWidget(self.btn_fz, 2, 1)
 
-        # NEW ACTION: Streifenpartner mitnehmen!
-        self.btn_streifenpartner = QPushButton("[7] 👥 1. Streifenpartner")
-        self.btn_streifenpartner.clicked.connect(lambda: self.handle_action("Streifenpartner", "Streifenpartner"))
-        self.grid.addWidget(self.btn_streifenpartner, 3, 0, 1, 2)
-
         self.card_layout.addLayout(self.grid)
+
+        # Streifenpartner Button
+        self.btn_streifenpartner = QPushButton("[7] 👥 1. Streifenpartner mitnehmen")
+        self.btn_streifenpartner.clicked.connect(lambda: self.handle_action("Streifenpartner", "Streifenpartner"))
+        self.card_layout.addWidget(self.btn_streifenpartner)
 
         # Intermediate Summary Button
         self.btn_send_summary = QPushButton("[8] / [Z] 📊 Zwischenstand in Chat senden")
         self.btn_send_summary.clicked.connect(self.handle_send_summary)
         self.card_layout.addWidget(self.btn_send_summary)
+
+        # Delete Last Log Button
+        self.btn_delete_last = QPushButton("[9] / [ENTF] 🗑️ Letzten Log löschen")
+        self.btn_delete_last.clicked.connect(self.handle_delete_last_log)
+        self.card_layout.addWidget(self.btn_delete_last)
 
         # Cancel Button
         self.btn_cancel = QPushButton("[ESC] ❌ Verwerfen (Nicht posten)")
@@ -1627,8 +1894,8 @@ class PDOverlayWindow(QWidget):
         self.status_label.setStyleSheet(f"color: {colors['border']}; font-size: {int(font_size * 0.95)}px; font-weight: bold; border: none;")
         self.notify_label.setStyleSheet(f"color: {colors['border']}; font-size: {int(font_size * 1.05)}px; font-weight: bold; border: none;")
 
-        thumb_w = int(290 * scale)
-        thumb_h = int(135 * scale)
+        thumb_w = int(350 * scale)
+        thumb_h = int(155 * scale)
         self.thumb_label.setFixedSize(thumb_w, thumb_h)
         self.thumb_label.setStyleSheet(f"background-color: {colors['thumb_bg']}; border-radius: {int(6 * scale)}px; border: 1px solid {colors['accent']};")
 
@@ -1637,7 +1904,7 @@ class PDOverlayWindow(QWidget):
                 background-color: {colors['btn_bg']};
                 color: {colors['text']};
                 border-radius: {int(6 * scale)}px;
-                padding: {int(6 * scale)}px {int(8 * scale)}px;
+                padding: {int(5 * scale)}px {int(7 * scale)}px;
                 font-size: {font_size}px;
                 font-weight: bold;
                 border: 1px solid {colors['accent']};
@@ -1671,6 +1938,28 @@ class PDOverlayWindow(QWidget):
             }}
             QPushButton:pressed {{
                 background: {colors['accent_pressed']};
+            }}
+        """)
+
+        self.btn_delete_last.setStyleSheet(f"""
+            QPushButton {{
+                background-color: #261111;
+                color: #f87171;
+                border-radius: {int(6 * scale)}px;
+                padding: {int(6 * scale)}px {int(10 * scale)}px;
+                font-size: {font_size}px;
+                font-weight: bold;
+                border: 1px solid #7f1d1d;
+                font-family: "{font_family}";
+                text-align: center;
+            }}
+            QPushButton:hover {{
+                background-color: #3b1414;
+                color: #ffffff;
+                border-color: #ef4444;
+            }}
+            QPushButton:pressed {{
+                background-color: #1a0808;
             }}
         """)
 
@@ -1712,28 +2001,28 @@ class PDOverlayWindow(QWidget):
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Event":
             self.status_label.setText("⏳ Event: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
-            self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (2/2 Senden)")
+            self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (2/2)")
             self.highlight_button(self.btn_event, "#c084fc")
         else:
-            self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (1/2 Start)")
+            self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (1/2)")
 
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Ammu-Rob":
             self.status_label.setText("⏳ Shoprob: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
-            self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (2/2 Senden)")
+            self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (2/2)")
             self.highlight_button(self.btn_shoprob, "#e67e22")
         else:
-            self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (1/2 Start)")
+            self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (1/2)")
 
         if self.pending_two_shot and self.pending_two_shot.get("type") == "FZ Raid":
             self.status_label.setText("⏳ FZ-Raid: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
-            self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (2/2 Senden)")
+            self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (2/2)")
             self.highlight_button(self.btn_fz, "#2ecc71")
         else:
-            self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (1/2 Start)")
+            self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (1/2)")
 
-        self.btn_streifenpartner.setText(f"[7] 👥 {sp_num}. Streifenpartner")
+        self.btn_streifenpartner.setText(f"[7] 👥 {sp_num}. Streifenpartner mitnehmen")
 
         if not self.pending_two_shot:
             self.status_label.setVisible(False)
@@ -1771,8 +2060,8 @@ class PDOverlayWindow(QWidget):
         if not pix.isNull():
             hud = CONFIG.get("hud", {})
             scale = float(hud.get("scale", 1.0))
-            thumb_w = int(290 * scale)
-            thumb_h = int(135 * scale)
+            thumb_w = int(350 * scale)
+            thumb_h = int(155 * scale)
             scaled = pix.scaled(thumb_w, thumb_h, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
             self.thumb_label.setPixmap(scaled)
 
@@ -1808,7 +2097,7 @@ class PDOverlayWindow(QWidget):
                 background-color: {colors['btn_hover']};
                 color: #ffffff;
                 border-radius: {int(6 * scale)}px;
-                padding: {int(6 * scale)}px {int(8 * scale)}px;
+                padding: {int(5 * scale)}px {int(7 * scale)}px;
                 font-size: {font_size}px;
                 font-weight: bold;
                 border: 2px solid {border_color};
@@ -1829,24 +2118,24 @@ class PDOverlayWindow(QWidget):
 
     def handle_action(self, cat_key, base_title):
         num = self.get_next_number(cat_key)
-        full_title = f"{num}. {base_title}"
+        send_title = format_log_title_for_discord(cat_key, base_title, num)
         self.auto_timer.stop()
-        self.show_notification(f"⏳ Sende {full_title}...")
-        threading.Thread(target=self._send_async, args=(cat_key, full_title, [self.current_screenshot]), daemon=True).start()
+        self.show_notification(f"⏳ Sende {send_title}...")
+        threading.Thread(target=self._send_async, args=(cat_key, send_title, [self.current_screenshot]), daemon=True).start()
 
     def handle_event_action(self, base_title="Event"):
         self.auto_timer.stop()
         num = self.get_next_number("Event")
-        full_title = f"{num}. Event"
+        send_title = format_log_title_for_discord("Event", base_title, num)
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Event":
             p1 = self.pending_two_shot.get("path")
             p2 = self.current_screenshot
             self.clear_pending_state()
-            self.show_notification(f"⏳ Sende {full_title} (2 Fotos)...")
-            threading.Thread(target=self._send_async, args=("Event", full_title, [p1, p2]), daemon=True).start()
+            self.show_notification(f"⏳ Sende {send_title} (2 Fotos)...")
+            threading.Thread(target=self._send_async, args=("Event", send_title, [p1, p2]), daemon=True).start()
         else:
             self.save_pending_state({"type": "Event", "path": self.current_screenshot, "time": time.time()})
-            self.show_notification(f"📌 {full_title} (Foto 1/2) gespeichert! Warte auf Foto 2.")
+            self.show_notification(f"📌 {num}. Event (Foto 1/2) gespeichert! Warte auf Foto 2.")
             try:
                 play_beep(900, 80)
                 play_beep(1300, 80)
@@ -1857,16 +2146,16 @@ class PDOverlayWindow(QWidget):
     def handle_shoprob_action(self, base_title="Shoprob"):
         self.auto_timer.stop()
         num = self.get_next_number("Shoprob")
-        full_title = f"{num}. Shoprob"
+        send_title = format_log_title_for_discord("Shoprob", base_title, num)
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Ammu-Rob":
             p1 = self.pending_two_shot.get("path")
             p2 = self.current_screenshot
             self.clear_pending_state()
-            self.show_notification(f"⏳ Sende {full_title} (2 Fotos)...")
-            threading.Thread(target=self._send_async, args=("Shoprob", full_title, [p1, p2]), daemon=True).start()
+            self.show_notification(f"⏳ Sende {send_title} (2 Fotos)...")
+            threading.Thread(target=self._send_async, args=("Shoprob", send_title, [p1, p2]), daemon=True).start()
         else:
             self.save_pending_state({"type": "Ammu-Rob", "path": self.current_screenshot, "time": time.time()})
-            self.show_notification(f"📌 {full_title} (Foto 1/2) gespeichert! Warte auf Foto 2.")
+            self.show_notification(f"📌 {num}. Shoprob (Foto 1/2) gespeichert! Warte auf Foto 2.")
             try:
                 play_beep(900, 80)
                 play_beep(1300, 80)
@@ -1877,22 +2166,44 @@ class PDOverlayWindow(QWidget):
     def handle_fz_action(self, base_title="FZ-Raid"):
         self.auto_timer.stop()
         num = self.get_next_number("FZ Raid")
-        full_title = f"{num}. FZ-Raid"
+        send_title = format_log_title_for_discord("FZ Raid", base_title, num)
         if self.pending_two_shot and self.pending_two_shot.get("type") == "FZ Raid":
             p1 = self.pending_two_shot.get("path")
             p2 = self.current_screenshot
             self.clear_pending_state()
-            self.show_notification(f"⏳ Sende {full_title} (2 Fotos)...")
-            threading.Thread(target=self._send_async, args=("FZ Raid", full_title, [p1, p2]), daemon=True).start()
+            self.show_notification(f"⏳ Sende {send_title} (2 Fotos)...")
+            threading.Thread(target=self._send_async, args=("FZ Raid", send_title, [p1, p2]), daemon=True).start()
         else:
             self.save_pending_state({"type": "FZ Raid", "path": self.current_screenshot, "time": time.time()})
-            self.show_notification(f"📌 {full_title} (Foto 1/2) gespeichert! Warte auf Foto 2.")
+            self.show_notification(f"📌 {num}. FZ-Raid (Foto 1/2) gespeichert! Warte auf Foto 2.")
             try:
                 play_beep(900, 80)
                 play_beep(1300, 80)
             except Exception:
                 pass
             QTimer.singleShot(1800, self.close_overlay)
+
+    def handle_delete_last_log(self):
+        self.auto_timer.stop()
+        self.show_notification("⏳ Suche & lösche letzten Log aus Discord...")
+        threading.Thread(target=self._delete_last_log_async, daemon=True).start()
+
+    def _delete_last_log_async(self):
+        success, info = delete_last_discord_log()
+        if success:
+            try:
+                play_beep(1200, 80)
+                play_beep(700, 120)
+            except Exception:
+                pass
+            clean_title = info.replace('*', '').replace('_', '').replace('~', '').strip()
+            self.show_notification(f"🗑️ '{clean_title}' erfolgreich gelöscht!")
+            threading.Thread(target=self._fetch_stats_async, daemon=True).start()
+            QTimer.singleShot(2200, self.close_overlay)
+        else:
+            log(f"[Delete Log Error] {info}")
+            self.show_notification(f"❌ {info}")
+            QTimer.singleShot(2500, self.close_overlay)
 
     def handle_send_summary(self):
         self.auto_timer.stop()
@@ -1956,7 +2267,8 @@ class PDOverlayWindow(QWidget):
                 play_beep(1900, 150)
             except Exception:
                 pass
-            self.show_notification(f"✅ {title} erfolgreich gepostet!")
+            clean_display = title.replace('*', '').replace('_', '').strip()
+            self.show_notification(f"✅ {clean_display} gepostet!")
             threading.Thread(target=self._fetch_stats_async, daemon=True).start()
             QTimer.singleShot(1500, self.close_overlay)
         else:
@@ -1992,6 +2304,8 @@ class PDOverlayWindow(QWidget):
             self.handle_action("Streifenpartner", "Streifenpartner")
         elif key_char in ("8", "z", "Z"):
             self.handle_send_summary()
+        elif key_char in ("9", "del", "delete", "entf"):
+            self.handle_delete_last_log()
         elif key_char == "esc":
             self.close_overlay()
 
@@ -2067,10 +2381,12 @@ def start_keyboard_listener():
         try:
             if hasattr(key, 'char') and key.char:
                 c = key.char.lower()
-                if c in ['1', '2', '3', '4', '5', '6', '7', '8', 'z']:
+                if c in ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'z']:
                     overlay_signal.key_pressed.emit(c)
             elif key == keyboard.Key.esc:
                 overlay_signal.key_pressed.emit("esc")
+            elif key in (keyboard.Key.delete, getattr(keyboard.Key, 'delete', None)):
+                overlay_signal.key_pressed.emit("del")
             elif key == keyboard.Key.f10 or str(key) == 'Key.f10' or getattr(key, 'name', '') == 'f10':
                 log("[Keyboard] F10 Taste erkannt -> Toggle Teleprompter HUD")
                 overlay_signal.toggle_prompter.emit()
@@ -2309,6 +2625,27 @@ def main():
     act_sound.setChecked(CONFIG.get("sound_enabled", True))
     act_sound.triggered.connect(toggle_sound_tray)
     tray_menu.addAction(act_sound)
+
+    def delete_last_log_from_tray():
+        def worker():
+            s, info = delete_last_discord_log()
+            if s:
+                try:
+                    play_beep(1200, 80)
+                    play_beep(700, 120)
+                except Exception:
+                    pass
+                overlay_signal.show_msg.emit("LSPD Log Assistent", f"✅ Letzter Log wurde erfolgreich aus Discord gelöscht:<br><br><b>{info}</b>", "info")
+                c, _ = calculate_zwischenstand()
+                if c:
+                    overlay_signal.update_stats.emit(c)
+            else:
+                overlay_signal.show_msg.emit("LSPD Log Assistent", f"❌ Konnte letzten Log nicht löschen:<br><br>{info}", "warn")
+        threading.Thread(target=worker, daemon=True).start()
+
+    act_delete_log = QAction("🗑️ Letzten Discord-Log löschen", tray_menu)
+    act_delete_log.triggered.connect(delete_last_log_from_tray)
+    tray_menu.addAction(act_delete_log)
 
     act_settings = QAction("⚙️ Einstellungen (HUD / Badge / Pfade)", tray_menu)
     act_settings.triggered.connect(show_settings_dialog)

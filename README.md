@@ -46,18 +46,16 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
 
 ---
 
-### 2. 🔢 Fortlaufende Nummerierung für alle Logs (Unendlicher Zähler)
+### 2. 🔢 Fortlaufende Nummerierung & Anpassbare Log-Beschriftung
 * **Automatisches Zählen:** Jeder Log-Eintrag wird automatisch mit seiner fortlaufenden Nummer betitelt (z.B. `1. Inhaftierung`, `2. Inhaftierung` ... `12. Inhaftierung`, `13. Inhaftierung` ohne Begrenzung).
-* **Dynamische Live-Buttons:** Die Hotkey-Buttons im Ingame-HUD zeigen sofort die nächste zu vergebende Nummer an (`[1] 🟢 12. Inhaftierung`, `[2] 🔴 9. Global`, etc.).
+* **Frei wählbare Titel-Vorlagen (Einstellungen Tab 2):** Für alle 7 Kategorien kann frei eingestellt werden, wie der Post auf Discord heißen soll (z. B. `{nr}. Inhaftierung` oder `Inhaftierung #{nr}`).
+* **Discord Markdown Schriftstile:** Checkboxen für **Fett** (`**Text**`), __Unterstrichen__ (`__Text__`) und *Kursiv* (`*Text*`) mit interaktiver Live-Vorschau in den Einstellungen. Im HUD bleibt der Button kurz und sauber, auf Discord kommt das gewählte Styling an.
+* **Keine abgeschnittenen Texte mehr:** Das HUD wurde verbreitert und die 2-Shot Phasen wurden optimiert (`(1/2)` / `(2/2)`), sodass auch bei längeren Namen und Skalierungen kein Text abgeschnitten wird.
+* **🗑️ Letzten Log per Knopfdruck löschen:**
+  * Mit Taste **`[9]`** oder **`[ENTF]`** (oder per Klick auf den roten Button im HUD) wird der letzte gesendete Log automatisch auf Discord gesucht und gelöscht.
+  * Auch jederzeit direkt über das Taskleisten-Tray-Menü aufrufbar (*"🗑️ Letzten Discord-Log löschen"*).
+  * Der interne Zähler passt sich nach dem Löschen sofort automatisch wieder nach unten an.
 * **Discord-Thread-Synchronisation:** Beim Start und nach jedem Post liest das Tool den Discord-Thread aus, erkennt die bisher höchste vergebene Nummer und zählt nahtlos weiter.
-* **Alle Kategorien abgedeckt:**
-  * `Inhaftierung` (z.B. `12. Inhaftierung`)
-  * `Global` (z.B. `9. Global`)
-  * `Local` (z.B. `3. Local`)
-  * `Event` (z.B. `8. Event`)
-  * `Shoprob` (z.B. `4. Shoprob`)
-  * `FZ-Raid` (z.B. `2. FZ-Raid`)
-  * `Streifenpartner` (z.B. `1. Streifenpartner`)
 
 ---
 
@@ -78,15 +76,18 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
 ---
 
 ### 4. ⚙️ Neues Schwarz-Weiß-Grau Einstellungsmenü (Monochrome)
-Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) ist vollständig in einem übersichtlichen, matten **Schwarz-Weiß-Grau (Monochrome)** Design gehalten und in 3 saubere Tabs unterteilt:
+Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) ist vollständig in einem übersichtlichen, matten **Schwarz-Weiß-Grau (Monochrome)** Design gehalten und in 4 saubere Tabs unterteilt:
 * **Tab 1: 👮 Dienst & Discord:**
   * Reisepassnummer / Badge-ID (Dienstnummer).
   * Medal Screenshot-Ordner mit bequemer `📁 Durchsuchen`-Auswahl.
   * Discord Forum-Thread-ID & sichere Token-Statusanzeige.
-* **Tab 2: ⚖️ Grandkasten Rechner & F10:**
+* **Tab 2: 📝 Log-Beschriftung & Stil:**
+  * Discord Schriftstil (Fett, Unterstrichen, Kursiv) mit Live-Vorschau.
+  * Eigene Textvorlagen für alle 7 Kategorien mit `{nr}` Platzhalter.
+* **Tab 3: ⚖️ Grandkasten Rechner & F10:**
   * F12 Rechner Design-Theme & Fenstergröße (25% bis 100%).
   * Teleprompter Seiten-Takt (3s bis 10s) & Info zum automatischen Ablauf.
-* **Tab 3: 🖥️ Ingame-HUD & Audio:**
+* **Tab 4: 🖥️ Ingame-HUD & Audio:**
   * Live-HUD Farb-Theme, Positionierung, Skalierung, Schriftart & Transparenz.
   * Signalton (Piep-Sound) An/Aus schaltbar.
   * Live-HUD Testvorschau-Button.
@@ -112,7 +113,9 @@ Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) ist vollst
 | **`F12`** | Bußgeld-, Wanteds- & TOW-Rechner öffnen / schließen (fest zentriert) |
 | **`F10`** | Teleprompter & Rechtebelehrung (Automatischer Auto-Play & Auto-Close) |
 | **`1` bis `7`** | Screenshot-Kategorie auswählen (wenn HUD aktiv ist) |
-| **`Z`** | Tages-Zwischenstand manuell an Discord senden |
+| **`8`** / **`Z`** | Tages-Zwischenstand manuell an Discord senden |
+| **`9`** / **`ENTF`** | **Letzten Log automatisch aus Discord löschen** |
+| **`ESC`** | Rechner, Teleprompter oder Screenshot-Overlay schließen |
 | **`ESC`** | Rechner, Teleprompter oder Screenshot-Overlay schließen |
 
 ---
