@@ -15,6 +15,7 @@ Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset
 ### 1. ⚖️ Dienst-Rechner & Aktenvermerk ([F12])
 Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Spiel.
 
+* **Feste zentrierte Position:** Der Rechner sitzt stabil und zentriert auf dem Bildschirm – kein versehentliches Verschieben per Mausklick mehr.
 * **Multi-Auflösung & Flexible Größen (25% bis 100%):**
   * **25% (Mini):** Ultrakompakte 1-Spalten-Ansicht – ideal für kleine Monitore, Laptops oder Nebenbeiblick.
   * **50% (Halb):** 2-Spalten-Ansicht – halbe Bildschirmbreite für entspanntes Multitasking.
@@ -23,7 +24,7 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
   * **Anpassung an jede Bildschirmauflösung:** Automatische Ausrichtung für 4K, 1440p, 1080p, 720p/Laptops und Ultrawide (21:9) ohne Taskleisten-Clipping.
 * **Bußgeld- & Strafenkatalog nach Grandkasten (GrandRP DE1):**
   * Über **100 offizielle Straftaten** in 9 Kategorien (`StVO`, `StGB Integrität`, `StGB Wirtschaft`, `StGB Beamte`, `WaffG`, `BtMG`, `Sperrzonen`, `BDG`, `StPO`).
-  * **Echtzeit-Suchleiste:** Suche blitzschnell nach Paragraphen oder Stichwörtern (z.B. *Mord*, *Flucht*, *Drogen*, *§4*, *101*).
+  * **Echtzeit-Suchleiste:** Suche blitzschnell nach Paragraphen oder Stichwörtern (z. B. *Mord*, *Flucht*, *Drogen*, *§4*, *101*).
   * **Höchststrafe-Regel (1:1 Grandkasten):** Weder Bußgelder noch Wanteds addieren sich willkürlich auf – es zählt immer nur das schwerste Delikt für Gesamtstrafe und Fahndungslevel.
   * **Graue Wanteds (`voluntaryWanteds`):** Beamten-Ermessensspielraum per Knopfdruck auswählbar inkl. exakter automatischer Bußgelderhöhung.
   * **Reue & Kooperation (StGB §35):** Reduziert Wanteds automatisch um 2 (min. 1) und vermerkt das Delikt im Aktenvermerk.
@@ -56,22 +57,31 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
 * **Automatischer Auto-Play:** Startet beim Öffnen mit **[F10]** direkt.
 * **Auto-Close:** Schließt sich nach dem ersten Durchlauf automatisch selbst.
 * **Einstellbarer Takt (3 bis 10 Sekunden):**
-  * Im F12-Rechner (Tab 3) oder im F10 Mini-HUD kann die Durchlaufzeit flexibel von **3s bis 10s** eingestellt werden.
+  * Im F12-Rechner (Tab 3), im F10 Mini-HUD oder in den Einstellungen kann die Durchlaufzeit flexibel von **3s bis 10s** eingestellt werden.
 * **Integrierter 5-Minuten Anwalts-Timer:** Fristüberwachung mit akustischem Signal und 1-Klick Vermerkerstellung.
 
 ---
 
-### 3. 🔊 Sound-Einstellungen (Piepton Ein / Aus)
-* Der Signalton (Piep-Sound) bei Uploads, Aktionen und Timer-Ablauf kann flexibel **ein- und ausgeschaltet** werden:
-  * In den **Einstellungen (⚙️ HUD & Aussehen)**.
-  * Direkt im **System-Tray Menü** mit einem Klick auf `🔊 Signalton (Piep-Sound)`.
+### 3. ⚙️ Neues Schwarz-Weiß-Grau Einstellungsmenü (Monochrome)
+Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) ist vollständig in einem übersichtlichen, matten **Schwarz-Weiß-Grau (Monochrome)** Design gehalten und in 3 saubere Tabs unterteilt:
+* **Tab 1: 👮 Dienst & Discord:**
+  * Reisepassnummer / Badge-ID (Dienstnummer).
+  * Medal Screenshot-Ordner mit bequemer `📁 Durchsuchen`-Auswahl.
+  * Discord Forum-Thread-ID & sichere Token-Statusanzeige.
+* **Tab 2: ⚖️ Grandkasten Rechner & F10:**
+  * F12 Rechner Design-Theme & Fenstergröße (25% bis 100%).
+  * Teleprompter Seiten-Takt (3s bis 10s) & Info zum automatischen Ablauf.
+* **Tab 3: 🖥️ Ingame-HUD & Audio:**
+  * Live-HUD Farb-Theme, Positionierung, Skalierung, Schriftart & Transparenz.
+  * Signalton (Piep-Sound) An/Aus schaltbar.
+  * Live-HUD Testvorschau-Button.
 
 ---
 
 ### 4. 🎨 Vollständig anpassbares Design & Themes
 * **Live-Themes:**
-  * 🌐 *Grandkasten Cyberpunk* (Original Grandkasten DE1 Navy / Blue)
   * ⚫ *Schwarz-Grau-Weiß (Monochrome)*
+  * 🌐 *Grandkasten Cyberpunk* (Original Grandkasten DE1 Navy / Blue)
   * 🟣 *Schwarz-Lila (Standard)*
   * 🔵 *LSPD Cyber Blue*
   * 🔴 *Tactical Stealth Red*
@@ -84,7 +94,7 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
 
 | Taste | Funktion |
 | :--- | :--- |
-| **`F12`** | Bußgeld-, Wanteds- & TOW-Rechner öffnen / schließen |
+| **`F12`** | Bußgeld-, Wanteds- & TOW-Rechner öffnen / schließen (fest zentriert) |
 | **`F10`** | Teleprompter & Rechtebelehrung (Automatischer Auto-Play & Auto-Close) |
 | **`1` bis `7`** | Screenshot-Kategorie auswählen (wenn HUD aktiv ist) |
 | **`Z`** | Tages-Zwischenstand manuell an Discord senden |

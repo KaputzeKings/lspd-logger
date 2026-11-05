@@ -851,11 +851,11 @@ class UpdateDialog(QDialog):
             self.btn_update.setEnabled(True)
             self.btn_later.setEnabled(True)
 
-# Full Customizable Grandkasten Setup Dialog with Monochrome Design
+# Full Customizable Grandkasten Setup Dialog with Pure Monochrome Design (Schwarz-Weiß-Grau)
 class SetupDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("LSPD Dienst-Assistent - Grandkasten Einstellungen")
+        self.setWindowTitle("LSPD Dienst-Assistent - Einstellungen")
         self.setFixedSize(680, 640)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
         self.init_ui()
@@ -869,7 +869,7 @@ class SetupDialog(QDialog):
 
         header = QLabel(
             f"<span style='color: #ffffff; font-weight: bold; font-size: 11px; letter-spacing: 0.5px;'>{title_text}</span> "
-            f"<span style='color: #64748b; font-size: 10px; font-weight: normal;'>{subtitle_text}</span>"
+            f"<span style='color: #888888; font-size: 10px; font-weight: normal;'>{subtitle_text}</span>"
         )
         card_layout.addWidget(header)
         return card, card_layout
@@ -877,129 +877,127 @@ class SetupDialog(QDialog):
     def init_ui(self):
         self.setStyleSheet("""
             QDialog {
-                background-color: #0c0d12;
-                border: 1px solid #272a38;
-                border-radius: 10px;
+                background-color: #0a0a0a;
+                border: 1px solid #262626;
+                border-radius: 8px;
             }
             QTabWidget::pane {
-                border: 1px solid #232736;
-                background: #0f1118;
-                border-radius: 8px;
+                border: 1px solid #262626;
+                background: #0f0f0f;
+                border-radius: 6px;
                 top: -1px;
             }
             QTabBar::tab {
-                background: #141722;
-                color: #94a3b8;
+                background: #141414;
+                color: #888888;
                 padding: 8px 18px;
-                border-top-left-radius: 6px;
-                border-top-right-radius: 6px;
+                border-top-left-radius: 5px;
+                border-top-right-radius: 5px;
                 font-weight: bold;
                 font-size: 11px;
                 margin-right: 4px;
-                border: 1px solid #232736;
+                border: 1px solid #262626;
                 border-bottom: none;
             }
             QTabBar::tab:selected {
-                background: #1f2438;
+                background: #222222;
                 color: #ffffff;
                 border-top: 2px solid #ffffff;
             }
             QTabBar::tab:hover:!selected {
-                background: #181c2b;
-                color: #cbd5e1;
+                background: #1a1a1a;
+                color: #cccccc;
             }
             QFrame#cardFrame {
-                background-color: #141722;
-                border: 1px solid #272a38;
-                border-radius: 8px;
+                background-color: #141414;
+                border: 1px solid #242424;
+                border-radius: 6px;
             }
             QLabel {
-                color: #cbd5e1;
+                color: #e0e0e0;
                 font-size: 11px;
                 font-weight: bold;
             }
             QLabel#hintLabel {
-                color: #64748b;
+                color: #888888;
                 font-size: 10px;
                 font-weight: normal;
             }
             QLineEdit, QComboBox {
-                background-color: #181b26;
+                background-color: #181818;
                 color: #ffffff;
-                border: 1px solid #2d3246;
-                border-radius: 6px;
+                border: 1px solid #2c2c2c;
+                border-radius: 5px;
                 padding: 6px 10px;
                 font-size: 11px;
             }
             QLineEdit:focus, QComboBox:focus {
-                border: 1px solid #ffffff;
-                background-color: #1e2230;
+                border: 1px solid #888888;
+                background-color: #1f1f1f;
             }
             QComboBox::drop-down {
                 subcontrol-origin: padding;
                 subcontrol-position: top right;
                 width: 22px;
-                border-left: 1px solid #2d3246;
-                border-top-right-radius: 5px;
-                border-bottom-right-radius: 5px;
+                border-left: 1px solid #2c2c2c;
             }
             QComboBox QAbstractItemView {
-                background-color: #181b26;
+                background-color: #181818;
                 color: #ffffff;
-                selection-background-color: #272d40;
+                selection-background-color: #282828;
                 selection-color: #ffffff;
-                border: 1px solid #2d3246;
-                border-radius: 6px;
+                border: 1px solid #333333;
+                border-radius: 4px;
                 padding: 4px;
             }
             QPushButton {
-                background-color: #1c1f2e;
-                color: #cbd5e1;
-                border: 1px solid #2d3348;
-                border-radius: 6px;
+                background-color: #181818;
+                color: #cccccc;
+                border: 1px solid #2c2c2c;
+                border-radius: 5px;
                 padding: 7px 14px;
                 font-size: 11px;
                 font-weight: bold;
             }
             QPushButton:hover {
-                background-color: #252a3d;
+                background-color: #242424;
                 color: #ffffff;
-                border: 1px solid #3f4764;
+                border: 1px solid #444444;
             }
             QPushButton#btnSave {
-                background-color: #27272a;
+                background-color: #262626;
                 color: #ffffff;
-                border: 1px solid #52525b;
+                border: 1px solid #4a4a4a;
                 padding: 9px 20px;
                 font-size: 12px;
             }
             QPushButton#btnSave:hover {
-                background-color: #3f3f46;
-                border: 1px solid #a1a1aa;
+                background-color: #383838;
+                border: 1px solid #777777;
             }
             QPushButton#btnCancel {
-                background-color: #18181b;
-                color: #a1a1aa;
-                border: 1px solid #3f3f46;
+                background-color: #141414;
+                color: #888888;
+                border: 1px solid #2a2a2a;
                 padding: 9px 16px;
                 font-size: 12px;
             }
             QPushButton#btnCancel:hover {
-                background-color: #27272a;
-                color: #ffffff;
+                background-color: #1f1f1f;
+                color: #cccccc;
             }
             QSlider::groove:horizontal {
                 height: 6px;
-                background: #232736;
+                background: #202020;
                 border-radius: 3px;
             }
             QSlider::sub-page:horizontal {
-                background: #475569;
+                background: #555555;
                 border-radius: 3px;
             }
             QSlider::handle:horizontal {
                 background: #ffffff;
-                border: 1px solid #94a3b8;
+                border: 1px solid #888888;
                 width: 14px;
                 margin: -5px 0;
                 border-radius: 7px;
@@ -1013,13 +1011,13 @@ class SetupDialog(QDialog):
             QCheckBox::indicator {
                 width: 16px;
                 height: 16px;
-                border: 1px solid #3b4259;
-                border-radius: 4px;
-                background: #181b26;
+                border: 1px solid #333333;
+                border-radius: 3px;
+                background: #181818;
             }
             QCheckBox::indicator:checked {
-                background: #3b82f6;
-                border: 1px solid #60a5fa;
+                background: #444444;
+                border: 1px solid #ffffff;
             }
         """)
 
@@ -1027,15 +1025,15 @@ class SetupDialog(QDialog):
         layout.setContentsMargins(18, 16, 18, 16)
         layout.setSpacing(12)
 
-        # Header Title
+        # Header Title (Pure Monochrome)
         title_bar = QHBoxLayout()
         title_lbl = QLabel(
-            "🛡️ <span style='color: #ffffff; font-size: 14px;'><b>LSPD DIENST-ASSISTENT</b></span> "
-            "<span style='color: #64748b; font-size: 11px; font-weight: normal;'>| Grandkasten Konfiguration</span>"
+            "🛡️ <span style='color: #ffffff; font-size: 14px;'><b>LSPD EINSTELLUNGEN</b></span> "
+            "<span style='color: #888888; font-size: 11px; font-weight: normal;'>| Schwarz-Weiß-Grau (Monochrome)</span>"
         )
         title_bar.addWidget(title_lbl)
         title_bar.addStretch()
-        version_lbl = QLabel(f"<span style='color: #38bdf8; font-size: 10px; font-weight: bold;'>v{CURRENT_VERSION}</span>")
+        version_lbl = QLabel(f"<span style='color: #888888; font-size: 10px; font-weight: bold;'>v{CURRENT_VERSION}</span>")
         title_bar.addWidget(version_lbl)
         layout.addLayout(title_bar)
 
@@ -1084,13 +1082,13 @@ class SetupDialog(QDialog):
         c3_lay.addWidget(self.thread_input)
         
         token_box = QFrame()
-        token_box.setStyleSheet("background: #0f1118; border: 1px solid #232736; border-radius: 6px; padding: 6px;")
+        token_box.setStyleSheet("background: #111111; border: 1px solid #242424; border-radius: 5px; padding: 6px;")
         tb_lay = QHBoxLayout(token_box)
         tb_lay.setContentsMargins(8, 4, 8, 4)
         t_ico = QLabel("🔒")
         t_ico.setStyleSheet("font-size: 14px; border: none;")
         tb_lay.addWidget(t_ico)
-        t_lbl = QLabel("<span style='color: #94a3b8; font-size: 10px; font-weight: normal;'>"
+        t_lbl = QLabel("<span style='color: #888888; font-size: 10px; font-weight: normal;'>"
                        "<b>Discord-Token:</b> Wird automatisch und sicher aus deiner Desktop-App gelesen. "
                        "Keine manuelle Eingabe erforderlich.</span>")
         t_lbl.setStyleSheet("border: none;")
@@ -1178,13 +1176,13 @@ class SetupDialog(QDialog):
         cc2_lay.addLayout(promp_grid)
 
         auto_box = QFrame()
-        auto_box.setStyleSheet("background: #0f1118; border: 1px solid #232736; border-radius: 6px; padding: 6px;")
+        auto_box.setStyleSheet("background: #111111; border: 1px solid #242424; border-radius: 5px; padding: 6px;")
         ab_lay = QHBoxLayout(auto_box)
         ab_lay.setContentsMargins(8, 4, 8, 4)
         ab_ico = QLabel("⚡")
         ab_ico.setStyleSheet("font-size: 14px; border: none;")
         ab_lay.addWidget(ab_ico)
-        ab_lbl = QLabel("<span style='color: #94a3b8; font-size: 10px; font-weight: normal;'>"
+        ab_lbl = QLabel("<span style='color: #888888; font-size: 10px; font-weight: normal;'>"
                         "<b>Automatische Rechte:</b> Nach Druck auf [F10] wechselt der Teleprompter alle eingestellten Sekunden "
                         "automatisch zur nächsten Seite und schließt sich nach dem Durchlauf selbstständig.</span>")
         ab_lbl.setStyleSheet("border: none;")
@@ -1234,8 +1232,8 @@ class SetupDialog(QDialog):
         custom_row.addWidget(self.btn_text_color)
         hud_grid.addLayout(custom_row, 1, 1)
 
-        self.custom_bg = hud_conf.get("custom_bg", "#0c0d12")
-        self.custom_accent = hud_conf.get("custom_accent", "#38bdf8")
+        self.custom_bg = hud_conf.get("custom_bg", "#0a0a0a")
+        self.custom_accent = hud_conf.get("custom_accent", "#555555")
         self.custom_text = hud_conf.get("custom_text", "#ffffff")
 
         hud_grid.addWidget(QLabel("Bildschirm-Position:"), 2, 0)

@@ -2668,20 +2668,6 @@ class GrandCalculatorOverlay(QWidget):
         if hasattr(self, 'prompter_layout'):
             self.render_prompter_sentences()
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
-            event.accept()
-        else:
-            super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event):
-        if event.buttons() == Qt.LeftButton and hasattr(self, 'drag_pos') and self.drag_pos:
-            self.move(event.globalPosition().toPoint() - self.drag_pos)
-            event.accept()
-        else:
-            super().mouseMoveEvent(event)
-
     # --- KEY & EVENT HANDLERS ---
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key_Escape, Qt.Key_F12):
