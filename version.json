@@ -1,5 +1,5 @@
 {
-    "version": "1.3.2",
-    "changelog": "🛡️ Update v1.3.2 - Multi-Auflösung, 25%/50% Skalierung, Sound-Toggle & Teleprompter-Takt:\n- Multi-Monitor & Alle Auflösungen: Dynamische Anpassung an jede Display-Auflösung (4K, 1440p, 1080p, 720p/Laptops, Ultrawide) ohne Clipping oder Anzeigefehler.\n- Neue Grandkasten-Größen: 25% (Mini) und 50% (Halb) mit adaptivem Spaltenlayout (1 Spalte bei 25%, 2 Spalten bei 50%, 3 Spalten ab 75%).\n- Live-Größenwähler: Direkt im F12-Header zwischen 25%, 50%, 75%, 82%, 88%, 95% und 100% umschaltbar.\n- Sound-Schalter (Ein/Aus): Signalton (Piep-Sound) kann in den Einstellungen und im Tray-Menü ein- und ausgeschaltet werden.\n- Einstellbarer Teleprompter-Takt: Intervall von 3 bis 10 Sekunden flexibel wählbar im F12-Rechner und im F10 Mini-HUD.\n- Windows Light Mode Fix: Weiße Balken bei Windows-Hell-Design dauerhaft eliminiert.",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.3.2/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.4.0",
+    "changelog": "🛡️ Update v1.4.0 - Monochrome Grandkasten Einstellungsmenü & F12-Fix:\n- Reines Schwarz-Weiß-Grau (Monochrome) Design: Einstellungen vollständig überarbeitet in edlem, aufgeräumtem Card-Design ohne störende Farbtöne.\n- 3 übersichtliche Tabs: 'Dienst & Discord', 'Grandkasten Rechner & F10' und 'Ingame-HUD & Audio'.\n- F12 Rechner fixiert: Feste, zentrierte Bildschirmposition – versehentliches Verschieben per Mausklick ist vollständig deaktiviert.\n- Dokumentation aktualisiert: Vollständiges README mit allen Hotkeys, Funktionen und Richtlinien.",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.0/LSPD_Log_Assistent_Paket.zip"
 }
