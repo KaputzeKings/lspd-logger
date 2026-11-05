@@ -47,6 +47,39 @@ def init_custom_fonts(app=None):
         app.setFont(font)
     return "Inter" if loaded else "Segoe UI Variable Text"
 
+def ensure_switch_assets():
+    if getattr(sys, 'frozen', False):
+        base = os.path.dirname(sys.executable)
+    else:
+        base = os.path.dirname(os.path.abspath(__file__))
+    assets = {
+        "sw_off.png": (False, "#242430"),
+        "sw_orange.png": (True, "#fb923c"),
+        "sw_purple.png": (True, "#a855f7"),
+        "sw_blue.png": (True, "#3b82f6")
+    }
+    paths = {}
+    for fname, (checked, col_hex) in assets.items():
+        p = os.path.join(base, fname)
+        if not os.path.exists(p):
+            pix = QPixmap(34, 18)
+            pix.fill(Qt.transparent)
+            painter = QPainter(pix)
+            painter.setRenderHint(QPainter.Antialiasing)
+            bg = QColor(col_hex) if checked else QColor("#242430")
+            border = QColor(col_hex) if checked else QColor("#3d3d50")
+            painter.setBrush(bg)
+            painter.setPen(QPen(border, 1))
+            painter.drawRoundedRect(0, 0, 34, 18, 9, 9)
+            painter.setBrush(QColor("#ffffff"))
+            painter.setPen(Qt.NoPen)
+            x = 18 if checked else 2
+            painter.drawEllipse(x, 2, 14, 14)
+            painter.end()
+            pix.save(p)
+        paths[fname] = p.replace("\\", "/")
+    return paths
+
 def create_dot_pixmap(color_hex, size=8):
     pix = QPixmap(size, size)
     pix.fill(Qt.transparent)
@@ -713,6 +746,105 @@ class FloatingPrompterHUD(QWidget):
         if hasattr(self, 'btn_next'):
             self.btn_next.setStyleSheet(f"background: {t['accent']}; color: {t['accent_text']}; border: none; border-radius: 5px; padding: 5px 14px; font-size: 11px; font-weight: 900;")
 
+class SwitchButton(QWidget):
+    clicked = Signal(bool)
+
+    def __init__(self, checked=False, active_color="#3b82f6", parent=None):
+        super().__init__(parent)
+        self.setFixedSize(36, 20)
+        self.setCursor(Qt.PointingHandCursor)
+        self._checked = checked
+        self._active_color = QColor(active_color)
+        self._inactive_color = QColor("#22222a")
+        self._border_color = QColor("#383848")
+        self._thumb_color = QColor("#ffffff")
+        self._enabled = True
+
+    def isChecked(self):
+        return self._checked
+
+    def setChecked(self, val):
+        val = bool(val)
+        if self._checked != val:
+            self._checked = val
+            self.update()
+            self.clicked.emit(self._checked)
+
+    def setEnabled(self, val):
+        super().setEnabled(val)
+        self._enabled = bool(val)
+        self.update()
+
+    def mousePressEvent(self, e):
+        if self._enabled and e.button() == Qt.LeftButton:
+            self.setChecked(not self._checked)
+            e.accept()
+        else:
+            super().mousePressEvent(e)
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        if not self._enabled:
+            bg = QColor("#18181e")
+            border = QColor("#26262e")
+            thumb = QColor("#52525b")
+        else:
+            bg = self._active_color if self._checked else self._inactive_color
+            border = self._active_color if self._checked else self._border_color
+            thumb = self._thumb_color
+
+        p.setBrush(bg)
+        p.setPen(QPen(border, 1))
+        p.drawRoundedRect(0, 0, 36, 20, 10, 10)
+
+        p.setBrush(thumb)
+        p.setPen(Qt.NoPen)
+        x = 18 if self._checked else 2
+        p.drawEllipse(x, 2, 16, 16)
+        p.end()
+
+class SwitchRow(QWidget):
+    toggled = Signal(bool)
+
+    def __init__(self, text, active_color="#3b82f6", parent=None):
+        super().__init__(parent)
+        self.setObjectName("switchRow")
+        self.lay = QHBoxLayout(self)
+        self.lay.setContentsMargins(6, 4, 6, 4)
+        self.lay.setSpacing(6)
+
+        self.lbl = QLabel(text)
+        self.lbl.setStyleSheet("color: #cbd5e1; font-size: 11px; font-weight: 600; font-family: 'Inter'; background: transparent; border: none;")
+        self.lbl.setCursor(Qt.PointingHandCursor)
+        self.lay.addWidget(self.lbl)
+
+        self.lay.addStretch()
+
+        self.switch = SwitchButton(False, active_color)
+        self.switch.clicked.connect(self.toggled)
+        self.lay.addWidget(self.switch)
+
+        self.lbl.mousePressEvent = lambda e: self.switch.setChecked(not self.switch.isChecked())
+        self.setStyleSheet("""
+            QWidget#switchRow {
+                background-color: transparent;
+                border: none;
+            }
+        """)
+
+    def isChecked(self):
+        return self.switch.isChecked()
+
+    def setChecked(self, val):
+        self.switch.setChecked(val)
+
+    def setEnabled(self, val):
+        super().setEnabled(val)
+        self.switch.setEnabled(val)
+        self.lbl.setStyleSheet(f"color: {'#cbd5e1' if val else '#52525b'}; font-size: 11px; font-weight: 600; font-family: 'Inter'; background: transparent; border: none;")
+
+
 class GrandCalculatorOverlay(QWidget):
     closed = Signal()
 
@@ -1234,18 +1366,99 @@ class GrandCalculatorOverlay(QWidget):
         opts_lay = QVBoxLayout(self.opts_frame)
         opts_lay.setSpacing(8)
 
-        # Switches / Toggles (Wiederholungstäter & §35 Reue)
-        toggles_lay = QHBoxLayout()
+        # Switches / Toggles (Wiederholungstäter, §35 Reue & Systemfehler)
+        sw_paths = ensure_switch_assets()
+        p_off = sw_paths.get("sw_off.png", "sw_off.png")
+        p_orange = sw_paths.get("sw_orange.png", "sw_orange.png")
+        p_purple = sw_paths.get("sw_purple.png", "sw_purple.png")
+        p_blue = sw_paths.get("sw_blue.png", "sw_blue.png")
+
+        toggles_grid = QGridLayout()
+        toggles_grid.setSpacing(8)
+        toggles_grid.setContentsMargins(0, 0, 0, 0)
+
         self.cb_repeat = QCheckBox("Wiederholungstäter (StVO)")
-        self.cb_repeat.setStyleSheet("font-size: 12px; color: #fb923c; font-weight: bold;")
+        self.cb_repeat.setCursor(Qt.PointingHandCursor)
+        self.cb_repeat.setStyleSheet(f"""
+            QCheckBox {{
+                color: #fb923c;
+                font-size: 11px;
+                font-weight: 600;
+                font-family: 'Inter', system-ui, sans-serif;
+                spacing: 8px;
+            }}
+            QCheckBox:disabled {{
+                color: #52525b;
+            }}
+            QCheckBox::indicator {{
+                width: 34px;
+                height: 18px;
+            }}
+            QCheckBox::indicator:unchecked {{
+                image: url("{p_off}");
+            }}
+            QCheckBox::indicator:checked {{
+                image: url("{p_orange}");
+            }}
+        """)
         self.cb_repeat.toggled.connect(self.recalculate)
-        toggles_lay.addWidget(self.cb_repeat)
+        toggles_grid.addWidget(self.cb_repeat, 0, 0)
 
         self.cb_reue = QCheckBox("§35 Reue (-2 Wanteds)")
-        self.cb_reue.setStyleSheet("font-size: 12px; color: #a855f7; font-weight: bold;")
+        self.cb_reue.setCursor(Qt.PointingHandCursor)
+        self.cb_reue.setStyleSheet(f"""
+            QCheckBox {{
+                color: #c084fc;
+                font-size: 11px;
+                font-weight: 600;
+                font-family: 'Inter', system-ui, sans-serif;
+                spacing: 8px;
+            }}
+            QCheckBox:disabled {{
+                color: #52525b;
+            }}
+            QCheckBox::indicator {{
+                width: 34px;
+                height: 18px;
+            }}
+            QCheckBox::indicator:unchecked {{
+                image: url("{p_off}");
+            }}
+            QCheckBox::indicator:checked {{
+                image: url("{p_purple}");
+            }}
+        """)
         self.cb_reue.toggled.connect(self.recalculate)
-        toggles_lay.addWidget(self.cb_reue)
-        opts_lay.addLayout(toggles_lay)
+        toggles_grid.addWidget(self.cb_reue, 0, 1)
+
+        self.cb_systemfehler = QCheckBox("Systemfehler (+ Vermerk)")
+        self.cb_systemfehler.setCursor(Qt.PointingHandCursor)
+        self.cb_systemfehler.setStyleSheet(f"""
+            QCheckBox {{
+                color: #93c5fd;
+                font-size: 11px;
+                font-weight: 600;
+                font-family: 'Inter', system-ui, sans-serif;
+                spacing: 8px;
+            }}
+            QCheckBox:disabled {{
+                color: #52525b;
+            }}
+            QCheckBox::indicator {{
+                width: 34px;
+                height: 18px;
+            }}
+            QCheckBox::indicator:unchecked {{
+                image: url("{p_off}");
+            }}
+            QCheckBox::indicator:checked {{
+                image: url("{p_blue}");
+            }}
+        """)
+        self.cb_systemfehler.toggled.connect(self.recalculate)
+        toggles_grid.addWidget(self.cb_systemfehler, 1, 0, 1, 2)
+
+        opts_lay.addLayout(toggles_grid)
 
         # Grid for Systemwanteds & Abtransport
         grid_lay = QGridLayout()
@@ -1660,7 +1873,9 @@ class GrandCalculatorOverlay(QWidget):
         if orga_val == "- Orga -":
             orga_val = ""
 
-        if not offense_ids and sys_wanteds == 0 and not officer_name and not plate_str:
+        is_sysfehler = hasattr(self, 'cb_systemfehler') and self.cb_systemfehler.isChecked()
+
+        if not offense_ids and sys_wanteds == 0 and not officer_name and not plate_str and not is_sysfehler:
             self.txt_aktenvermerk.setPlainText("")
             return
 
@@ -1679,7 +1894,14 @@ class GrandCalculatorOverlay(QWidget):
         if sys_wanteds > 0:
             parts.append(f"{sys_wanteds} Systemwanteds")
 
-        crimes_part = " + ".join(parts) if parts else "..."
+        if is_sysfehler:
+            parts.append("Systemfehler")
+
+        if not offense_ids:
+            crimes_part = " + ".join(["..."] + [p for p in parts if p != "..."])
+        else:
+            crimes_part = " + ".join(parts) if parts else "..."
+
         akte = f"{date_prefix} - {crimes_part}"
 
         # Officer tag
@@ -1716,6 +1938,8 @@ class GrandCalculatorOverlay(QWidget):
         self.input_system_wanteds.clear()
         self.cb_reue.setChecked(False)
         self.cb_repeat.setChecked(False)
+        if hasattr(self, 'cb_systemfehler'):
+            self.cb_systemfehler.setChecked(False)
         self.recalculate()
 
     # --- TAB 2: TOW RECHNER (1:1 Grandkasten StVO §8 Geschwindigkeitsrechner) ---

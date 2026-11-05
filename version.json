@@ -1,5 +1,5 @@
 {
-    "version": "1.4.6",
-    "changelog": "Update v1.4.6 - Grandkasten Datenbank-Fix, Inter-Typografie & Farbige Status-Punkte:\n- Grandkasten Dienst-Rechner gefixt: Zuverlaessiges Laden aller 104 Straftatbestaende in PyInstaller onedir/internal Umgebung.\n- 1:1 Ember Inter-Typografie: Originale InterVariable TTF-Schriftart fuer alle Fenster, Buttons und Offense-Cards.\n- Farbige Punkte (Ember Design): Antialiased Farb-Indikatoren an allen 7 HUD-Buttons sowie allen 9 Kategorien und 104 Straftaten im F12-Rechner.\n- Aktenvermerk & Dashboard: Elegantes Velvet Obsidian Styling ohne grelle Rahmen.",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.6/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.4.7",
+    "changelog": "Update v1.4.7 - Systemfehler (+ Vermerk) & Switch-Toggles im Grandkasten:\n- Neuer Schalter 'Systemfehler (+ Vermerk)': Fuegt vorschriftsmaessig '+ Systemfehler' an den Aktenvermerk an (z.B. '05.11 21:53 - ... + Systemfehler' oder 'StGB §4.1 + Systemfehler').\n- 1:1 Grandkasten Switch-Toggles: Moderne, farblich akzentuierte Pill-Switches fuer Wiederholungstaeter (Orange), §35 Reue (Lila) und Systemfehler (Blau).\n- Perfekte GrandRP DE1 MDT-Kompatibilitaet fuer unvorhergesehene Server- und Systemfehler.",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.7/LSPD_Log_Assistent_Paket.zip"
 }

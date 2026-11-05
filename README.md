@@ -1,12 +1,25 @@
-# 👮‍♂️ LSPD Log Assistent (v1.4.6)
+# 👮‍♂️ LSPD Log Assistent (v1.4.7)
 
-[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.4.6)](https://github.com/KaputzeKings/lspd-logger/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.4.7)](https://github.com/KaputzeKings/lspd-logger/releases)
 [![GrandRP DE1](https://img.shields.io/badge/GrandRP-DE1-blue.svg)](https://gta5grand.com)
 [![Platform](https://img.shields.io/badge/Plattform-Windows-0078d7.svg)](https://microsoft.com)
 
 Ein leistungsstarkes, automatisiertes **Logging-, Auswertungs- und Dienst-Tool** für Beamte des **Los Santos Police Department** auf GrandRP (DE1). 
 
 Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset und vollwertigem **Dienst-Rechner (F12)** für Bußgelder, Wanteds und TOW nach Vorbild von [Grandkasten](https://grandkasten.com/).
+
+---
+
+## 🚀 Neu in Version 1.4.7
+
+* **Systemfehler (+ Vermerk) integriert (1:1 Grandkasten):**
+  * Neuer Schalter im F12 Dienst-Rechner: **Systemfehler (+ Vermerk)**.
+  * Hängt vorschriftsmäßig `+ Systemfehler` an den MDT-Aktenvermerk an (z.B. `05.11 21:53 - ... + Systemfehler` oder `05.11 21:53 - StGB §4.1 + Systemfehler`).
+  * Ermöglicht Beamten die saubere Dokumentation von unvorhergesehenen Spiel-, Fahrzeug- oder Anti-Cheat-Fehlern.
+* **1:1 Grandkasten Switch-Toggles:**
+  * Moderne Pill-Switches mit dynamischen Farbakzenten (Orange für Wiederholungstäter, Lila für §35 Reue, Blau für Systemfehler).
+* **Reset-Unterstützung:**
+  * Ein Klick auf *Alles Zurücksetzen* setzt auch den Systemfehler-Schalter wieder zurück.
 
 ---
 
