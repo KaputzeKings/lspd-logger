@@ -1,13 +1,10 @@
 {
-    "version": "1.4.3",
+    "version": "1.4.4",
     "release_date": "2026-11-05",
     "changelog": [
-        "Ember Dark (Velvet Obsidian) UI Redesign: Elegantes matt-schwarzes Dashboard-Design für Overlay, Einstellungen und F12 Dienst-Rechner",
-        "Design nach Vorlage adaptiert: Samtweiches Obsidian-Schwarz (#0c0c0e), eingelassene Karten (#141418), Pill-Navigation (#212128) und dezente 1px Border (#282834)",
-        "Leuchtende Neon-Indikatoren: Smaragdgrün, Karmesinrot, Electric Blue, Violett, Bernstein, Teal und Magenta für alle Einsatzkategorien",
-        "Optimierte Button-Proportionen und Abstände: Kein Text-Clipping mehr bei jeglicher Bildschirmauflösung",
-        "Zwischenstand im Overlay mit fetter Hervorhebung und cleanen Punkt-Separatoren",
-        "Pill-Tabs und abgerundete Eingabefelder in den Einstellungen (Setup-Dialog)",
-        "F12 Dienst-Rechner standardmäßig mit modernem Ember Dark Velvet Theme"
+        "1:1 Inter Schriftart (OFL): Inter Variable Font nativ gebundelt und als Standard-Schriftart für alle UI-Elemente integriert",
+        "Exakte Ember-Farbpalette: 100% pixelgenau aus der Ember-Vorlage gesampelte Farbwerte (#161616 Hintergrund, #101012 Karten, #222226 Active Pills, #262628 Borders)",
+        "Exakte Neon-Akzentfarben: Business Mint (#4bd4a3), Enterprise Yellow (#f7bd2e), Pro Blue (#5ea2ef), Starter Pink (#ec5ba3), Free Purple (#a87ffb)",
+        "Inter-Typografie mit optimiertem Antialiasing und klaren Schriftstilen in HUD, Einstellungen und F12 Dienst-Rechner"
     ]
 }

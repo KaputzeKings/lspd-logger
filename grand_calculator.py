@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QCheckBox, QButtonGroup, QRadioButton
 )
 from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint
-from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKeyEvent, QPen, QPalette
+from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter, QAction, QKeyEvent, QPen, QPalette
 
 def get_base_dir():
     if getattr(sys, 'frozen', False):
@@ -42,37 +42,37 @@ def normalize_search_text(t):
 
 CALC_THEMES = {
     "Ember Dark (Velvet Obsidian)": {
-        "bg": "#0c0c0e",
-        "surface": "#121216",
-        "card_bg": "#16161b",
-        "card_hover": "#212128",
-        "border": "#282834",
-        "border_subtle": "#1f1f26",
-        "accent": "#212128",
+        "bg": "#161616",
+        "surface": "#111111",
+        "card_bg": "#101012",
+        "card_hover": "#1c1c20",
+        "border": "#262628",
+        "border_subtle": "#1e1e20",
+        "accent": "#222226",
         "accent_text": "#ffffff",
         "card_active_bg": "#122019",
-        "card_active_border": "#10b981",
-        "text": "#f4f4f5",
+        "card_active_border": "#4bd4a3",
+        "text": "#ffffff",
         "text_muted": "#71717a",
-        "money": "#10b981",
-        "stars": "#f59e0b",
+        "money": "#4bd4a3",
+        "stars": "#f7bd2e",
         "danger": "#ef4444"
     },
     "Schwarz-Grau-Weiß (Monochrome)": {
-        "bg": "#0c0c0e",
-        "surface": "#121216",
-        "card_bg": "#16161b",
-        "card_hover": "#212128",
-        "border": "#282834",
-        "border_subtle": "#1f1f26",
-        "accent": "#212128",
+        "bg": "#161616",
+        "surface": "#111111",
+        "card_bg": "#101012",
+        "card_hover": "#1c1c20",
+        "border": "#262628",
+        "border_subtle": "#1e1e20",
+        "accent": "#222226",
         "accent_text": "#ffffff",
         "card_active_bg": "#181822",
         "card_active_border": "#ffffff",
-        "text": "#f4f4f5",
+        "text": "#ffffff",
         "text_muted": "#71717a",
-        "money": "#10b981",
-        "stars": "#f59e0b",
+        "money": "#4bd4a3",
+        "stars": "#f7bd2e",
         "danger": "#ef4444"
     },
     "Grandkasten Cyberpunk": {
@@ -747,7 +747,7 @@ class GrandCalculatorOverlay(QWidget):
         self.setStyleSheet(f"""
             QWidget {{
                 color: {t['text']};
-                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                font-family: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
             }}
             QTabWidget::pane {{
                 border: 1px solid {t['border_subtle']};

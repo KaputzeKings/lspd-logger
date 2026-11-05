@@ -20,11 +20,11 @@ from PySide6.QtWidgets import (
     QCheckBox
 )
 from PySide6.QtCore import Qt, QTimer, Signal, QObject
-from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKeyEvent
+from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter, QAction, QKeyEvent
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.4.3"
+CURRENT_VERSION = "1.4.4"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -56,6 +56,28 @@ def play_beep(freq=1000, duration=150):
     except Exception:
         pass
 
+def init_custom_fonts(app=None):
+    candidates = [
+        os.path.join(getattr(sys, "_MEIPASS", ""), "InterVariable.ttf"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "InterVariable.ttf"),
+        os.path.join(os.path.dirname(sys.executable), "InterVariable.ttf"),
+        os.path.join(BASE_DIR, "InterVariable.ttf"),
+        r"C:\Users\theop\.gemini\antigravity\scratch\pd_logger\InterVariable.ttf"
+    ]
+    loaded = False
+    for p in candidates:
+        if p and os.path.exists(p):
+            font_id = QFontDatabase.addApplicationFont(p)
+            if font_id >= 0:
+                log(f"[Font] Inter Font erfolgreich geladen: {p} (ID: {font_id})")
+                loaded = True
+                break
+    if app:
+        font = QFont("Inter" if loaded else "Segoe UI Variable Text", 10)
+        font.setStyleStrategy(QFont.PreferAntialias)
+        app.setFont(font)
+    return "Inter" if loaded else "Segoe UI Variable Text"
+
 def adjust_color(hex_color, factor):
     try:
         c = hex_color.lstrip('#')
@@ -70,30 +92,30 @@ def adjust_color(hex_color, factor):
 
 THEMES = {
     "Ember Dark (Velvet Obsidian)": {
-        "bg": "#0c0c0e",
-        "card_bg": "#141418",
-        "border": "#282834",
-        "accent": "#212128",
-        "accent_hover": "#2e2e3a",
-        "accent_pressed": "#181820",
-        "text": "#f4f4f5",
+        "bg": "#161616",
+        "card_bg": "#101012",
+        "border": "#262628",
+        "accent": "#222226",
+        "accent_hover": "#2a2a30",
+        "accent_pressed": "#18181a",
+        "text": "#ffffff",
         "text_muted": "#71717a",
-        "btn_bg": "#16161b",
-        "btn_hover": "#212128",
-        "thumb_bg": "#08080a"
+        "btn_bg": "#18181a",
+        "btn_hover": "#222226",
+        "thumb_bg": "#0c0c0e"
     },
     "Schwarz-Grau-Weiß (Monochrome)": {
-        "bg": "#0c0c0e",
-        "card_bg": "#141418",
-        "border": "#282834",
-        "accent": "#212128",
-        "accent_hover": "#2e2e3a",
-        "accent_pressed": "#181820",
-        "text": "#f4f4f5",
+        "bg": "#161616",
+        "card_bg": "#101012",
+        "border": "#262628",
+        "accent": "#222226",
+        "accent_hover": "#2a2a30",
+        "accent_pressed": "#18181a",
+        "text": "#ffffff",
         "text_muted": "#71717a",
-        "btn_bg": "#16161b",
-        "btn_hover": "#212128",
-        "thumb_bg": "#08080a"
+        "btn_bg": "#18181a",
+        "btn_hover": "#222226",
+        "thumb_bg": "#0c0c0e"
     },
     "Grandkasten Cyberpunk": {
         "bg": "#0a0a0c",
@@ -245,7 +267,7 @@ def get_default_config():
             "theme": "Ember Dark (Velvet Obsidian)",
             "scale": 1.0,
             "position": "Oben Rechts",
-            "font_family": "Segoe UI",
+            "font_family": "Inter",
             "font_size": 11,
             "opacity": 0.96,
             "auto_close_sec": 25,
@@ -1124,9 +1146,9 @@ class SetupDialog(QDialog):
                 border: 1px solid #383848;
             }
             QPushButton#btnSave {
-                background-color: #10b981;
+                background-color: #4bd4a3;
                 color: #0c0c0e;
-                border: 1px solid #10b981;
+                border: 1px solid #4bd4a3;
                 border-radius: 8px;
                 padding: 9px 24px;
                 font-size: 12px;
@@ -1182,7 +1204,7 @@ class SetupDialog(QDialog):
             }
             QCheckBox::indicator:checked {
                 background: #10b981;
-                border: 1px solid #10b981;
+                border: 1px solid #4bd4a3;
             }
         """)
 
@@ -1877,7 +1899,7 @@ class PDOverlayWindow(QWidget):
         hud = CONFIG.get("hud", {})
         colors = get_theme_colors(hud)
         scale = float(hud.get("scale", 1.0))
-        font_family = hud.get("font_family", "Segoe UI")
+        font_family = hud.get("font_family", "Inter")
         font_size = int(hud.get("font_size", 11))
         opacity = float(hud.get("opacity", 0.96))
         
@@ -2035,7 +2057,7 @@ class PDOverlayWindow(QWidget):
             self.status_label.setText("⏳ Event: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
             self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (2/2)")
-            self.highlight_button(self.btn_event, "#8b5cf6", "#1c1428")
+            self.highlight_button(self.btn_event, "#a87ffb", "#1c1428")
         else:
             self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (1/2)")
 
@@ -2043,7 +2065,7 @@ class PDOverlayWindow(QWidget):
             self.status_label.setText("⏳ Shoprob: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
             self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (2/2)")
-            self.highlight_button(self.btn_shoprob, "#f59e0b", "#261a10")
+            self.highlight_button(self.btn_shoprob, "#f7bd2e", "#261a10")
         else:
             self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (1/2)")
 
@@ -2051,7 +2073,7 @@ class PDOverlayWindow(QWidget):
             self.status_label.setText("⏳ FZ-Raid: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
             self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (2/2)")
-            self.highlight_button(self.btn_fz, "#14b8a6", "#102320")
+            self.highlight_button(self.btn_fz, "#2dd4bf", "#102320")
         else:
             self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (1/2)")
 
@@ -2060,13 +2082,13 @@ class PDOverlayWindow(QWidget):
         if not self.pending_two_shot:
             self.status_label.setVisible(False)
             if recommendation == "inhaftierung":
-                self.highlight_button(self.btn_inhaftierung, "#10b981", "#122119")
+                self.highlight_button(self.btn_inhaftierung, "#4bd4a3", "#122019")
                 self.btn_inhaftierung.setText(f"[1] 🟢 {inh_num}. Inhaftierung ⭐")
             elif recommendation == "global":
                 self.highlight_button(self.btn_global, "#ef4444", "#241215")
                 self.btn_global.setText(f"[2] 🔴 {gl_num}. Global ⭐")
             elif recommendation == "local":
-                self.highlight_button(self.btn_local, "#3b82f6", "#121a28")
+                self.highlight_button(self.btn_local, "#5ea2ef", "#121a28")
                 self.btn_local.setText(f"[3] 🔵 {lo_num}. Local ⭐")
 
     def update_stats_ui(self, counts):
@@ -2454,6 +2476,7 @@ def create_tray_icon():
 def main():
     log(f"[Main] Starte QApplication (v{CURRENT_VERSION})...")
     app = QApplication(sys.argv)
+    init_custom_fonts(app)
     app.setQuitOnLastWindowClosed(False)
 
     global CONFIG
