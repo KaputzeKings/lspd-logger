@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.4.4"
+CURRENT_VERSION = "1.4.5"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -893,7 +893,7 @@ class UpdateDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(12)
 
-        title = QLabel(f"🚀 <span style='color: {colors['border']}; font-size: 15px;'><b>Neues Update verfügbar!</b></span>")
+        title = QLabel(f"<span style='color: #ffffff; font-size: 15px;'><b>Neues Update verfügbar</b></span>")
         layout.addWidget(title)
 
         new_ver = self.update_info.get("version", "Neu")
@@ -1215,8 +1215,8 @@ class SetupDialog(QDialog):
         # Header Title (Pure Monochrome)
         title_bar = QHBoxLayout()
         title_lbl = QLabel(
-            "🛡️ <span style='color: #ffffff; font-size: 14px;'><b>LSPD EINSTELLUNGEN</b></span> "
-            "<span style='color: #71717a; font-size: 11px; font-weight: normal;'>• Modern Dark (Ember Velvet)</span>"
+            "<span style='color: #ffffff; font-size: 14px;'><b>LSPD</b> <span style='font-weight: 500; color: #a1a1aa;'>Einstellungen</span></span> "
+            "<span style='color: #52525b; font-size: 11px; font-weight: normal;'>• Velvet Obsidian</span>"
         )
         title_bar.addWidget(title_lbl)
         title_bar.addStretch()
@@ -1233,7 +1233,7 @@ class SetupDialog(QDialog):
         l_serv.setSpacing(10)
 
         # Card 1: Beamten-Profil
-        c1, c1_lay = self._create_card("BEAMTEN-PROFIL & DIENSTNUMMER", "• Wichtig für Protokolle")
+        c1, c1_lay = self._create_card("Beamten-Profil & Dienstnummer", "Wichtig für Protokolle")
         c1_lay.addWidget(QLabel("Reisepassnummer / Badge-ID:"))
         self.badge_input = QLineEdit()
         self.badge_input.setPlaceholderText("z. B. 317595")
@@ -1245,13 +1245,13 @@ class SetupDialog(QDialog):
         l_serv.addWidget(c1)
 
         # Card 2: Screenshot Überwachung
-        c2, c2_lay = self._create_card("MEDAL SCREENSHOT-ORDNER", "• Lokale Überwachung")
+        c2, c2_lay = self._create_card("Medal Screenshot-Ordner", "Lokale Überwachung")
         c2_lay.addWidget(QLabel("Überwachter Ordner für Logs & Berechnungen:"))
         dir_lay = QHBoxLayout()
         self.dir_input = QLineEdit()
         self.dir_input.setText(CONFIG.get("watch_dir", get_default_watch_dir()))
         dir_lay.addWidget(self.dir_input)
-        browse_btn = QPushButton("📁 Durchsuchen")
+        browse_btn = QPushButton("Durchsuchen")
         browse_btn.clicked.connect(self.choose_directory)
         dir_lay.addWidget(browse_btn)
         c2_lay.addLayout(dir_lay)
@@ -1261,7 +1261,7 @@ class SetupDialog(QDialog):
         l_serv.addWidget(c2)
 
         # Card 3: Discord Forum
-        c3, c3_lay = self._create_card("DISCORD FORUM-THREAD", "• Server-Synchronisation")
+        c3, c3_lay = self._create_card("Discord Forum-Thread", "Server-Synchronisation")
         c3_lay.addWidget(QLabel("Forum Thread-ID (Optional):"))
         self.thread_input = QLineEdit()
         self.thread_input.setPlaceholderText("Leer lassen für automatische Thread-Erkennung")
@@ -1272,7 +1272,7 @@ class SetupDialog(QDialog):
         token_box.setStyleSheet("background: #111111; border: 1px solid #242424; border-radius: 5px; padding: 6px;")
         tb_lay = QHBoxLayout(token_box)
         tb_lay.setContentsMargins(8, 4, 8, 4)
-        t_ico = QLabel("🔒")
+        t_ico = QLabel("<span style='color: #4bd4a3;'>●</span>")
         t_ico.setStyleSheet("font-size: 14px; border: none;")
         tb_lay.addWidget(t_ico)
         t_lbl = QLabel("<span style='color: #888888; font-size: 10px; font-weight: normal;'>"
@@ -1284,7 +1284,7 @@ class SetupDialog(QDialog):
         l_serv.addWidget(c3)
 
         l_serv.addStretch()
-        self.tabs.addTab(tab_service, "👮 Dienst & Discord")
+        self.tabs.addTab(tab_service, "Dienst & Discord")
 
         # ==================== TAB 2: Log-Beschriftung & Stil ====================
         tab_formatting = QWidget()
@@ -1293,7 +1293,7 @@ class SetupDialog(QDialog):
         l_form.setSpacing(10)
 
         # Card 1: Schriftstil (Markdown)
-        cf1, cf1_lay = self._create_card("DISCORD SCHRIFTSTIL BEIM SENDEN", "• Markdown-Formatierung")
+        cf1, cf1_lay = self._create_card("Discord Schriftstil beim Senden", "Markdown-Formatierung")
         style_cfg = CONFIG.get("log_style", {})
         
         chk_lay = QHBoxLayout()
@@ -1320,7 +1320,7 @@ class SetupDialog(QDialog):
         preview_box.setStyleSheet("background: #0d0d0d; border: 1px solid #333333; border-radius: 5px; padding: 8px;")
         pv_lay = QHBoxLayout(preview_box)
         pv_lay.setContentsMargins(8, 4, 8, 4)
-        pv_ico = QLabel("💬")
+        pv_ico = QLabel("<span style='color: #5ea2ef;'>●</span>")
         pv_ico.setStyleSheet("font-size: 14px; border: none;")
         pv_lay.addWidget(pv_ico)
         self.lbl_style_preview = QLabel()
@@ -1330,8 +1330,8 @@ class SetupDialog(QDialog):
         l_form.addWidget(cf1)
 
         # Card 2: Titel-Vorlagen der Kategorien
-        cf2, cf2_lay = self._create_card("LOG-BESCHRIFTUNGEN DER KATEGORIEN", "• Platzhalter {nr} = Zähler")
-        h_tmpl = QLabel("💡 Verwende <b>{nr}</b> als Platzhalter für die fortlaufende Nummer (z. B. <i>{nr}. Inhaftierung</i> oder <i>Inhaftierung #{nr}</i>). Im HUD bleibt die Ansicht kurz und sauber.")
+        cf2, cf2_lay = self._create_card("Log-Beschriftungen der Kategorien", "Platzhalter {nr} = Zähler")
+        h_tmpl = QLabel("Verwende <b>{nr}</b> als Platzhalter für die fortlaufende Nummer (z. B. <i>{nr}. Inhaftierung</i> oder <i>Inhaftierung #{nr}</i>). Im HUD bleibt die Ansicht kurz und sauber.")
         h_tmpl.setObjectName("hintLabel")
         h_tmpl.setWordWrap(True)
         cf2_lay.addWidget(h_tmpl)
@@ -1342,43 +1342,43 @@ class SetupDialog(QDialog):
         t_grid.setHorizontalSpacing(14)
         t_grid.setVerticalSpacing(6)
 
-        t_grid.addWidget(QLabel("🟢 Inhaftierung:"), 0, 0)
+        t_grid.addWidget(QLabel("<span style='color: #4bd4a3;'>●</span> Inhaftierung:"), 0, 0)
         self.title_inh = QLineEdit()
         self.title_inh.setText(titles_cfg.get("Inhaftierung", "{nr}. Inhaftierung"))
         self.title_inh.textChanged.connect(self._update_style_preview)
         t_grid.addWidget(self.title_inh, 0, 1)
 
-        t_grid.addWidget(QLabel("🔴 Global:"), 1, 0)
+        t_grid.addWidget(QLabel("<span style='color: #ef4444;'>●</span> Global:"), 1, 0)
         self.title_global = QLineEdit()
         self.title_global.setText(titles_cfg.get("Global", "{nr}. Global"))
         self.title_global.textChanged.connect(self._update_style_preview)
         t_grid.addWidget(self.title_global, 1, 1)
 
-        t_grid.addWidget(QLabel("🔵 Local:"), 2, 0)
+        t_grid.addWidget(QLabel("<span style='color: #5ea2ef;'>●</span> Local:"), 2, 0)
         self.title_local = QLineEdit()
         self.title_local.setText(titles_cfg.get("Local", "{nr}. Local"))
         self.title_local.textChanged.connect(self._update_style_preview)
         t_grid.addWidget(self.title_local, 2, 1)
 
-        t_grid.addWidget(QLabel("🟣 Event:"), 3, 0)
+        t_grid.addWidget(QLabel("<span style='color: #a87ffb;'>●</span> Event:"), 3, 0)
         self.title_event = QLineEdit()
         self.title_event.setText(titles_cfg.get("Event", "{nr}. Event"))
         self.title_event.textChanged.connect(self._update_style_preview)
         t_grid.addWidget(self.title_event, 3, 1)
 
-        t_grid.addWidget(QLabel("🟠 Shoprob:"), 4, 0)
+        t_grid.addWidget(QLabel("<span style='color: #f7bd2e;'>●</span> Shoprob:"), 4, 0)
         self.title_shoprob = QLineEdit()
         self.title_shoprob.setText(titles_cfg.get("Shoprob", "{nr}. Shoprob"))
         self.title_shoprob.textChanged.connect(self._update_style_preview)
         t_grid.addWidget(self.title_shoprob, 4, 1)
 
-        t_grid.addWidget(QLabel("🪖 FZ-Raid:"), 5, 0)
+        t_grid.addWidget(QLabel("<span style='color: #2dd4bf;'>●</span> FZ-Raid:"), 5, 0)
         self.title_fz = QLineEdit()
         self.title_fz.setText(titles_cfg.get("FZ Raid", "{nr}. FZ-Raid"))
         self.title_fz.textChanged.connect(self._update_style_preview)
         t_grid.addWidget(self.title_fz, 5, 1)
 
-        t_grid.addWidget(QLabel("👥 Streifenpartner:"), 6, 0)
+        t_grid.addWidget(QLabel("<span style='color: #ec5ba3;'>●</span> Streifenpartner:"), 6, 0)
         self.title_partner = QLineEdit()
         self.title_partner.setText(titles_cfg.get("Streifenpartner", "{nr}. Streifenpartner"))
         self.title_partner.textChanged.connect(self._update_style_preview)
@@ -1386,13 +1386,13 @@ class SetupDialog(QDialog):
 
         cf2_lay.addLayout(t_grid)
 
-        btn_reset_titles = QPushButton("🔄 Beschriftungen auf Standard zurücksetzen")
+        btn_reset_titles = QPushButton("Beschriftungen zurücksetzen")
         btn_reset_titles.clicked.connect(self._reset_titles_to_defaults)
         cf2_lay.addWidget(btn_reset_titles)
 
         l_form.addWidget(cf2)
         l_form.addStretch()
-        self.tabs.addTab(tab_formatting, "📝 Log-Beschriftung & Stil")
+        self.tabs.addTab(tab_formatting, "Log-Beschriftung & Stil")
 
         # ==================== TAB 3: Grandkasten Rechner & F10 ====================
         tab_calc = QWidget()
@@ -1401,7 +1401,7 @@ class SetupDialog(QDialog):
         l_calc.setSpacing(10)
 
         # Card 1: F12 Dienst-Rechner
-        cc1, cc1_lay = self._create_card("F12 DIENST-RECHNER", "• Grandkasten DE1 Bußgeld & Wanted Rechner")
+        cc1, cc1_lay = self._create_card("F12 Dienst-Rechner", "Grandkasten DE1 Bußgeld & Wanted Rechner")
         
         calc_grid = QGridLayout()
         calc_grid.setHorizontalSpacing(14)
@@ -1441,13 +1441,13 @@ class SetupDialog(QDialog):
         calc_grid.addWidget(self.calc_scale_combo, 1, 1)
 
         cc1_lay.addLayout(calc_grid)
-        hc1 = QLabel("💡 Tipp: Du kannst die Größe auch direkt im geöffneten F12-Rechner oben rechts per Dropdown umschalten.")
+        hc1 = QLabel("Tipp: Du kannst die Größe auch direkt im geöffneten F12-Rechner oben rechts per Dropdown umschalten.")
         hc1.setObjectName("hintLabel")
         cc1_lay.addWidget(hc1)
         l_calc.addWidget(cc1)
 
         # Card 2: F10 Teleprompter
-        cc2, cc2_lay = self._create_card("F10 TELEPROMPTER & RECHTE", "• Automatische Miranda-Warnung")
+        cc2, cc2_lay = self._create_card("F10 Teleprompter & Rechte", "Automatische Miranda-Warnung")
         
         promp_grid = QGridLayout()
         promp_grid.setHorizontalSpacing(14)
@@ -1475,7 +1475,7 @@ class SetupDialog(QDialog):
         auto_box.setStyleSheet("background: #111111; border: 1px solid #242424; border-radius: 5px; padding: 6px;")
         ab_lay = QHBoxLayout(auto_box)
         ab_lay.setContentsMargins(8, 4, 8, 4)
-        ab_ico = QLabel("⚡")
+        ab_ico = QLabel("<span style='color: #f7bd2e;'>●</span>")
         ab_ico.setStyleSheet("font-size: 14px; border: none;")
         ab_lay.addWidget(ab_ico)
         ab_lbl = QLabel("<span style='color: #888888; font-size: 10px; font-weight: normal;'>"
@@ -1487,7 +1487,7 @@ class SetupDialog(QDialog):
         l_calc.addWidget(cc2)
 
         l_calc.addStretch()
-        self.tabs.addTab(tab_calc, "⚖️ Grandkasten Rechner & F10")
+        self.tabs.addTab(tab_calc, "Grandkasten Rechner & F10")
 
         # ==================== TAB 4: Ingame-HUD & Audio ====================
         tab_hud = QWidget()
@@ -1498,7 +1498,7 @@ class SetupDialog(QDialog):
         hud_conf = CONFIG.get("hud", {})
 
         # Card 1: Ingame HUD
-        ch1, ch1_lay = self._create_card("INGAME STATS-HUD (OVERLAY)", "• Live-Anzeige im Spiel")
+        ch1, ch1_lay = self._create_card("Ingame Stats-HUD (Overlay)", "Live-Anzeige im Spiel")
         
         hud_grid = QGridLayout()
         hud_grid.setHorizontalSpacing(14)
@@ -1591,21 +1591,21 @@ class SetupDialog(QDialog):
         l_hud.addWidget(ch1)
 
         # Card 2: Audio & Feedback
-        ch2, ch2_lay = self._create_card("AKUSTIK & FEEDBACK", "• Soundeffekte")
-        self.cb_sound = QCheckBox("🔊 Signalton (Piep-Sound) bei Uploads & Rechner-Aktionen abspielen")
+        ch2, ch2_lay = self._create_card("Akustik & Feedback", "Soundeffekte")
+        self.cb_sound = QCheckBox("Signalton bei Uploads & Rechner-Aktionen abspielen")
         self.cb_sound.setChecked(CONFIG.get("sound_enabled", True))
         ch2_lay.addWidget(self.cb_sound)
         l_hud.addWidget(ch2)
 
         # Card 3: Preview
-        ch3, ch3_lay = self._create_card("SCHNELL-TEST", "• Live-Vorschau")
-        self.btn_preview = QPushButton("👁️ Ingame-HUD Vorschau jetzt testen")
+        ch3, ch3_lay = self._create_card("Schnell-Test", "Live-Vorschau")
+        self.btn_preview = QPushButton("Ingame-HUD Vorschau testen")
         self.btn_preview.clicked.connect(self.trigger_hud_preview)
         ch3_lay.addWidget(self.btn_preview)
         l_hud.addWidget(ch3)
 
         l_hud.addStretch()
-        self.tabs.addTab(tab_hud, "🖥️ Ingame-HUD & Audio")
+        self.tabs.addTab(tab_hud, "Ingame-HUD & Audio")
 
         layout.addWidget(self.tabs)
 
@@ -1613,7 +1613,7 @@ class SetupDialog(QDialog):
         bottom_bar = QHBoxLayout()
         bottom_bar.setSpacing(10)
 
-        self.save_btn = QPushButton("💾 Einstellungen speichern & anwenden")
+        self.save_btn = QPushButton("Einstellungen speichern & anwenden")
         self.save_btn.setObjectName("btnSave")
         self.save_btn.clicked.connect(self.save_and_close)
         bottom_bar.addWidget(self.save_btn, 2)
@@ -1810,7 +1810,8 @@ class PDOverlayWindow(QWidget):
         self.stats_layout.setContentsMargins(6, 6, 6, 6)
         self.stats_layout.setSpacing(2)
 
-        self.stats_title = QLabel("📊 <b>Aktueller Zwischenstand:</b>")
+        self.stats_title = QLabel("AKTUELLE STATISTIK")
+        self.stats_title.setStyleSheet("font-size: 10px; font-weight: 700; color: #71717a; letter-spacing: 0.5px;")
         self.stats_layout.addWidget(self.stats_title)
 
         self.stats_line1 = QLabel("GL/LO: ?/3  |  Shop: ?/3  |  Events: ?/5")
@@ -1835,49 +1836,49 @@ class PDOverlayWindow(QWidget):
         self.grid = QGridLayout()
         self.grid.setSpacing(6)
 
-        self.btn_inhaftierung = QPushButton("[1] 🟢 1. Inhaftierung")
+        self.btn_inhaftierung = QPushButton("[1] ● 1. Inhaftierung")
         self.btn_inhaftierung.clicked.connect(lambda: self.handle_action("Inhaftierung", "Inhaftierung"))
         self.grid.addWidget(self.btn_inhaftierung, 0, 0)
 
-        self.btn_global = QPushButton("[2] 🔴 1. Global")
+        self.btn_global = QPushButton("[2] ● 1. Global")
         self.btn_global.clicked.connect(lambda: self.handle_action("Global", "Global"))
         self.grid.addWidget(self.btn_global, 0, 1)
 
-        self.btn_local = QPushButton("[3] 🔵 1. Local")
+        self.btn_local = QPushButton("[3] ● 1. Local")
         self.btn_local.clicked.connect(lambda: self.handle_action("Local", "Local"))
         self.grid.addWidget(self.btn_local, 1, 0)
 
-        self.btn_event = QPushButton("[4] 🟣 1. Event (1/2)")
+        self.btn_event = QPushButton("[4] ● 1. Event (1/2)")
         self.btn_event.clicked.connect(lambda: self.handle_event_action("Event"))
         self.grid.addWidget(self.btn_event, 1, 1)
 
-        self.btn_shoprob = QPushButton("[5] 🟠 1. Shoprob (1/2)")
+        self.btn_shoprob = QPushButton("[5] ● 1. Shoprob (1/2)")
         self.btn_shoprob.clicked.connect(lambda: self.handle_shoprob_action("Shoprob"))
         self.grid.addWidget(self.btn_shoprob, 2, 0)
 
-        self.btn_fz = QPushButton("[6] 🪖 1. FZ-Raid (1/2)")
+        self.btn_fz = QPushButton("[6] ● 1. FZ-Raid (1/2)")
         self.btn_fz.clicked.connect(lambda: self.handle_fz_action("FZ Raid"))
         self.grid.addWidget(self.btn_fz, 2, 1)
 
         self.card_layout.addLayout(self.grid)
 
         # Streifenpartner Button
-        self.btn_streifenpartner = QPushButton("[7] 👥 1. Streifenpartner")
+        self.btn_streifenpartner = QPushButton("[7] ● 1. Streifenpartner")
         self.btn_streifenpartner.clicked.connect(lambda: self.handle_action("Streifenpartner", "Streifenpartner"))
         self.card_layout.addWidget(self.btn_streifenpartner)
 
         # Intermediate Summary Button
-        self.btn_send_summary = QPushButton("[8] / [Z] 📊 Zwischenstand in Chat senden")
+        self.btn_send_summary = QPushButton("[8] / [Z] Zwischenstand in Chat senden")
         self.btn_send_summary.clicked.connect(self.handle_send_summary)
         self.card_layout.addWidget(self.btn_send_summary)
 
         # Delete Last Log Button
-        self.btn_delete_last = QPushButton("[9] / [ENTF] 🗑️ Letzten Log löschen")
+        self.btn_delete_last = QPushButton("[9] / [ENTF] Letzten Log löschen")
         self.btn_delete_last.clicked.connect(self.handle_delete_last_log)
         self.card_layout.addWidget(self.btn_delete_last)
 
         # Cancel Button
-        self.btn_cancel = QPushButton("[ESC] ❌ Verwerfen (Nicht posten)")
+        self.btn_cancel = QPushButton("[ESC] Verwerfen (Nicht posten)")
         self.btn_cancel.clicked.connect(self.close_overlay)
         self.card_layout.addWidget(self.btn_cancel)
 
@@ -1913,7 +1914,7 @@ class PDOverlayWindow(QWidget):
 
         badge_text = str(CONFIG.get("user_badge", "317108"))
         self.header_label.setText(
-            f"📸 <span style='font-size: {int(font_size * 1.15)}px; font-weight: 800; color: #ffffff;'>LSPD</span> "
+            f"<span style='font-size: {int(font_size * 1.15)}px; font-weight: 800; color: #ffffff;'>LSPD</span> "
             f"<span style='font-size: {int(font_size * 1.05)}px; font-weight: 600; color: #71717a;'>Log Assistent</span> "
             f"<span style='background: #181820; color: #a1a1aa; border: 1px solid #282835; border-radius: 6px; padding: 2px 7px; font-size: {int(font_size * 0.82)}px; font-weight: 600;'>#{badge_text}</span>"
         )
@@ -2049,47 +2050,47 @@ class PDOverlayWindow(QWidget):
         fz_num = self.get_next_number("FZ Raid")
         sp_num = self.get_next_number("Streifenpartner")
 
-        self.btn_inhaftierung.setText(f"[1] 🟢 {inh_num}. Inhaftierung")
-        self.btn_global.setText(f"[2] 🔴 {gl_num}. Global")
-        self.btn_local.setText(f"[3] 🔵 {lo_num}. Local")
+        self.btn_inhaftierung.setText(f"[1] ● {inh_num}. Inhaftierung")
+        self.btn_global.setText(f"[2] ● {gl_num}. Global")
+        self.btn_local.setText(f"[3] ● {lo_num}. Local")
 
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Event":
-            self.status_label.setText("⏳ Event: Foto 1 aktiv. Das hier als Foto 2 senden?")
+            self.status_label.setText("Event: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
-            self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (2/2)")
+            self.btn_event.setText(f"[4] ● {ev_num}. Event (2/2)")
             self.highlight_button(self.btn_event, "#a87ffb", "#1c1428")
         else:
-            self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (1/2)")
+            self.btn_event.setText(f"[4] ● {ev_num}. Event (1/2)")
 
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Ammu-Rob":
-            self.status_label.setText("⏳ Shoprob: Foto 1 aktiv. Das hier als Foto 2 senden?")
+            self.status_label.setText("Shoprob: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
-            self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (2/2)")
+            self.btn_shoprob.setText(f"[5] ● {sh_num}. Shoprob (2/2)")
             self.highlight_button(self.btn_shoprob, "#f7bd2e", "#261a10")
         else:
-            self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (1/2)")
+            self.btn_shoprob.setText(f"[5] ● {sh_num}. Shoprob (1/2)")
 
         if self.pending_two_shot and self.pending_two_shot.get("type") == "FZ Raid":
-            self.status_label.setText("⏳ FZ-Raid: Foto 1 aktiv. Das hier als Foto 2 senden?")
+            self.status_label.setText("FZ-Raid: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
-            self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (2/2)")
+            self.btn_fz.setText(f"[6] ● {fz_num}. FZ-Raid (2/2)")
             self.highlight_button(self.btn_fz, "#2dd4bf", "#102320")
         else:
-            self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (1/2)")
+            self.btn_fz.setText(f"[6] ● {fz_num}. FZ-Raid (1/2)")
 
-        self.btn_streifenpartner.setText(f"[7] 👥 {sp_num}. Streifenpartner")
+        self.btn_streifenpartner.setText(f"[7] ● {sp_num}. Streifenpartner")
 
         if not self.pending_two_shot:
             self.status_label.setVisible(False)
             if recommendation == "inhaftierung":
                 self.highlight_button(self.btn_inhaftierung, "#4bd4a3", "#122019")
-                self.btn_inhaftierung.setText(f"[1] 🟢 {inh_num}. Inhaftierung ⭐")
+                self.btn_inhaftierung.setText(f"[1] ● {inh_num}. Inhaftierung")
             elif recommendation == "global":
                 self.highlight_button(self.btn_global, "#ef4444", "#241215")
-                self.btn_global.setText(f"[2] 🔴 {gl_num}. Global ⭐")
+                self.btn_global.setText(f"[2] ● {gl_num}. Global")
             elif recommendation == "local":
                 self.highlight_button(self.btn_local, "#5ea2ef", "#121a28")
-                self.btn_local.setText(f"[3] 🔵 {lo_num}. Local ⭐")
+                self.btn_local.setText(f"[3] ● {lo_num}. Local")
 
     def update_stats_ui(self, counts):
         if counts:
@@ -2179,7 +2180,7 @@ class PDOverlayWindow(QWidget):
         num = self.get_next_number(cat_key)
         send_title = format_log_title_for_discord(cat_key, base_title, num)
         self.auto_timer.stop()
-        self.show_notification(f"⏳ Sende {send_title}...")
+        self.show_notification(f"Sende {send_title}...")
         threading.Thread(target=self._send_async, args=(cat_key, send_title, [self.current_screenshot]), daemon=True).start()
 
     def handle_event_action(self, base_title="Event"):
@@ -2190,11 +2191,11 @@ class PDOverlayWindow(QWidget):
             p1 = self.pending_two_shot.get("path")
             p2 = self.current_screenshot
             self.clear_pending_state()
-            self.show_notification(f"⏳ Sende {send_title} (2 Fotos)...")
+            self.show_notification(f"Sende {send_title} (2 Fotos)...")
             threading.Thread(target=self._send_async, args=("Event", send_title, [p1, p2]), daemon=True).start()
         else:
             self.save_pending_state({"type": "Event", "path": self.current_screenshot, "time": time.time()})
-            self.show_notification(f"📌 {num}. Event (Foto 1/2) gespeichert! Warte auf Foto 2.")
+            self.show_notification(f"{num}. Event (Foto 1/2) gespeichert. Warte auf Foto 2.")
             try:
                 play_beep(900, 80)
                 play_beep(1300, 80)
@@ -2210,11 +2211,11 @@ class PDOverlayWindow(QWidget):
             p1 = self.pending_two_shot.get("path")
             p2 = self.current_screenshot
             self.clear_pending_state()
-            self.show_notification(f"⏳ Sende {send_title} (2 Fotos)...")
+            self.show_notification(f"Sende {send_title} (2 Fotos)...")
             threading.Thread(target=self._send_async, args=("Shoprob", send_title, [p1, p2]), daemon=True).start()
         else:
             self.save_pending_state({"type": "Ammu-Rob", "path": self.current_screenshot, "time": time.time()})
-            self.show_notification(f"📌 {num}. Shoprob (Foto 1/2) gespeichert! Warte auf Foto 2.")
+            self.show_notification(f"{num}. Shoprob (Foto 1/2) gespeichert. Warte auf Foto 2.")
             try:
                 play_beep(900, 80)
                 play_beep(1300, 80)
@@ -2230,11 +2231,11 @@ class PDOverlayWindow(QWidget):
             p1 = self.pending_two_shot.get("path")
             p2 = self.current_screenshot
             self.clear_pending_state()
-            self.show_notification(f"⏳ Sende {send_title} (2 Fotos)...")
+            self.show_notification(f"Sende {send_title} (2 Fotos)...")
             threading.Thread(target=self._send_async, args=("FZ Raid", send_title, [p1, p2]), daemon=True).start()
         else:
             self.save_pending_state({"type": "FZ Raid", "path": self.current_screenshot, "time": time.time()})
-            self.show_notification(f"📌 {num}. FZ-Raid (Foto 1/2) gespeichert! Warte auf Foto 2.")
+            self.show_notification(f"{num}. FZ-Raid (Foto 1/2) gespeichert. Warte auf Foto 2.")
             try:
                 play_beep(900, 80)
                 play_beep(1300, 80)
@@ -2244,7 +2245,7 @@ class PDOverlayWindow(QWidget):
 
     def handle_delete_last_log(self):
         self.auto_timer.stop()
-        self.show_notification("⏳ Suche & lösche letzten Log aus Discord...")
+        self.show_notification("Suche & lösche letzten Log aus Discord...")
         threading.Thread(target=self._delete_last_log_async, daemon=True).start()
 
     def _delete_last_log_async(self):
@@ -2256,35 +2257,35 @@ class PDOverlayWindow(QWidget):
             except Exception:
                 pass
             clean_title = info.replace('*', '').replace('_', '').replace('~', '').strip()
-            self.show_notification(f"🗑️ '{clean_title}' erfolgreich gelöscht!")
+            self.show_notification(f"'{clean_title}' erfolgreich gelöscht.")
             threading.Thread(target=self._fetch_stats_async, daemon=True).start()
             QTimer.singleShot(2200, self.close_overlay)
         else:
             log(f"[Delete Log Error] {info}")
-            self.show_notification(f"❌ {info}")
+            self.show_notification(f"Fehler: {info}")
             QTimer.singleShot(2500, self.close_overlay)
 
     def handle_send_summary(self):
         self.auto_timer.stop()
-        self.show_notification("⏳ Berechne & sende Zwischenstand...")
+        self.show_notification("Berechne & sende Zwischenstand...")
         threading.Thread(target=self._send_summary_async, daemon=True).start()
 
     def _send_summary_async(self):
         token = get_discord_token()
         if not token:
-            self.show_notification("❌ Kein Discord Token gefunden!")
+            self.show_notification("Kein Discord Token gefunden.")
             QTimer.singleShot(2500, self.close_overlay)
             return
 
         thread_id = get_active_thread_id(token)
         if not thread_id:
-            self.show_notification("❌ Forum-Thread nicht gefunden!")
+            self.show_notification("Forum-Thread nicht gefunden.")
             QTimer.singleShot(2500, self.close_overlay)
             return
 
         counts, formatted = calculate_zwischenstand(token, thread_id)
         if not counts or not formatted:
-            self.show_notification("❌ Fehler beim Zählen!")
+            self.show_notification("Fehler beim Zählen.")
             QTimer.singleShot(2500, self.close_overlay)
             return
 
@@ -2295,24 +2296,24 @@ class PDOverlayWindow(QWidget):
                 play_beep(1800, 150)
             except Exception:
                 pass
-            self.show_notification("✅ Zwischenstand in Discord gepostet!")
+            self.show_notification("Zwischenstand in Discord gepostet.")
             overlay_signal.update_stats.emit(counts)
             QTimer.singleShot(1800, self.close_overlay)
         else:
             log(f"[Summary Send Error] {resp}")
-            self.show_notification("❌ Sende-Fehler!")
+            self.show_notification("Sende-Fehler aufgetreten.")
             QTimer.singleShot(2500, self.close_overlay)
 
     def _send_async(self, cat_key, title, file_paths):
         token = get_discord_token()
         if not token:
-            self.show_notification("❌ Kein Discord Token gefunden!")
+            self.show_notification("Kein Discord Token gefunden.")
             QTimer.singleShot(2500, self.close_overlay)
             return
 
         thread_id = get_active_thread_id(token)
         if not thread_id:
-            self.show_notification("❌ Forum-Thread nicht gefunden!")
+            self.show_notification("Forum-Thread nicht gefunden.")
             QTimer.singleShot(2500, self.close_overlay)
             return
 
@@ -2327,12 +2328,12 @@ class PDOverlayWindow(QWidget):
             except Exception:
                 pass
             clean_display = title.replace('*', '').replace('_', '').strip()
-            self.show_notification(f"✅ {clean_display} gepostet!")
+            self.show_notification(f"{clean_display} gepostet.")
             threading.Thread(target=self._fetch_stats_async, daemon=True).start()
             QTimer.singleShot(1500, self.close_overlay)
         else:
             log(f"[Upload Error] {resp}")
-            self.show_notification("❌ Fehler beim Senden!")
+            self.show_notification("Fehler beim Senden.")
             QTimer.singleShot(2500, self.close_overlay)
 
     def show_notification(self, text):
@@ -2468,8 +2469,9 @@ def create_tray_icon():
     p.setBrush(QColor(colors['accent']))
     p.setPen(QColor(colors['border']))
     p.drawRoundedRect(4, 4, 56, 56, 14, 14)
-    p.setFont(QFont("Segoe UI Emoji", 26))
-    p.drawText(pix.rect(), int(Qt.AlignCenter), "🚨")
+    p.setFont(QFont("Inter", 24, QFont.Bold))
+    p.setPen(QColor("#ffffff"))
+    p.drawText(pix.rect(), int(Qt.AlignCenter), "PD")
     p.end()
     return QIcon(pix)
 
@@ -2632,19 +2634,19 @@ def main():
 
         overlay_signal.show_overlay.emit(latest_file, "inhaftierung")
 
-    act_test = QAction("📸 Test-Overlay öffnen", tray_menu)
+    act_test = QAction("Test-Overlay öffnen", tray_menu)
     act_test.triggered.connect(trigger_test_overlay)
     tray_menu.addAction(act_test)
 
-    act_calc = QAction("⚖️ Bußgeld- & TOW-Rechner (F12)", tray_menu)
+    act_calc = QAction("Bußgeld- & TOW-Rechner (F12)", tray_menu)
     act_calc.triggered.connect(toggle_calc)
     tray_menu.addAction(act_calc)
 
-    act_prompter = QAction("📜 Teleprompter & Rechte (F10)", tray_menu)
+    act_prompter = QAction("Teleprompter & Rechte (F10)", tray_menu)
     act_prompter.triggered.connect(toggle_prompter_hud)
     tray_menu.addAction(act_prompter)
 
-    act_summary = QAction("📊 Zwischenstand jetzt senden", tray_menu)
+    act_summary = QAction("Zwischenstand jetzt senden", tray_menu)
     act_summary.triggered.connect(overlay.handle_send_summary)
     tray_menu.addAction(act_summary)
 
@@ -2657,18 +2659,18 @@ def main():
             elif info:
                 overlay_signal.show_msg.emit(
                     "LSPD Update",
-                    f"✅ <b>Du nutzt bereits die aktuellste Version (v{CURRENT_VERSION})!</b><br><br>Es ist kein neues Update erforderlich.",
+                    f"<b>Du nutzt bereits die aktuellste Version (v{CURRENT_VERSION})!</b><br><br>Es ist kein neues Update erforderlich.",
                     "info"
                 )
             else:
                 overlay_signal.show_msg.emit(
                     "LSPD Update",
-                    "⚠️ <b>Update-Prüfung fehlgeschlagen.</b><br><br>Konnte keine Verbindung zum GitHub-Server herstellen.",
+                    "<b>Update-Prüfung fehlgeschlagen.</b><br><br>Konnte keine Verbindung zum GitHub-Server herstellen.",
                     "warn"
                 )
         threading.Thread(target=run_check, daemon=True).start()
 
-    act_update = QAction("🔄 Nach Updates suchen", tray_menu)
+    act_update = QAction("Nach Updates suchen", tray_menu)
     act_update.triggered.connect(manual_check_updates)
     tray_menu.addAction(act_update)
 
@@ -2680,7 +2682,7 @@ def main():
         if new_val:
             play_beep(1200, 100)
 
-    act_sound = QAction("🔊 Signalton (Piep-Sound)", tray_menu)
+    act_sound = QAction("Signalton (Piep-Sound)", tray_menu)
     act_sound.setCheckable(True)
     act_sound.setChecked(CONFIG.get("sound_enabled", True))
     act_sound.triggered.connect(toggle_sound_tray)
@@ -2695,19 +2697,19 @@ def main():
                     play_beep(700, 120)
                 except Exception:
                     pass
-                overlay_signal.show_msg.emit("LSPD Log Assistent", f"✅ Letzter Log wurde erfolgreich aus Discord gelöscht:<br><br><b>{info}</b>", "info")
+                overlay_signal.show_msg.emit("LSPD Log Assistent", f"Letzter Log wurde erfolgreich aus Discord gelöscht:<br><br><b>{info}</b>", "info")
                 c, _ = calculate_zwischenstand()
                 if c:
                     overlay_signal.update_stats.emit(c)
             else:
-                overlay_signal.show_msg.emit("LSPD Log Assistent", f"❌ Konnte letzten Log nicht löschen:<br><br>{info}", "warn")
+                overlay_signal.show_msg.emit("LSPD Log Assistent", f"Konnte letzten Log nicht löschen:<br><br>{info}", "warn")
         threading.Thread(target=worker, daemon=True).start()
 
-    act_delete_log = QAction("🗑️ Letzten Discord-Log löschen", tray_menu)
+    act_delete_log = QAction("Letzten Discord-Log löschen", tray_menu)
     act_delete_log.triggered.connect(delete_last_log_from_tray)
     tray_menu.addAction(act_delete_log)
 
-    act_settings = QAction("⚙️ Einstellungen (HUD / Badge / Pfade)", tray_menu)
+    act_settings = QAction("Einstellungen (HUD / Badge / Pfade)", tray_menu)
     act_settings.triggered.connect(show_settings_dialog)
     tray_menu.addAction(act_settings)
 
@@ -2718,13 +2720,13 @@ def main():
         else:
             QMessageBox.information(None, "Ordner nicht gefunden", f"Der Ordner existiert noch nicht:\n{wdir}")
 
-    act_folder = QAction("📂 Medal-Ordner öffnen", tray_menu)
+    act_folder = QAction("Medal-Ordner öffnen", tray_menu)
     act_folder.triggered.connect(open_watch_folder)
     tray_menu.addAction(act_folder)
 
     tray_menu.addSeparator()
 
-    act_exit = QAction("❌ Beenden", tray_menu)
+    act_exit = QAction("Beenden", tray_menu)
     act_exit.triggered.connect(app.quit)
     tray_menu.addAction(act_exit)
 

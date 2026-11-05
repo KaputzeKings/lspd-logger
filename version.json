@@ -1,10 +1,12 @@
 {
-    "version": "1.4.4",
+    "version": "1.4.5",
     "release_date": "2026-11-05",
     "changelog": [
-        "1:1 Inter Schriftart (OFL): Inter Variable Font nativ gebundelt und als Standard-Schriftart für alle UI-Elemente integriert",
-        "Exakte Ember-Farbpalette: 100% pixelgenau aus der Ember-Vorlage gesampelte Farbwerte (#161616 Hintergrund, #101012 Karten, #222226 Active Pills, #262628 Borders)",
-        "Exakte Neon-Akzentfarben: Business Mint (#4bd4a3), Enterprise Yellow (#f7bd2e), Pro Blue (#5ea2ef), Starter Pink (#ec5ba3), Free Purple (#a87ffb)",
-        "Inter-Typografie mit optimiertem Antialiasing und klaren Schriftstilen in HUD, Einstellungen und F12 Dienst-Rechner"
+        "Vollständiges Unslop-Redesign: Alle 4 Hauptmodule (Ingame-HUD, Einstellungen, Bußgeld-Rechner & Teleprompter) nach den 9 Unslop-Prinzipien überarbeitet",
+        "Emoji- & Slop-Bereinigung: Komplette Entfernung dekorativer Emojis aus Buttons, Menüs, Kartenköpfen, Badges und Notifications",
+        "Elegante Typografie & Tabular Nums: Nativ gebundelte Inter-Schriftart, tabellarische Ziffern für Fines, Timer und Statistiken",
+        "Monochrome & Dot-Status: Ruhiges Obsidian-Design (#161616), klare dezente Status-Dots (●) für Kategorien, 1px Hairline-Borders (#262628)",
+        "Teleprompter & F10 HUD: Ruhige Obsidian-Bedienelemente, Mint-Auto-Play-Button, gelber Anwalts-Timer, nahtlose Tastatur-Steuerung",
+        "Vorher/Nachher Story-Video: Hochauflösender Video-Vergleich des Morphing-Prozesses auf dem Desktop bereitgestellt"
     ]
 }

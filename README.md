@@ -1,21 +1,21 @@
-# 👮‍♂️ LSPD Log Assistent
+# LSPD Log Assistent
 
 [![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=7c3aed&label=Version)](https://github.com/KaputzeKings/lspd-logger/releases)
 [![GrandRP DE1](https://img.shields.io/badge/GrandRP-DE1-blue.svg)](https://gta5grand.com)
 [![Platform](https://img.shields.io/badge/Plattform-Windows-0078d7.svg)](https://microsoft.com)
 
-Ein leistungsstarkes, automatisiertes **Logging-, Auswertungs- und Dienst-Tool** für Beamte des **Los Santos Police Department** auf GrandRP (DE1). 
+Ein präzises, automatisiertes **Logging-, Auswertungs- und Dienst-Tool** für Beamte des **Los Santos Police Department** auf GrandRP (DE1). 
 
-Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset und vollwertigem **Dienst-Rechner (F12)** für Bußgelder, Wanteds und TOW nach Vorbild von [Grandkasten](https://grandkasten.com/).
+Inklusive Ingame-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset, vollwertigem **Dienst-Rechner (F12)** für Bußgelder, Wanteds und TOW nach Vorbild von Grandkasten sowie schwebendem **Teleprompter (F10)** für Miranda-Warnungen.
 
 ---
 
-## 🌟 Kernfunktionen
+## Kernfunktionen
 
-### 1. ⚖️ Dienst-Rechner & Aktenvermerk ([F12])
+### 1. Dienst-Rechner & Aktenvermerk ([F12])
 Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Spiel.
 
-* **Feste zentrierte Position:** Der Rechner sitzt stabil und zentriert auf dem Bildschirm – kein versehentliches Verschieben per Mausklick mehr.
+* **Feste zentrierte Position:** Der Rechner sitzt stabil und zentriert auf dem Bildschirm – kein versehentliches Verschieben per Mausklick.
 * **Multi-Auflösung & Flexible Größen (25% bis 100%):**
   * **25% (Mini):** Ultrakompakte 1-Spalten-Ansicht – ideal für kleine Monitore, Laptops oder Nebenbeiblick.
   * **50% (Halb):** 2-Spalten-Ansicht – halbe Bildschirmbreite für entspanntes Multitasking.
@@ -35,7 +35,7 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
     * `04.11 16:02 - StGB §5 + StGB §35`
     * `04.11 16:02 - StGB §5 + 2 Systemwanteds`
     * `04.11 16:05 - StVO §10 Art. 16 @LSPD Alex Springfield`
-  * **Lizenz-Entzug:** Prominente rote Warn-Badges bei Delikten, die den Entzug von Führerschein oder Waffenschein verlangen.
+  * **Lizenz-Entzug:** Rote Warn-Badges bei Delikten, die den Entzug von Führerschein oder Waffenschein verlangen.
   * **1-Klick-Kopieren:** Klick auf den Aktenvermerk oder den Button kopiert den Text sofort ins Clipboard fürs MDT.
 
 * **TOW Rechner (StVO §25 Abschlepp- & Blitzerrechner):**
@@ -46,68 +46,51 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
 
 ---
 
-### 2. 🔢 Fortlaufende Nummerierung & Anpassbare Log-Beschriftung
+### 2. Fortlaufende Nummerierung & Anpassbare Log-Beschriftung
 * **Automatisches Zählen:** Jeder Log-Eintrag wird automatisch mit seiner fortlaufenden Nummer betitelt (z.B. `1. Inhaftierung`, `2. Inhaftierung` ... `12. Inhaftierung`, `13. Inhaftierung` ohne Begrenzung).
-* **Frei wählbare Titel-Vorlagen (Einstellungen Tab 2):** Für alle 7 Kategorien kann frei eingestellt werden, wie der Post auf Discord heißen soll (z. B. `{nr}. Inhaftierung` oder `Inhaftierung #{nr}`).
-* **Discord Markdown Schriftstile:** Checkboxen für **Fett** (`**Text**`), __Unterstrichen__ (`__Text__`) und *Kursiv* (`*Text*`) mit interaktiver Live-Vorschau in den Einstellungen. Im HUD bleibt der Button kurz und sauber, auf Discord kommt das gewählte Styling an.
-* **Keine abgeschnittenen Texte mehr:** Das HUD wurde verbreitert und die 2-Shot Phasen wurden optimiert (`(1/2)` / `(2/2)`), sodass auch bei längeren Namen und Skalierungen kein Text abgeschnitten wird.
-* **🗑️ Letzten Log per Knopfdruck löschen:**
-  * Mit Taste **`[9]`** oder **`[ENTF]`** (oder per Klick auf den roten Button im HUD) wird der letzte gesendete Log automatisch auf Discord gesucht und gelöscht.
-  * Auch jederzeit direkt über das Taskleisten-Tray-Menü aufrufbar (*"🗑️ Letzten Discord-Log löschen"*).
-  * Der interne Zähler passt sich nach dem Löschen sofort automatisch wieder nach unten an.
-* **Discord-Thread-Synchronisation:** Beim Start und nach jedem Post liest das Tool den Discord-Thread aus, erkennt die bisher höchste vergebene Nummer und zählt nahtlos weiter.
+* **Individuelle Discord-Beschriftung:** In den Einstellungen kann für jede Kategorie festgelegt werden, wie der Log im Discord formatiert wird (z. B. `{nr}. Inhaftierung` oder `Inhaftierung #{nr}`).
+* **Markdown-Schriftstile:** Wähle flexibel, ob gesendete Logs in Discord **Fett**, __Unterstrichen__ oder *Kursiv* formatiert werden sollen – inklusive Live-Vorschau in den Einstellungen.
+* **1-Klick Log-Löschung ([9] / [ENTF]):** Versehentlich einen falschen Log gesendet? Ein Druck auf die Taste `[9]` oder `[ENTF]` löscht den zuletzt geposteten Log direkt und automatisch wieder aus dem Discord-Thread.
 
 ---
 
-### 3. 📜 Teleprompter, Rechtebelehrung & Anwalts-Timer ([F10])
-* **Exakte Miranda-Rechte:**
-  1. *Sie haben das Recht zu schweigen, alles was Sie sagen kann und wird gegen Sie verwendet werden.*
-  2. *Ab 2 Wanteds haben Sie das Recht auf einen staatlich anerkannten Anwalt, den Sie selbst benennen müssen.*
-  3. *Wenn kein Anwalt verfügbar ist, wird Ihnen ein Pflichtverteidiger gestellt.*
-  4. *Die Judikative übernimmt der Exekutivbeamte.*
-  5. *Wenn ein Anwalt hinzugezogen wird, kann es länger als 25 Minuten dauern.*
-  6. *Haben Sie ihre Rechte verstanden?*
-* **Automatischer Auto-Play:** Startet beim Öffnen mit **[F10]** direkt.
-* **Auto-Close:** Schließt sich nach dem ersten Durchlauf automatisch selbst.
-* **Einstellbarer Takt (3 bis 10 Sekunden):**
-  * Im F12-Rechner (Tab 3), im F10 Mini-HUD oder in den Einstellungen kann die Durchlaufzeit flexibel von **3s bis 10s** eingestellt werden.
-* **Integrierter 5-Minuten Anwalts-Timer:** Fristüberwachung mit akustischem Signal und 1-Klick Vermerkerstellung.
+### 3. Teleprompter & Rechtebelehrung ([F10])
+* **Miranda-Warnung per Knopfdruck:** Drücke im Einsatz **[F10]**, um das schwebende Mini-HUD zu öffnen.
+* **Taktung frei konfigurierbar:** Stelle die Anzeigedauer der Sätze (3 bis 10 Sekunden) in den Einstellungen oder direkt am HUD ein.
+* **Auto-Play & Auto-Close:** Läuft vollautomatisch Satz für Satz durch und schließt sich nach dem 5. Satz selbstständig.
+* **Integrierter 5-Minuten Anwalts-Timer:** Klick auf den Timer startet die gesetzliche Wartefrist für Rechtsbeistände mit automatischen Aktenvermerken ("Anwalt nicht erschienen" / "Anwalt eingetroffen").
 
 ---
 
-### 4. ⚙️ Modern Dark Einstellungsmenü (Ember Velvet Obsidian)
-Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) präsentiert sich im hochmodernen **Ember Dark (Velvet Obsidian)** Design mit eleganten Pill-Tabs, abgerundeten Feldern und Neon-Akzenten, unterteilt in 4 saubere Tabs:
-* **Tab 1: 👮 Dienst & Discord:**
+### 4. Einstellungen & Konfiguration
+Über das Tray-Icon per Rechtsklick erreichbar:
+
+* **Tab 1: Dienst & Discord:**
   * Reisepassnummer / Badge-ID (Dienstnummer).
-  * Medal Screenshot-Ordner mit bequemer `📁 Durchsuchen`-Auswahl.
+  * Medal Screenshot-Ordner mit bequemer `Durchsuchen`-Auswahl.
   * Discord Forum-Thread-ID & sichere Token-Statusanzeige.
-* **Tab 2: 📝 Log-Beschriftung & Stil:**
+* **Tab 2: Log-Beschriftung & Stil:**
   * Discord Schriftstil (Fett, Unterstrichen, Kursiv) mit Live-Vorschau.
   * Eigene Textvorlagen für alle 7 Kategorien mit `{nr}` Platzhalter.
-* **Tab 3: ⚖️ Grandkasten Rechner & F10:**
+* **Tab 3: Grandkasten Rechner & F10:**
   * F12 Rechner Design-Theme & Fenstergröße (25% bis 100%).
   * Teleprompter Seiten-Takt (3s bis 10s) & Info zum automatischen Ablauf.
-* **Tab 4: 🖥️ Ingame-HUD & Audio:**
+* **Tab 4: Ingame-HUD & Audio:**
   * Live-HUD Farb-Theme, Positionierung, Skalierung, Schriftart & Transparenz.
   * Signalton (Piep-Sound) An/Aus schaltbar.
   * Live-HUD Testvorschau-Button.
 
 ---
 
-### 5. 🎨 Vollständig anpassbares Design & Themes
-* **Live-Themes:**
-  * 🌑 *Ember Dark (Velvet Obsidian)* (Modern Dark Dashboard Design)
-  * ⚫ *Schwarz-Grau-Weiß (Monochrome)*
-  * 🌐 *Grandkasten Cyberpunk* (Original Grandkasten DE1 Navy / Blue)
-  * 🟣 *Schwarz-Lila (Standard)*
-  * 🔵 *LSPD Cyber Blue*
-  * 🔴 *Tactical Stealth Red*
-  * 🟢 *Emerald Special Forces*
-* **Windows Light Mode Bugfix:** Keine weißen Balken oder Anzeigefehler mehr bei hellem Windows-Design.
+### 5. Unslopped Design System (Ember Velvet Obsidian)
+* **Reines, ruhiges Chrome:** Keine bunten Farbverläufe, keine Neonränder, keine dekorativen Emojis.
+* **1:1 Inter Variable Font:** Perfekte Lesbarkeit mit moderner digitaler Typografie.
+* **Monochrome Dot-Statusanzeigen:** Saubere Farb-Dots (`●`) zur visuellen Unterscheidung ohne Emoji-Unruhe.
+* **Tabellarische Ziffern (`tabular-nums`):** Flatterfreie Ziffern in Timern, Geldbeträgen und Statistiken.
 
 ---
 
-## ⌨️ Tastenbelegung im Überblick
+## Tastenbelegung im Überblick
 
 | Taste | Funktion |
 | :--- | :--- |
@@ -117,11 +100,10 @@ Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) präsentie
 | **`8`** / **`Z`** | Tages-Zwischenstand manuell an Discord senden |
 | **`9`** / **`ENTF`** | **Letzten Log automatisch aus Discord löschen** |
 | **`ESC`** | Rechner, Teleprompter oder Screenshot-Overlay schließen |
-| **`ESC`** | Rechner, Teleprompter oder Screenshot-Overlay schließen |
 
 ---
 
-## 👥 Mitwirkende & Credits
+## Mitwirkende & Credits
 - **Entwickelt für:** LSPD Beamte auf GrandRP DE1
 - **Credits & Stimmen:** Justin Liebermann, Alex Springfield, Stefan Grand
 - **Datenbasis Strafenkatalog:** Nach offizieller Vorlage von [Grandkasten](https://grandkasten.com/)

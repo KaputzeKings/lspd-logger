@@ -268,13 +268,13 @@ class OffenseCard(QFrame):
         row1.addStretch()
 
         if "entziehen" in self.info.lower():
-            badge_text = "⚠️ Führerschein" if "führerschein" in self.info.lower() else "⚠️ Waffenschein"
+            badge_text = "Führerschein-Entzug" if "führerschein" in self.info.lower() else "Waffenschein-Entzug"
             entzug_badge = QLabel(badge_text)
             entzug_badge.setStyleSheet("""
-                background: #450a0a;
-                color: #f87171;
-                font-weight: bold;
-                border: 1px solid #7f1d1d;
+                background: #201314;
+                color: #ef4444;
+                font-weight: 600;
+                border: 1px solid #3d1c1d;
                 border-radius: 4px;
                 padding: 1px 6px;
                 font-size: 9px;
@@ -462,12 +462,12 @@ class FloatingPrompterHUD(QWidget):
         self.setStyleSheet(f"""
             QFrame#hudContainer {{
                 background-color: {t['bg']};
-                border: 2px solid {t['accent']};
-                border-radius: 12px;
+                border: 1px solid {t['border']};
+                border-radius: 14px;
             }}
             QLabel {{
                 color: {t['text']};
-                font-family: 'Segoe UI', system-ui, sans-serif;
+                font-family: 'Inter', system-ui, sans-serif;
             }}
         """)
 
@@ -484,7 +484,8 @@ class FloatingPrompterHUD(QWidget):
         header = QHBoxLayout()
         header.setSpacing(8)
 
-        self.lbl_hud_title = QLabel(f"📜 <b style='color: {t['accent']};'>TELEPROMPTER</b>")
+        self.lbl_hud_title = QLabel("<b>TELEPROMPTER</b>")
+        self.lbl_hud_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #a1a1aa; letter-spacing: 0.5px;")
         header.addWidget(self.lbl_hud_title)
 
         self.combo_hud_template = QComboBox()
@@ -501,7 +502,7 @@ class FloatingPrompterHUD(QWidget):
         btn_close = QPushButton("✕")
         btn_close.setFixedSize(22, 22)
         btn_close.setCursor(Qt.PointingHandCursor)
-        btn_close.setStyleSheet("background: #ef4444; color: #ffffff; border: none; border-radius: 4px; font-weight: bold; font-size: 11px;")
+        btn_close.setStyleSheet("QPushButton { background: #18181a; color: #71717a; border: 1px solid #262628; border-radius: 6px; font-weight: bold; font-size: 11px; } QPushButton:hover { background: #27272a; color: #ffffff; }")
         btn_close.clicked.connect(self.hide)
         header.addWidget(btn_close)
 
@@ -528,19 +529,19 @@ class FloatingPrompterHUD(QWidget):
         self.btn_prev = QPushButton("◀")
         self.btn_prev.setFixedSize(28, 26)
         self.btn_prev.setCursor(Qt.PointingHandCursor)
-        self.btn_prev.setStyleSheet(f"background: {t['card_bg']}; color: {t['text']}; border: 1px solid {t['border_subtle']}; border-radius: 5px; font-size: 11px; font-weight: bold;")
+        self.btn_prev.setStyleSheet("QPushButton { background: #18181a; color: #d4d4d8; border: 1px solid #262628; border-radius: 6px; font-size: 11px; font-weight: bold; } QPushButton:hover { background: #222226; color: #ffffff; }")
         self.btn_prev.clicked.connect(self.main_calc.prompter_prev)
         ctrl_row.addWidget(self.btn_prev)
 
-        self.btn_copy = QPushButton("📋 Kopieren")
+        self.btn_copy = QPushButton("Kopieren")
         self.btn_copy.setCursor(Qt.PointingHandCursor)
-        self.btn_copy.setStyleSheet(f"background: {t['card_bg']}; color: #38bdf8; border: 1px solid #0284c7; border-radius: 5px; padding: 4px 8px; font-size: 11px; font-weight: bold;")
+        self.btn_copy.setStyleSheet("QPushButton { background: #18181a; color: #d4d4d8; border: 1px solid #262628; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 500; } QPushButton:hover { background: #222226; color: #ffffff; }")
         self.btn_copy.clicked.connect(self.main_calc.prompter_copy_current)
         ctrl_row.addWidget(self.btn_copy)
 
-        self.btn_auto = QPushButton("▶ Auto (3s)")
+        self.btn_auto = QPushButton("Auto (3s)")
         self.btn_auto.setCursor(Qt.PointingHandCursor)
-        self.btn_auto.setStyleSheet("background: #059669; color: #ffffff; border: none; border-radius: 5px; padding: 4px 9px; font-size: 11px; font-weight: bold;")
+        self.btn_auto.setStyleSheet("QPushButton { background: #122019; color: #4bd4a3; border: 1px solid #4bd4a3; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 600; } QPushButton:hover { background: #182e24; }")
         self.btn_auto.clicked.connect(self.main_calc.toggle_autoplay)
         ctrl_row.addWidget(self.btn_auto)
 
@@ -556,16 +557,16 @@ class FloatingPrompterHUD(QWidget):
         self.combo_hud_speed.currentIndexChanged.connect(lambda i: self.main_calc.set_prompter_seconds(self.combo_hud_speed.itemData(i)))
         ctrl_row.addWidget(self.combo_hud_speed)
 
-        self.btn_next = QPushButton("▶ Weiter")
+        self.btn_next = QPushButton("Weiter")
         self.btn_next.setCursor(Qt.PointingHandCursor)
-        self.btn_next.setStyleSheet(f"background: {t['accent']}; color: {t['accent_text']}; border: none; border-radius: 5px; padding: 4px 12px; font-size: 11px; font-weight: 900;")
+        self.btn_next.setStyleSheet("QPushButton { background: #222226; color: #ffffff; border: 1px solid #33333a; border-radius: 6px; padding: 5px 14px; font-size: 11px; font-weight: 600; } QPushButton:hover { background: #2b2b32; border-color: #4b4b56; }")
         self.btn_next.clicked.connect(self.main_calc.prompter_next)
         ctrl_row.addWidget(self.btn_next, stretch=1)
 
         # Mini Attorney Timer Indicator
-        self.lbl_hud_timer = QLabel("⏱️ 05:00")
+        self.lbl_hud_timer = QLabel("05:00")
         self.lbl_hud_timer.setCursor(Qt.PointingHandCursor)
-        self.lbl_hud_timer.setStyleSheet(f"background: {t['card_bg']}; color: #38bdf8; border: 1px solid {t['border_subtle']}; border-radius: 5px; padding: 4px 7px; font-size: 11px; font-weight: bold;")
+        self.lbl_hud_timer.setStyleSheet("QLabel { background: #18181a; color: #f7bd2e; border: 1px solid #262628; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; } QLabel:hover { background: #222226; }")
         self.lbl_hud_timer.mousePressEvent = lambda _: self.main_calc.toggle_attorney_timer()
         ctrl_row.addWidget(self.lbl_hud_timer)
 
@@ -613,12 +614,12 @@ class FloatingPrompterHUD(QWidget):
             self.container.setStyleSheet(f"""
                 QFrame#hudContainer {{
                     background-color: {t['bg']};
-                    border: 2px solid {t['accent']};
-                    border-radius: 12px;
+                    border: 1px solid {t['border']};
+                    border-radius: 14px;
                 }}
             """)
         if hasattr(self, 'lbl_hud_title'):
-            self.lbl_hud_title.setText(f"📜 <b style='color: {t['accent']};'>TELEPROMPTER</b>")
+            self.lbl_hud_title.setText("<b>TELEPROMPTER</b>")
         if hasattr(self, 'sentence_box'):
             self.sentence_box.setStyleSheet(f"background: {t['surface']}; border: 1px solid {t['border_subtle']}; border-radius: 8px; padding: 8px;")
         if hasattr(self, 'btn_next'):
@@ -879,12 +880,12 @@ class GrandCalculatorOverlay(QWidget):
 
         # Header Bar with Live Theme Selector
         header = QHBoxLayout()
-        self.title_lbl = QLabel(f"🛡️ <span style='font-size: 16px; font-weight: 900; color: {t['text']};'>GRANDKASTEN</span> <span style='color: {t['accent']}; font-size: 13px; font-weight: bold;'>DIENST-RECHNER</span> <span style='color: {t['text_muted']}; font-size: 11px;'>| Bußgeld, Wanteds & TOW</span>")
+        self.title_lbl = QLabel(f"<span style='font-size: 15px; font-weight: 800; color: {t['text']};'>GRANDKASTEN</span> <span style='color: #71717a; font-size: 12px; font-weight: 500;'>DIENST-RECHNER</span> <span style='color: #52525b; font-size: 11px;'>| Bußgeld, Wanteds & TOW</span>")
         header.addWidget(self.title_lbl)
         header.addStretch()
 
         # Theme selector dropdown directly in header
-        lbl_theme = QLabel("🎨 <span style='font-size:11px; color:#94a3b8;'>HUD-Design:</span>")
+        lbl_theme = QLabel("<span style='font-size:11px; color:#71717a;'>Design:</span>")
         header.addWidget(lbl_theme)
 
         self.combo_header_theme = QComboBox()
@@ -896,7 +897,7 @@ class GrandCalculatorOverlay(QWidget):
         header.addWidget(self.combo_header_theme)
 
         # Scale selector dropdown in header
-        lbl_scale = QLabel("📐 <span style='font-size:11px; color:#94a3b8;'>Größe:</span>")
+        lbl_scale = QLabel("<span style='font-size:11px; color:#71717a;'>Größe:</span>")
         header.addWidget(lbl_scale)
 
         self.combo_header_scale = QComboBox()
@@ -961,9 +962,9 @@ class GrandCalculatorOverlay(QWidget):
         self.tab_tow.setStyleSheet("background: transparent; border: none;")
         self.tab_prompter = QWidget()
         self.tab_prompter.setStyleSheet("background: transparent; border: none;")
-        self.tabs.addTab(self.tab_bussgeld, "⚖️ Bußgeld- & Wanteds-Rechner")
-        self.tabs.addTab(self.tab_tow, "🚙 TOW Rechner")
-        self.tabs.addTab(self.tab_prompter, "📜 Teleprompter & Rechte")
+        self.tabs.addTab(self.tab_bussgeld, "Bußgeld & Wanteds")
+        self.tabs.addTab(self.tab_tow, "TOW Rechner")
+        self.tabs.addTab(self.tab_prompter, "Teleprompter & Rechte")
 
         self.setup_bussgeld_tab()
         self.setup_tow_tab()
@@ -983,7 +984,7 @@ class GrandCalculatorOverlay(QWidget):
         # Search bar
         search_lay = QHBoxLayout()
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍 Straftat, Paragraph oder Stichwort suchen (z. B. Mord, Flucht, Drogen, §4)...")
+        self.search_input.setPlaceholderText("Straftat, Paragraph oder Stichwort suchen (z. B. Mord, Flucht, Drogen, §4)...")
         self.search_input.textChanged.connect(self.on_search_changed)
         search_lay.addWidget(self.search_input)
 
@@ -1143,12 +1144,12 @@ class GrandCalculatorOverlay(QWidget):
 
         # Switches / Toggles (Wiederholungstäter & §35 Reue)
         toggles_lay = QHBoxLayout()
-        self.cb_repeat = QCheckBox("⚠️ Wiederholungstäter (StVO)")
+        self.cb_repeat = QCheckBox("Wiederholungstäter (StVO)")
         self.cb_repeat.setStyleSheet("font-size: 12px; color: #fb923c; font-weight: bold;")
         self.cb_repeat.toggled.connect(self.recalculate)
         toggles_lay.addWidget(self.cb_repeat)
 
-        self.cb_reue = QCheckBox("🤝 §35 Reue (-2 Wanteds)")
+        self.cb_reue = QCheckBox("§35 Reue (-2 Wanteds)")
         self.cb_reue.setStyleSheet("font-size: 12px; color: #a855f7; font-weight: bold;")
         self.cb_reue.toggled.connect(self.recalculate)
         toggles_lay.addWidget(self.cb_reue)
@@ -1240,7 +1241,7 @@ class GrandCalculatorOverlay(QWidget):
         akte_lay.addWidget(lbl_hint_copy)
 
         btn_row = QHBoxLayout()
-        self.btn_copy_akte = QPushButton("📋 Aktenvermerk kopieren")
+        self.btn_copy_akte = QPushButton("Aktenvermerk kopieren")
         self.btn_copy_akte.setCursor(Qt.PointingHandCursor)
         self.btn_copy_akte.setStyleSheet("""
             QPushButton {
@@ -1331,7 +1332,7 @@ class GrandCalculatorOverlay(QWidget):
                 self.cards_by_key[key] = card
                 self.all_card_items.append((cat, item, card))
 
-        self.lbl_no_results = QLabel("🔍 Keine passenden Straftatbestände gefunden.")
+        self.lbl_no_results = QLabel("Keine passenden Straftatbestände gefunden.")
         self.lbl_no_results.setAlignment(Qt.AlignCenter)
         self.lbl_no_results.setStyleSheet("color: #94a3b8; font-size: 13px; font-weight: bold; padding: 30px;")
         self.lbl_no_results.setVisible(False)
@@ -1393,7 +1394,7 @@ class GrandCalculatorOverlay(QWidget):
 
         if hasattr(self, 'lbl_no_results'):
             if is_searching and len(matched_cards) == 0:
-                self.lbl_no_results.setText(f"🔍 Keine Straftaten für \"{raw_q}\" gefunden.\nÜberprüfe Stichwort oder Paragraph.")
+                self.lbl_no_results.setText(f"Keine Straftaten für \"{raw_q}\" gefunden.\nÜberprüfe Stichwort oder Paragraph.")
                 self.offenses_grid.addWidget(self.lbl_no_results, 0, 0, 1, cols)
                 self.lbl_no_results.setVisible(True)
             else:
@@ -1467,9 +1468,9 @@ class GrandCalculatorOverlay(QWidget):
             # License warnings
             info = item.get("info", "")
             if "waffenschein" in info.lower():
-                warnings.add("⚠️ Waffenschein muss entzogen werden!")
+                warnings.add("Waffenschein muss entzogen werden!")
             if "führerschein" in info.lower():
-                warnings.add("⚠️ Führerschein muss entzogen werden!")
+                warnings.add("Führerschein muss entzogen werden!")
 
         if most_severe:
             ms_key = make_item_key(most_severe)
@@ -1605,8 +1606,8 @@ class GrandCalculatorOverlay(QWidget):
         if text:
             clipboard = QApplication.clipboard()
             clipboard.setText(text)
-            self.btn_copy_akte.setText("✅ Kopiert!")
-            QTimer.singleShot(1500, lambda: self.btn_copy_akte.setText("📋 Aktenvermerk kopieren"))
+            self.btn_copy_akte.setText("Kopiert")
+            QTimer.singleShot(1500, lambda: self.btn_copy_akte.setText("Aktenvermerk kopieren"))
 
     def reset_calculator(self):
         self.selected_items.clear()
@@ -1639,7 +1640,7 @@ class GrandCalculatorOverlay(QWidget):
         c_lay = QVBoxLayout(card)
         c_lay.setSpacing(12)
 
-        tow_title = QLabel("🚙 <span style='font-size: 15px; font-weight: bold;'>TOW Rechner</span>")
+        tow_title = QLabel("<span style='font-size: 14px; font-weight: 700; color: #ffffff;'>TOW Rechner</span>")
         tow_title.setStyleSheet("color: #38bdf8;")
         c_lay.addWidget(tow_title)
 
@@ -1679,7 +1680,7 @@ class GrandCalculatorOverlay(QWidget):
         c_lay.addLayout(grid)
 
         # Row 3: Wiederholungstäter Checkbox
-        self.tow_repeat = QCheckBox("⚠️ Wiederholungstäter (StVO §25 lit. 2)")
+        self.tow_repeat = QCheckBox("Wiederholungstäter (StVO §25 lit. 2)")
         self.tow_repeat.setStyleSheet("font-size: 13px; font-weight: bold; color: #f97316;")
         c_lay.addWidget(self.tow_repeat)
 
@@ -1733,7 +1734,7 @@ class GrandCalculatorOverlay(QWidget):
 
         # Row 6: Kopieren & Reset Buttons
         row_btn = QHBoxLayout()
-        self.btn_tow_copy = QPushButton("📋 Kopieren")
+        self.btn_tow_copy = QPushButton("Kopieren")
         self.btn_tow_copy.setCursor(Qt.PointingHandCursor)
         self.btn_tow_copy.setStyleSheet("""
             QPushButton {
@@ -1836,8 +1837,8 @@ class GrandCalculatorOverlay(QWidget):
         if text:
             clipboard = QApplication.clipboard()
             clipboard.setText(text)
-            self.btn_tow_copy.setText("✅ Kopiert!")
-            QTimer.singleShot(1500, lambda: self.btn_tow_copy.setText("📋 Kopieren"))
+            self.btn_tow_copy.setText("Kopiert")
+            QTimer.singleShot(1500, lambda: self.btn_tow_copy.setText("Kopieren"))
 
     def reset_tow(self):
         self.tow_plate.clear()
@@ -1875,7 +1876,7 @@ class GrandCalculatorOverlay(QWidget):
         self.combo_prompter_tpl.currentTextChanged.connect(self.prompter_on_template_change)
         f1_lay.addWidget(self.combo_prompter_tpl)
 
-        self.btn_open_floating = QPushButton("📌 Schwebendes Mini-HUD öffnen (F10)")
+        self.btn_open_floating = QPushButton("Schwebendes HUD öffnen (F10)")
         self.btn_open_floating.setCursor(Qt.PointingHandCursor)
         self.btn_open_floating.setStyleSheet(f"""
             QPushButton {{
@@ -1918,7 +1919,7 @@ class GrandCalculatorOverlay(QWidget):
         f2_lay = QVBoxLayout(self.p_box_timer)
         f2_lay.setSpacing(8)
 
-        lbl_timer_title = QLabel("⚖️ ANWALTS-WARTEFRIST (5 MIN.)")
+        lbl_timer_title = QLabel("ANWALTS-WARTEFRIST (5 MIN.)")
         lbl_timer_title.setAlignment(Qt.AlignCenter)
         lbl_timer_title.setStyleSheet(f"color: {t['text_muted']}; font-size: 11px; font-weight: 800; letter-spacing: 1.5px;")
         f2_lay.addWidget(lbl_timer_title)
@@ -1977,7 +1978,7 @@ class GrandCalculatorOverlay(QWidget):
         lbl_vermerk_title = QLabel("<span style='color: #94a3b8; font-size: 10px; font-weight: bold;'>MDT-AKTENVERMERK BEI FRIST:</span>")
         f2_lay.addWidget(lbl_vermerk_title)
 
-        self.btn_vermerk_expired = QPushButton("📋 Vermerk: Anwalt nicht erschienen")
+        self.btn_vermerk_expired = QPushButton("Vermerk: Anwalt nicht erschienen")
         self.btn_vermerk_expired.setCursor(Qt.PointingHandCursor)
         self.btn_vermerk_expired.setStyleSheet(f"""
             QPushButton {{
@@ -1997,7 +1998,7 @@ class GrandCalculatorOverlay(QWidget):
         self.btn_vermerk_expired.clicked.connect(lambda: self.copy_attorney_vermerk("expired"))
         f2_lay.addWidget(self.btn_vermerk_expired)
 
-        self.btn_vermerk_arrived = QPushButton("📋 Vermerk: Anwalt eingetroffen")
+        self.btn_vermerk_arrived = QPushButton("Vermerk: Anwalt eingetroffen")
         self.btn_vermerk_arrived.setCursor(Qt.PointingHandCursor)
         self.btn_vermerk_arrived.setStyleSheet(f"""
             QPushButton {{
@@ -2027,7 +2028,7 @@ class GrandCalculatorOverlay(QWidget):
 
         # Stage Header
         stage_head = QHBoxLayout()
-        self.lbl_stage_title = QLabel("🛡️ Miranda-Warnung (Standard)")
+        self.lbl_stage_title = QLabel("Miranda-Warnung (Standard)")
         self.lbl_stage_title.setStyleSheet(f"font-size: 16px; font-weight: 900; color: {t['accent']};")
         stage_head.addWidget(self.lbl_stage_title)
         stage_head.addStretch()
@@ -2036,7 +2037,7 @@ class GrandCalculatorOverlay(QWidget):
         self.lbl_step_progress.setStyleSheet(f"font-size: 12px; font-weight: bold; color: {t['text_muted']}; background: {t['card_bg']}; border: 1px solid {t['border_subtle']}; border-radius: 4px; padding: 4px 10px;")
         stage_head.addWidget(self.lbl_step_progress)
 
-        btn_reset_prompter = QPushButton("🔄 Von vorn")
+        btn_reset_prompter = QPushButton("Zurücksetzen")
         btn_reset_prompter.setCursor(Qt.PointingHandCursor)
         btn_reset_prompter.setStyleSheet(f"background: {t['card_bg']}; color: {t['text_muted']}; border: 1px solid {t['border_subtle']}; border-radius: 4px; padding: 4px 8px; font-size: 11px;")
         btn_reset_prompter.clicked.connect(self.prompter_reset)
@@ -2066,7 +2067,7 @@ class GrandCalculatorOverlay(QWidget):
         act_bar = QHBoxLayout()
         act_bar.setSpacing(10)
 
-        self.btn_p_prev = QPushButton("⏮ Vorheriger")
+        self.btn_p_prev = QPushButton("Vorheriger")
         self.btn_p_prev.setCursor(Qt.PointingHandCursor)
         self.btn_p_prev.setStyleSheet(f"""
             QPushButton {{
@@ -2085,7 +2086,7 @@ class GrandCalculatorOverlay(QWidget):
         self.btn_p_prev.clicked.connect(self.prompter_prev)
         act_bar.addWidget(self.btn_p_prev)
 
-        self.btn_p_copy_cur = QPushButton("📋 Satz kopieren (Chat)")
+        self.btn_p_copy_cur = QPushButton("Satz kopieren (Chat)")
         self.btn_p_copy_cur.setCursor(Qt.PointingHandCursor)
         self.btn_p_copy_cur.setStyleSheet("""
             QPushButton {
@@ -2104,7 +2105,7 @@ class GrandCalculatorOverlay(QWidget):
         self.btn_p_copy_cur.clicked.connect(self.prompter_copy_current)
         act_bar.addWidget(self.btn_p_copy_cur)
 
-        self.btn_p_copy_all = QPushButton("📋 Alles kopieren")
+        self.btn_p_copy_all = QPushButton("Alles kopieren")
         self.btn_p_copy_all.setCursor(Qt.PointingHandCursor)
         self.btn_p_copy_all.setStyleSheet(f"""
             QPushButton {{
@@ -2164,7 +2165,7 @@ class GrandCalculatorOverlay(QWidget):
         self.combo_p_speed.currentIndexChanged.connect(lambda i: self.set_prompter_seconds(self.combo_p_speed.itemData(i)))
         act_bar.addWidget(self.combo_p_speed)
 
-        self.btn_p_next = QPushButton("⏭ Weiter (Leertaste / Enter)")
+        self.btn_p_next = QPushButton("Weiter (Leertaste / Enter)")
         self.btn_p_next.setCursor(Qt.PointingHandCursor)
         self.btn_p_next.setStyleSheet(f"""
             QPushButton {{
@@ -2200,7 +2201,7 @@ class GrandCalculatorOverlay(QWidget):
         t = self.theme_data
 
         if hasattr(self, 'lbl_stage_title'):
-            self.lbl_stage_title.setText(f"🛡️ {self.prompter_current_template}")
+            self.lbl_stage_title.setText(f"{self.prompter_current_template}")
         if hasattr(self, 'lbl_step_progress'):
             self.lbl_step_progress.setText(f"Satz {self.prompter_step + 1} von {max(1, total)}")
 
@@ -2322,11 +2323,11 @@ class GrandCalculatorOverlay(QWidget):
             clipboard = QApplication.clipboard()
             clipboard.setText(text)
             if hasattr(self, 'btn_p_copy_cur'):
-                self.btn_p_copy_cur.setText("✅ Kopiert!")
-                QTimer.singleShot(1200, lambda: self.btn_p_copy_cur.setText("📋 Satz kopieren (Chat)"))
+                self.btn_p_copy_cur.setText("Kopiert")
+                QTimer.singleShot(1200, lambda: self.btn_p_copy_cur.setText("Satz kopieren (Chat)"))
             if hasattr(self, 'floating_prompter') and hasattr(self.floating_prompter, 'btn_copy'):
-                self.floating_prompter.btn_copy.setText("✅ Kopiert!")
-                QTimer.singleShot(1200, lambda: self.floating_prompter.btn_copy.setText("📋 Kopieren"))
+                self.floating_prompter.btn_copy.setText("Kopiert")
+                QTimer.singleShot(1200, lambda: self.floating_prompter.btn_copy.setText("Kopieren"))
 
     def prompter_copy_all(self):
         sentences = PROMPTER_TEMPLATES.get(self.prompter_current_template, [])
@@ -2335,8 +2336,8 @@ class GrandCalculatorOverlay(QWidget):
             clipboard = QApplication.clipboard()
             clipboard.setText(text)
             if hasattr(self, 'btn_p_copy_all'):
-                self.btn_p_copy_all.setText("✅ Alles kopiert!")
-                QTimer.singleShot(1200, lambda: self.btn_p_copy_all.setText("📋 Alles kopieren"))
+                self.btn_p_copy_all.setText("Alles kopiert")
+                QTimer.singleShot(1200, lambda: self.btn_p_copy_all.setText("Alles kopieren"))
 
     def prompter_on_template_change(self, name):
         if name in PROMPTER_TEMPLATES:
@@ -2449,7 +2450,7 @@ class GrandCalculatorOverlay(QWidget):
         cnt = self.prompter_autoplay_countdown
         if hasattr(self, 'btn_p_auto'):
             if self.prompter_autoplay_running:
-                self.btn_p_auto.setText(f"⏸ Auto-Play ({cnt}s)")
+                self.btn_p_auto.setText(f"Auto-Play ({cnt}s)")
                 self.btn_p_auto.setStyleSheet("background-color: #eab308; color: #000000; border: none; border-radius: 6px; padding: 10px 18px; font-weight: 900; font-size: 13px;")
             else:
                 self.btn_p_auto.setText(f"▶ Auto-Play ({sec}s)")
@@ -2457,7 +2458,7 @@ class GrandCalculatorOverlay(QWidget):
 
         if hasattr(self, 'floating_prompter') and hasattr(self.floating_prompter, 'btn_auto'):
             if self.prompter_autoplay_running:
-                self.floating_prompter.btn_auto.setText(f"⏸ {cnt}s")
+                self.floating_prompter.btn_auto.setText(f"{cnt}s")
                 self.floating_prompter.btn_auto.setStyleSheet("background: #eab308; color: #000000; border: none; border-radius: 5px; padding: 4px 9px; font-size: 11px; font-weight: 900;")
             else:
                 self.floating_prompter.btn_auto.setText(f"▶ Auto ({sec}s)")
@@ -2491,7 +2492,7 @@ class GrandCalculatorOverlay(QWidget):
         else:
             self.attorney_timer.start(1000)
             self.attorney_timer_running = True
-            self.btn_timer_toggle.setText("⏸ Pause")
+            self.btn_timer_toggle.setText("Pause")
             self.btn_timer_toggle.setStyleSheet("background-color: #eab308; color: #000000; font-weight: bold; border-radius: 6px; padding: 7px; font-size: 12px; border: none;")
 
     def reset_attorney_timer(self):
@@ -2504,7 +2505,7 @@ class GrandCalculatorOverlay(QWidget):
         self.lbl_attorney_time.setStyleSheet("font-size: 30px; font-weight: 900; color: #38bdf8; font-family: monospace; padding: 4px 0;")
         self.progress_attorney.setValue(300)
         if hasattr(self, 'floating_prompter'):
-            self.floating_prompter.lbl_hud_timer.setText("⏱️ 05:00")
+            self.floating_prompter.lbl_hud_timer.setText("05:00")
             self.floating_prompter.lbl_hud_timer.setStyleSheet(f"background: {self.theme_data['card_bg']}; color: #38bdf8; border: 1px solid {self.theme_data['border_subtle']}; border-radius: 5px; padding: 5px 8px; font-size: 11px; font-weight: bold;")
 
     def _on_attorney_tick(self):
@@ -2516,7 +2517,7 @@ class GrandCalculatorOverlay(QWidget):
             self.lbl_attorney_time.setText(time_str)
             self.progress_attorney.setValue(self.attorney_timer_seconds)
             if hasattr(self, 'floating_prompter'):
-                self.floating_prompter.lbl_hud_timer.setText(f"⏱️ {time_str}")
+                self.floating_prompter.lbl_hud_timer.setText(f"{time_str}")
 
             if self.attorney_timer_seconds == 0:
                 self.attorney_timer.stop()
@@ -2524,7 +2525,7 @@ class GrandCalculatorOverlay(QWidget):
                 self.lbl_attorney_time.setText("00:00 (Frist um!)")
                 self.lbl_attorney_time.setStyleSheet("font-size: 24px; font-weight: 900; color: #ef4444; font-family: monospace; padding: 4px 0;")
                 if hasattr(self, 'floating_prompter'):
-                    self.floating_prompter.lbl_hud_timer.setText("⚠️ 00:00!")
+                    self.floating_prompter.lbl_hud_timer.setText("00:00 Abgelaufen")
                     self.floating_prompter.lbl_hud_timer.setStyleSheet("background: #450a0a; color: #f87171; border: 1px solid #ef4444; border-radius: 5px; padding: 5px 8px; font-size: 11px; font-weight: bold;")
                 try:
                     from pd_logger_overlay import play_beep
@@ -2545,11 +2546,11 @@ class GrandCalculatorOverlay(QWidget):
         clipboard.setText(txt)
         if mode == "expired" and hasattr(self, 'btn_vermerk_expired'):
             orig = self.btn_vermerk_expired.text()
-            self.btn_vermerk_expired.setText("✅ Vermerk kopiert!")
+            self.btn_vermerk_expired.setText("Vermerk kopiert")
             QTimer.singleShot(1500, lambda: self.btn_vermerk_expired.setText(orig))
         elif mode == "arrived" and hasattr(self, 'btn_vermerk_arrived'):
             orig = self.btn_vermerk_arrived.text()
-            self.btn_vermerk_arrived.setText("✅ Vermerk kopiert!")
+            self.btn_vermerk_arrived.setText("Vermerk kopiert")
             QTimer.singleShot(1500, lambda: self.btn_vermerk_arrived.setText(orig))
 
     # --- THEME SWITCHING (LIVE) ---
@@ -2587,7 +2588,7 @@ class GrandCalculatorOverlay(QWidget):
 
         # Update Title Label
         if hasattr(self, 'title_lbl'):
-            self.title_lbl.setText(f"🛡️ <span style='font-size: 16px; font-weight: 900; color: {t['text']};'>GRANDKASTEN</span> <span style='color: {t['accent']}; font-size: 13px; font-weight: bold;'>DIENST-RECHNER</span> <span style='color: {t['text_muted']}; font-size: 11px;'>| Bußgeld, Wanteds & TOW</span>")
+            self.title_lbl.setText(f"<span style='font-size: 15px; font-weight: 800; color: {t['text']};'>GRANDKASTEN</span> <span style='color: #71717a; font-size: 12px; font-weight: 500;'>DIENST-RECHNER</span> <span style='color: #52525b; font-size: 11px;'>| Bußgeld, Wanteds & TOW</span>")
 
         # Update Theme Combo without triggering signals
         if hasattr(self, 'combo_header_theme') and self.current_theme_name in CALC_THEMES:
