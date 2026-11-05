@@ -24,7 +24,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QIcon, QPainter, QAction, QKey
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.4.2"
+CURRENT_VERSION = "1.4.3"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -69,18 +69,31 @@ def adjust_color(hex_color, factor):
     return hex_color
 
 THEMES = {
+    "Ember Dark (Velvet Obsidian)": {
+        "bg": "#0c0c0e",
+        "card_bg": "#141418",
+        "border": "#282834",
+        "accent": "#212128",
+        "accent_hover": "#2e2e3a",
+        "accent_pressed": "#181820",
+        "text": "#f4f4f5",
+        "text_muted": "#71717a",
+        "btn_bg": "#16161b",
+        "btn_hover": "#212128",
+        "thumb_bg": "#08080a"
+    },
     "Schwarz-Grau-Weiß (Monochrome)": {
-        "bg": "#0a0a0a",
-        "card_bg": "#141416",
-        "border": "#6b7280",
-        "accent": "#4b5563",
-        "accent_hover": "#9ca3af",
-        "accent_pressed": "#374151",
-        "text": "#ffffff",
-        "text_muted": "#9ca3af",
-        "btn_bg": "#1f1f23",
-        "btn_hover": "#2e2e36",
-        "thumb_bg": "#050505"
+        "bg": "#0c0c0e",
+        "card_bg": "#141418",
+        "border": "#282834",
+        "accent": "#212128",
+        "accent_hover": "#2e2e3a",
+        "accent_pressed": "#181820",
+        "text": "#f4f4f5",
+        "text_muted": "#71717a",
+        "btn_bg": "#16161b",
+        "btn_hover": "#212128",
+        "thumb_bg": "#08080a"
     },
     "Grandkasten Cyberpunk": {
         "bg": "#0a0a0c",
@@ -165,7 +178,7 @@ THEMES = {
 def get_theme_colors(hud_conf=None):
     if hud_conf is None:
         hud_conf = CONFIG.get("hud", {})
-    theme_name = hud_conf.get("theme", "Schwarz-Grau-Weiß (Monochrome)")
+    theme_name = hud_conf.get("theme", "Ember Dark (Velvet Obsidian)")
     if theme_name in THEMES:
         return THEMES[theme_name]
     
@@ -213,7 +226,7 @@ def get_default_config():
         "sound_enabled": True,
         "prompter_seconds": 3,
         "calc_scale": 0.82,
-        "calc_theme": "Schwarz-Grau-Weiß (Monochrome)",
+        "calc_theme": "Ember Dark (Velvet Obsidian)",
         "log_titles": {
             "Inhaftierung": "{nr}. Inhaftierung",
             "Global": "{nr}. Global",
@@ -229,7 +242,7 @@ def get_default_config():
             "italic": False
         },
         "hud": {
-            "theme": "Schwarz-Grau-Weiß (Monochrome)",
+            "theme": "Ember Dark (Velvet Obsidian)",
             "scale": 1.0,
             "position": "Oben Rechts",
             "font_family": "Segoe UI",
@@ -1020,147 +1033,156 @@ class SetupDialog(QDialog):
     def init_ui(self):
         self.setStyleSheet("""
             QDialog {
-                background-color: #0a0a0a;
-                border: 1px solid #262626;
-                border-radius: 8px;
+                background-color: #0c0c0e;
+                border: 1px solid #23232b;
+                border-radius: 14px;
             }
             QTabWidget::pane {
-                border: 1px solid #262626;
-                background: #0f0f0f;
-                border-radius: 6px;
-                top: -1px;
+                border: 1px solid #23232b;
+                background: #101014;
+                border-radius: 12px;
+                top: 6px;
+            }
+            QTabBar {
+                qproperty-drawBase: 0;
             }
             QTabBar::tab {
-                background: #141414;
-                color: #888888;
-                padding: 8px 16px;
-                border-top-left-radius: 5px;
-                border-top-right-radius: 5px;
-                font-weight: bold;
+                background: #141418;
+                color: #71717a;
+                padding: 8px 18px;
+                border-radius: 9px;
+                font-weight: 600;
                 font-size: 11px;
-                margin-right: 4px;
-                border: 1px solid #262626;
-                border-bottom: none;
+                margin-right: 6px;
+                border: 1px solid #23232b;
             }
             QTabBar::tab:selected {
-                background: #222222;
+                background: #212128;
                 color: #ffffff;
-                border-top: 2px solid #ffffff;
+                border: 1px solid #383848;
+                font-weight: 700;
             }
             QTabBar::tab:hover:!selected {
-                background: #1a1a1a;
-                color: #cccccc;
+                background: #181820;
+                color: #d4d4d8;
+                border-color: #2c2c36;
             }
             QFrame#cardFrame {
-                background-color: #141414;
-                border: 1px solid #242424;
-                border-radius: 6px;
+                background-color: #141418;
+                border: 1px solid #22222a;
+                border-radius: 12px;
             }
             QLabel {
-                color: #e0e0e0;
+                color: #e4e4e7;
                 font-size: 11px;
-                font-weight: bold;
+                font-weight: 600;
             }
             QLabel#hintLabel {
-                color: #888888;
+                color: #71717a;
                 font-size: 10px;
                 font-weight: normal;
             }
             QLineEdit, QComboBox {
-                background-color: #181818;
+                background-color: #111114;
                 color: #ffffff;
-                border: 1px solid #2c2c2c;
-                border-radius: 5px;
-                padding: 6px 10px;
+                border: 1px solid #23232b;
+                border-radius: 8px;
+                padding: 7px 11px;
                 font-size: 11px;
             }
             QLineEdit:focus, QComboBox:focus {
-                border: 1px solid #888888;
-                background-color: #1f1f1f;
+                border: 1px solid #3b82f6;
+                background-color: #14141b;
             }
             QComboBox::drop-down {
                 subcontrol-origin: padding;
                 subcontrol-position: top right;
-                width: 22px;
-                border-left: 1px solid #2c2c2c;
+                width: 24px;
+                border-left: 1px solid #23232b;
             }
             QComboBox QAbstractItemView {
-                background-color: #181818;
+                background-color: #141418;
                 color: #ffffff;
-                selection-background-color: #282828;
+                selection-background-color: #212128;
                 selection-color: #ffffff;
-                border: 1px solid #333333;
-                border-radius: 4px;
+                border: 1px solid #2a2a34;
+                border-radius: 8px;
                 padding: 4px;
             }
             QPushButton {
-                background-color: #181818;
-                color: #cccccc;
-                border: 1px solid #2c2c2c;
-                border-radius: 5px;
-                padding: 7px 14px;
+                background-color: #16161b;
+                color: #d4d4d8;
+                border: 1px solid #23232b;
+                border-radius: 8px;
+                padding: 8px 16px;
                 font-size: 11px;
-                font-weight: bold;
+                font-weight: 600;
             }
             QPushButton:hover {
-                background-color: #242424;
+                background-color: #212128;
                 color: #ffffff;
-                border: 1px solid #444444;
+                border: 1px solid #383848;
             }
             QPushButton#btnSave {
-                background-color: #262626;
-                color: #ffffff;
-                border: 1px solid #4a4a4a;
-                padding: 9px 20px;
+                background-color: #10b981;
+                color: #0c0c0e;
+                border: 1px solid #10b981;
+                border-radius: 8px;
+                padding: 9px 24px;
                 font-size: 12px;
+                font-weight: 700;
             }
             QPushButton#btnSave:hover {
-                background-color: #383838;
-                border: 1px solid #777777;
+                background-color: #34d399;
+                border-color: #34d399;
             }
             QPushButton#btnCancel {
-                background-color: #141414;
-                color: #888888;
-                border: 1px solid #2a2a2a;
-                padding: 9px 16px;
+                background-color: #141418;
+                color: #71717a;
+                border: 1px solid #23232b;
+                border-radius: 8px;
+                padding: 9px 18px;
                 font-size: 12px;
             }
             QPushButton#btnCancel:hover {
-                background-color: #1f1f1f;
-                color: #cccccc;
+                background-color: #1a1a20;
+                color: #d4d4d8;
             }
             QSlider::groove:horizontal {
                 height: 6px;
-                background: #202020;
+                background: #1c1c22;
                 border-radius: 3px;
             }
             QSlider::sub-page:horizontal {
-                background: #555555;
+                background: #3b82f6;
                 border-radius: 3px;
             }
             QSlider::handle:horizontal {
                 background: #ffffff;
-                border: 1px solid #888888;
+                border: 1px solid #3b82f6;
                 width: 14px;
                 margin: -5px 0;
                 border-radius: 7px;
             }
             QCheckBox {
-                color: #ffffff;
+                color: #f4f4f5;
                 font-size: 11px;
-                font-weight: bold;
+                font-weight: 600;
                 spacing: 8px;
             }
             QCheckBox::indicator {
-                width: 16px;
-                height: 16px;
-                border: 1px solid #333333;
-                border-radius: 3px;
-                background: #181818;
+                width: 17px;
+                height: 17px;
+                border: 1px solid #2a2a34;
+                border-radius: 5px;
+                background: #111114;
+            }
+            QCheckBox::indicator:hover {
+                border-color: #3b82f6;
             }
             QCheckBox::indicator:checked {
-                background: #444444;
-                border: 1px solid #ffffff;
+                background: #10b981;
+                border: 1px solid #10b981;
             }
         """)
 
@@ -1172,7 +1194,7 @@ class SetupDialog(QDialog):
         title_bar = QHBoxLayout()
         title_lbl = QLabel(
             "🛡️ <span style='color: #ffffff; font-size: 14px;'><b>LSPD EINSTELLUNGEN</b></span> "
-            "<span style='color: #888888; font-size: 11px; font-weight: normal;'>| Schwarz-Weiß-Grau (Monochrome)</span>"
+            "<span style='color: #71717a; font-size: 11px; font-weight: normal;'>• Modern Dark (Ember Velvet)</span>"
         )
         title_bar.addWidget(title_lbl)
         title_bar.addStretch()
@@ -1366,6 +1388,7 @@ class SetupDialog(QDialog):
         calc_grid.addWidget(QLabel("F12 Rechner Design-Theme:"), 0, 0)
         self.calc_theme_combo = QComboBox()
         self.calc_theme_combo.addItems([
+            "Ember Dark (Velvet Obsidian)",
             "Schwarz-Grau-Weiß (Monochrome)",
             "Grandkasten Cyberpunk",
             "Schwarz-Lila (Standard)",
@@ -1817,7 +1840,7 @@ class PDOverlayWindow(QWidget):
         self.card_layout.addLayout(self.grid)
 
         # Streifenpartner Button
-        self.btn_streifenpartner = QPushButton("[7] 👥 1. Streifenpartner mitnehmen")
+        self.btn_streifenpartner = QPushButton("[7] 👥 1. Streifenpartner")
         self.btn_streifenpartner.clicked.connect(lambda: self.handle_action("Streifenpartner", "Streifenpartner"))
         self.card_layout.addWidget(self.btn_streifenpartner)
 
@@ -1867,14 +1890,18 @@ class PDOverlayWindow(QWidget):
         self.setGeometry(x, y, w, h)
 
         badge_text = str(CONFIG.get("user_badge", "317108"))
-        self.header_label.setText(f"📸 <span style='color: {colors['border']};'><b>LSPD</b></span> <span style='color: #ffffff;'><b>Log Assistent</b></span> <span style='color: {colors['accent_hover']}; font-size: {int(font_size*0.9)}px;'>[{badge_text}]</span>")
-        self.header_label.setStyleSheet(f"font-size: {int(font_size * 1.2)}px; border: none; font-family: '{font_family}';")
+        self.header_label.setText(
+            f"📸 <span style='font-size: {int(font_size * 1.15)}px; font-weight: 800; color: #ffffff;'>LSPD</span> "
+            f"<span style='font-size: {int(font_size * 1.05)}px; font-weight: 600; color: #71717a;'>Log Assistent</span> "
+            f"<span style='background: #181820; color: #a1a1aa; border: 1px solid #282835; border-radius: 6px; padding: 2px 7px; font-size: {int(font_size * 0.82)}px; font-weight: 600;'>#{badge_text}</span>"
+        )
+        self.header_label.setStyleSheet(f"font-size: {int(font_size * 1.15)}px; border: none; font-family: '{font_family}';")
 
         self.card.setStyleSheet(f"""
             QFrame {{
                 background-color: {colors['bg']};
-                border: 2px solid {colors['border']};
-                border-radius: {int(12 * scale)}px;
+                border: 1px solid {colors['border']};
+                border-radius: {int(14 * scale)}px;
                 font-family: "{font_family}";
             }}
         """)
@@ -1882,101 +1909,107 @@ class PDOverlayWindow(QWidget):
         self.stats_frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {colors['card_bg']};
-                border: 1px solid {colors['accent']};
-                border-radius: {int(6 * scale)}px;
-                padding: {int(4 * scale)}px;
+                border: 1px solid #22222a;
+                border-radius: {int(10 * scale)}px;
+                padding: {int(6 * scale)}px {int(8 * scale)}px;
             }}
         """)
-        self.stats_title.setStyleSheet(f"color: {colors['text_muted']}; font-size: {int(font_size * 0.95)}px; font-weight: bold; border: none;")
-        self.stats_line1.setStyleSheet(f"color: {colors['text']}; font-size: {int(font_size * 0.92)}px; font-weight: bold; border: none;")
-        self.stats_line2.setStyleSheet(f"color: {colors['text']}; font-size: {int(font_size * 0.92)}px; font-weight: bold; border: none;")
+        self.stats_title.setStyleSheet(f"color: #71717a; font-size: {int(font_size * 0.88)}px; font-weight: 700; letter-spacing: 0.6px; border: none;")
+        self.stats_line1.setStyleSheet(f"color: {colors['text']}; font-size: {int(font_size * 0.92)}px; border: none;")
+        self.stats_line2.setStyleSheet(f"color: {colors['text']}; font-size: {int(font_size * 0.92)}px; border: none;")
 
-        self.status_label.setStyleSheet(f"color: {colors['border']}; font-size: {int(font_size * 0.95)}px; font-weight: bold; border: none;")
-        self.notify_label.setStyleSheet(f"color: {colors['border']}; font-size: {int(font_size * 1.05)}px; font-weight: bold; border: none;")
+        self.status_label.setStyleSheet(f"color: #3b82f6; font-size: {int(font_size * 0.95)}px; font-weight: bold; border: none;")
+        self.notify_label.setStyleSheet(f"color: #10b981; font-size: {int(font_size * 1.05)}px; font-weight: bold; border: none;")
 
         thumb_w = int(350 * scale)
         thumb_h = int(155 * scale)
         self.thumb_label.setFixedSize(thumb_w, thumb_h)
-        self.thumb_label.setStyleSheet(f"background-color: {colors['thumb_bg']}; border-radius: {int(6 * scale)}px; border: 1px solid {colors['accent']};")
+        self.thumb_label.setStyleSheet(f"background-color: {colors['thumb_bg']}; border-radius: {int(8 * scale)}px; border: 1px solid #22222a;")
 
         self.btn_base_style = f"""
             QPushButton {{
                 background-color: {colors['btn_bg']};
                 color: {colors['text']};
-                border-radius: {int(6 * scale)}px;
-                padding: {int(5 * scale)}px {int(7 * scale)}px;
+                border-radius: {int(9 * scale)}px;
+                padding: {int(6 * scale)}px {int(8 * scale)}px;
                 font-size: {font_size}px;
-                font-weight: bold;
-                border: 1px solid {colors['accent']};
+                font-weight: 600;
+                border: 1px solid #23232b;
                 text-align: left;
                 font-family: "{font_family}";
             }}
             QPushButton:hover {{
                 background-color: {colors['btn_hover']};
                 color: #ffffff;
-                border-color: {colors['border']};
+                border: 1px solid #383848;
             }}
             QPushButton:pressed {{
-                background-color: {colors['bg']};
+                background-color: #111114;
             }}
         """
 
         self.btn_send_summary.setStyleSheet(f"""
             QPushButton {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {colors['accent']}, stop:1 {colors['accent_hover']});
+                background-color: #212128;
                 color: #ffffff;
-                border-radius: {int(6 * scale)}px;
-                padding: {int(7 * scale)}px {int(10 * scale)}px;
+                border-radius: {int(9 * scale)}px;
+                padding: {int(8 * scale)}px {int(12 * scale)}px;
                 font-size: {font_size}px;
-                font-weight: bold;
-                border: 1px solid {colors['border']};
+                font-weight: 700;
+                border: 1px solid #353546;
                 text-align: center;
                 font-family: "{font_family}";
             }}
             QPushButton:hover {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {colors['accent_hover']}, stop:1 {colors['border']});
+                background-color: #2d2d3a;
+                border-color: #4f4f66;
             }}
             QPushButton:pressed {{
-                background: {colors['accent_pressed']};
+                background-color: #181820;
             }}
         """)
 
         self.btn_delete_last.setStyleSheet(f"""
             QPushButton {{
-                background-color: #261111;
+                background-color: #181113;
                 color: #f87171;
-                border-radius: {int(6 * scale)}px;
-                padding: {int(6 * scale)}px {int(10 * scale)}px;
+                border-radius: {int(9 * scale)}px;
+                padding: {int(7 * scale)}px {int(12 * scale)}px;
                 font-size: {font_size}px;
-                font-weight: bold;
-                border: 1px solid #7f1d1d;
+                font-weight: 600;
+                border: 1px solid #381a1f;
                 font-family: "{font_family}";
                 text-align: center;
             }}
             QPushButton:hover {{
-                background-color: #3b1414;
-                color: #ffffff;
+                background-color: #261317;
+                color: #fecaca;
                 border-color: #ef4444;
             }}
             QPushButton:pressed {{
-                background-color: #1a0808;
+                background-color: #120a0b;
             }}
         """)
 
         self.btn_cancel.setStyleSheet(f"""
             QPushButton {{
-                background-color: #261122;
-                color: #f472b6;
-                border-radius: {int(6 * scale)}px;
-                padding: {int(6 * scale)}px {int(10 * scale)}px;
+                background-color: #141418;
+                color: #a1a1aa;
+                border-radius: {int(9 * scale)}px;
+                padding: {int(7 * scale)}px {int(12 * scale)}px;
                 font-size: {font_size}px;
-                font-weight: bold;
-                border: 1px solid #701a75;
+                font-weight: 600;
+                border: 1px solid #23232b;
                 font-family: "{font_family}";
+                text-align: center;
             }}
             QPushButton:hover {{
-                background-color: #3b1434;
+                background-color: #1c1c22;
                 color: #ffffff;
+                border-color: #3f3f4e;
+            }}
+            QPushButton:pressed {{
+                background-color: #0d0d10;
             }}
         """)
 
@@ -2002,7 +2035,7 @@ class PDOverlayWindow(QWidget):
             self.status_label.setText("⏳ Event: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
             self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (2/2)")
-            self.highlight_button(self.btn_event, "#c084fc")
+            self.highlight_button(self.btn_event, "#8b5cf6", "#1c1428")
         else:
             self.btn_event.setText(f"[4] 🟣 {ev_num}. Event (1/2)")
 
@@ -2010,7 +2043,7 @@ class PDOverlayWindow(QWidget):
             self.status_label.setText("⏳ Shoprob: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
             self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (2/2)")
-            self.highlight_button(self.btn_shoprob, "#e67e22")
+            self.highlight_button(self.btn_shoprob, "#f59e0b", "#261a10")
         else:
             self.btn_shoprob.setText(f"[5] 🟠 {sh_num}. Shoprob (1/2)")
 
@@ -2018,22 +2051,22 @@ class PDOverlayWindow(QWidget):
             self.status_label.setText("⏳ FZ-Raid: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
             self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (2/2)")
-            self.highlight_button(self.btn_fz, "#2ecc71")
+            self.highlight_button(self.btn_fz, "#14b8a6", "#102320")
         else:
             self.btn_fz.setText(f"[6] 🪖 {fz_num}. FZ-Raid (1/2)")
 
-        self.btn_streifenpartner.setText(f"[7] 👥 {sp_num}. Streifenpartner mitnehmen")
+        self.btn_streifenpartner.setText(f"[7] 👥 {sp_num}. Streifenpartner")
 
         if not self.pending_two_shot:
             self.status_label.setVisible(False)
             if recommendation == "inhaftierung":
-                self.highlight_button(self.btn_inhaftierung, "#57f287")
+                self.highlight_button(self.btn_inhaftierung, "#10b981", "#122119")
                 self.btn_inhaftierung.setText(f"[1] 🟢 {inh_num}. Inhaftierung ⭐")
             elif recommendation == "global":
-                self.highlight_button(self.btn_global, "#ed4245")
+                self.highlight_button(self.btn_global, "#ef4444", "#241215")
                 self.btn_global.setText(f"[2] 🔴 {gl_num}. Global ⭐")
             elif recommendation == "local":
-                self.highlight_button(self.btn_local, "#5865f2")
+                self.highlight_button(self.btn_local, "#3b82f6", "#121a28")
                 self.btn_local.setText(f"[3] 🔵 {lo_num}. Local ⭐")
 
     def update_stats_ui(self, counts):
@@ -2041,14 +2074,14 @@ class PDOverlayWindow(QWidget):
             if 'next_numbers' in counts and isinstance(counts['next_numbers'], dict):
                 self.next_numbers.update(counts['next_numbers'])
                 self.update_button_labels()
-            gl = f"{counts.get('GL/LO', 0)}/3"
-            sh = f"{counts.get('Shoprob etc.', 0)}/3"
-            ev = f"{counts.get('Events', 0)}/5"
-            fz = f"{counts.get('FZ-Raid', 0)}/1"
-            inh = f"{counts.get('Inhaftierungen', 0)}/7"
-            part = f"{counts.get('Streifenpartner', 0)}/2"
-            self.stats_line1.setText(f"GL/LO: {gl}  |  Shop: {sh}  |  Events: {ev}")
-            self.stats_line2.setText(f"FZ: {fz}  |  Inh: {inh}  |  Partner: {part}")
+            gl = f"<b>{counts.get('GL/LO', 0)}</b>/3"
+            sh = f"<b>{counts.get('Shoprob etc.', 0)}</b>/3"
+            ev = f"<b>{counts.get('Events', 0)}</b>/5"
+            fz = f"<b>{counts.get('FZ-Raid', 0)}</b>/1"
+            inh = f"<b>{counts.get('Inhaftierungen', 0)}</b>/7"
+            part = f"<b>{counts.get('Streifenpartner', 0)}</b>/2"
+            self.stats_line1.setText(f"GL/LO: {gl}  •  Shop: {sh}  •  Events: {ev}")
+            self.stats_line2.setText(f"FZ: {fz}  •  Inh: {inh}  •  Partner: {part}")
             log(f"[UI] Stats: GL/LO={gl}, Shop={sh}, Ev={ev}, FZ={fz}, Inh={inh}, Partner={part}")
 
     def display_screenshot(self, screenshot_path, recommendation=None):
@@ -2087,22 +2120,26 @@ class PDOverlayWindow(QWidget):
         if counts:
             overlay_signal.update_stats.emit(counts)
 
-    def highlight_button(self, btn, border_color):
+    def highlight_button(self, btn, border_color, bg_color=None):
         hud = CONFIG.get("hud", {})
-        colors = get_theme_colors(hud)
         scale = float(hud.get("scale", 1.0))
         font_size = int(hud.get("font_size", 11))
+        bg = bg_color or "#18241d"
         btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: {colors['btn_hover']};
+                background-color: {bg};
                 color: #ffffff;
-                border-radius: {int(6 * scale)}px;
-                padding: {int(5 * scale)}px {int(7 * scale)}px;
+                border-radius: {int(9 * scale)}px;
+                padding: {int(6 * scale)}px {int(8 * scale)}px;
                 font-size: {font_size}px;
-                font-weight: bold;
-                border: 2px solid {border_color};
+                font-weight: 700;
+                border: 1.5px solid {border_color};
                 text-align: left;
                 font-family: "{hud.get('font_family', 'Segoe UI')}";
+            }}
+            QPushButton:hover {{
+                background-color: {adjust_color(bg, 1.25)};
+                border-color: {border_color};
             }}
         """)
 

@@ -75,8 +75,8 @@ Mit einem Tastendruck auf **[F12]** öffnet sich der Rechner direkt über dem Sp
 
 ---
 
-### 4. ⚙️ Neues Schwarz-Weiß-Grau Einstellungsmenü (Monochrome)
-Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) ist vollständig in einem übersichtlichen, matten **Schwarz-Weiß-Grau (Monochrome)** Design gehalten und in 4 saubere Tabs unterteilt:
+### 4. ⚙️ Modern Dark Einstellungsmenü (Ember Velvet Obsidian)
+Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) präsentiert sich im hochmodernen **Ember Dark (Velvet Obsidian)** Design mit eleganten Pill-Tabs, abgerundeten Feldern und Neon-Akzenten, unterteilt in 4 saubere Tabs:
 * **Tab 1: 👮 Dienst & Discord:**
   * Reisepassnummer / Badge-ID (Dienstnummer).
   * Medal Screenshot-Ordner mit bequemer `📁 Durchsuchen`-Auswahl.
@@ -96,6 +96,7 @@ Das Einstellungsmenü (Rechtsklick Tray ➔ **⚙️ Einstellungen**) ist vollst
 
 ### 5. 🎨 Vollständig anpassbares Design & Themes
 * **Live-Themes:**
+  * 🌑 *Ember Dark (Velvet Obsidian)* (Modern Dark Dashboard Design)
   * ⚫ *Schwarz-Grau-Weiß (Monochrome)*
   * 🌐 *Grandkasten Cyberpunk* (Original Grandkasten DE1 Navy / Blue)
   * 🟣 *Schwarz-Lila (Standard)*

@@ -41,6 +41,40 @@ def normalize_search_text(t):
     return ' '.join(t.split())
 
 CALC_THEMES = {
+    "Ember Dark (Velvet Obsidian)": {
+        "bg": "#0c0c0e",
+        "surface": "#121216",
+        "card_bg": "#16161b",
+        "card_hover": "#212128",
+        "border": "#282834",
+        "border_subtle": "#1f1f26",
+        "accent": "#212128",
+        "accent_text": "#ffffff",
+        "card_active_bg": "#122019",
+        "card_active_border": "#10b981",
+        "text": "#f4f4f5",
+        "text_muted": "#71717a",
+        "money": "#10b981",
+        "stars": "#f59e0b",
+        "danger": "#ef4444"
+    },
+    "Schwarz-Grau-Weiß (Monochrome)": {
+        "bg": "#0c0c0e",
+        "surface": "#121216",
+        "card_bg": "#16161b",
+        "card_hover": "#212128",
+        "border": "#282834",
+        "border_subtle": "#1f1f26",
+        "accent": "#212128",
+        "accent_text": "#ffffff",
+        "card_active_bg": "#181822",
+        "card_active_border": "#ffffff",
+        "text": "#f4f4f5",
+        "text_muted": "#71717a",
+        "money": "#10b981",
+        "stars": "#f59e0b",
+        "danger": "#ef4444"
+    },
     "Grandkasten Cyberpunk": {
         "bg": "#0f111a",
         "surface": "#141724",
@@ -55,23 +89,6 @@ CALC_THEMES = {
         "text": "#e2e8f0",
         "text_muted": "#8892b0",
         "money": "#22c55e",
-        "stars": "#ffcc00",
-        "danger": "#ef4444"
-    },
-    "Schwarz-Grau-Weiß (Monochrome)": {
-        "bg": "#050505",
-        "surface": "#111113",
-        "card_bg": "#18181b",
-        "card_hover": "#27272a",
-        "border": "#71717a",
-        "border_subtle": "#2a2a32",
-        "accent": "#e4e4e7",
-        "accent_text": "#000000",
-        "card_active_bg": "#222228",
-        "card_active_border": "#ffffff",
-        "text": "#ffffff",
-        "text_muted": "#a1a1aa",
-        "money": "#4ade80",
         "stars": "#ffcc00",
         "danger": "#ef4444"
     },
@@ -226,7 +243,7 @@ class OffenseCard(QFrame):
         self.init_card_ui()
 
     def get_theme(self):
-        return getattr(self.overlay, 'theme_data', CALC_THEMES["Grandkasten Cyberpunk"])
+        return getattr(self.overlay, 'theme_data', CALC_THEMES["Ember Dark (Velvet Obsidian)"])
 
     def init_card_ui(self):
         t = self.get_theme()
@@ -619,12 +636,12 @@ class GrandCalculatorOverlay(QWidget):
         self.cards_by_key = {}
 
         # Theme Initialization
-        initial_theme = theme_name or "Grandkasten Cyberpunk"
+        initial_theme = theme_name or "Ember Dark (Velvet Obsidian)"
         if isinstance(initial_theme, dict):
             self.theme_data = initial_theme
             self.current_theme_name = "Benutzerdefiniert"
         else:
-            self.current_theme_name = initial_theme if initial_theme in CALC_THEMES else "Grandkasten Cyberpunk"
+            self.current_theme_name = initial_theme if initial_theme in CALC_THEMES else "Ember Dark (Velvet Obsidian)"
             self.theme_data = CALC_THEMES[self.current_theme_name]
 
         self.setWindowTitle("LSPD Dienst-Rechner - 1:1 Grandkasten")
@@ -847,7 +864,7 @@ class GrandCalculatorOverlay(QWidget):
         self.main_frame.setStyleSheet(f"""
             QFrame#mainFrame {{
                 background-color: {t['bg']};
-                border: 2px solid {t['border']};
+                border: 1px solid {t['border']};
                 border-radius: 12px;
             }}
         """)
@@ -2563,7 +2580,7 @@ class GrandCalculatorOverlay(QWidget):
             self.main_frame.setStyleSheet(f"""
                 QFrame#mainFrame {{
                     background-color: {t['bg']};
-                    border: 2px solid {t['border']};
+                    border: 1px solid {t['border']};
                     border-radius: 12px;
                 }}
             """)

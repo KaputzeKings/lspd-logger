@@ -1,5 +1,13 @@
 {
-    "version": "1.4.2",
-    "changelog": "🛡️ Update v1.4.2 - Log-Beschriftung, Schriftstil & Letzten Log löschen:\n- Log-Beschriftungen & Formatierung: In den Einstellungen (Tab 2) kann für alle 7 Kategorien frei gewählt werden, wie der Log-Titel beim Senden formatiert wird (mit {nr} als Zähler-Platzhalter).\n- Discord Markdown Schriftstil: Checkboxen für Fett (**Text**), Unterstrichen (__Text__) und Kursiv (*Text*) mit Live-Vorschau.\n- Letzten Log automatisch löschen: Per Knopfdruck ([9] / [ENTF] im HUD oder über das Tray-Menü) kann der letzte gesendete Log automatisch aus Discord gelöscht werden.\n- HUD-Optimierung: Breiteres Kartenlayout und optimierte Button-Labels, sodass keine Texte mehr abgeschnitten werden.",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.2/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.4.3",
+    "release_date": "2026-11-05",
+    "changelog": [
+        "Ember Dark (Velvet Obsidian) UI Redesign: Elegantes matt-schwarzes Dashboard-Design für Overlay, Einstellungen und F12 Dienst-Rechner",
+        "Design nach Vorlage adaptiert: Samtweiches Obsidian-Schwarz (#0c0c0e), eingelassene Karten (#141418), Pill-Navigation (#212128) und dezente 1px Border (#282834)",
+        "Leuchtende Neon-Indikatoren: Smaragdgrün, Karmesinrot, Electric Blue, Violett, Bernstein, Teal und Magenta für alle Einsatzkategorien",
+        "Optimierte Button-Proportionen und Abstände: Kein Text-Clipping mehr bei jeglicher Bildschirmauflösung",
+        "Zwischenstand im Overlay mit fetter Hervorhebung und cleanen Punkt-Separatoren",
+        "Pill-Tabs und abgerundete Eingabefelder in den Einstellungen (Setup-Dialog)",
+        "F12 Dienst-Rechner standardmäßig mit modernem Ember Dark Velvet Theme"
+    ]
 }
