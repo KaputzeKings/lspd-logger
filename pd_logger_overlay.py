@@ -165,7 +165,7 @@ THEMES = {
 def get_theme_colors(hud_conf=None):
     if hud_conf is None:
         hud_conf = CONFIG.get("hud", {})
-    theme_name = hud_conf.get("theme", "Schwarz-Lila (Standard)")
+    theme_name = hud_conf.get("theme", "Schwarz-Grau-Weiß (Monochrome)")
     if theme_name in THEMES:
         return THEMES[theme_name]
     
@@ -213,9 +213,9 @@ def get_default_config():
         "sound_enabled": True,
         "prompter_seconds": 3,
         "calc_scale": 0.82,
-        "calc_theme": "Grandkasten Cyberpunk",
+        "calc_theme": "Schwarz-Grau-Weiß (Monochrome)",
         "hud": {
-            "theme": "Schwarz-Lila (Standard)",
+            "theme": "Schwarz-Grau-Weiß (Monochrome)",
             "scale": 1.0,
             "position": "Oben Rechts",
             "font_family": "Segoe UI",
@@ -851,187 +851,400 @@ class UpdateDialog(QDialog):
             self.btn_update.setEnabled(True)
             self.btn_later.setEnabled(True)
 
-# Full Customizable Setup Dialog with Tabs
+# Full Customizable Grandkasten Setup Dialog with Monochrome Design
 class SetupDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("LSPD Log Assistent - Einstellungen")
-        self.setFixedSize(540, 560)
+        self.setWindowTitle("LSPD Dienst-Assistent - Grandkasten Einstellungen")
+        self.setFixedSize(680, 640)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
         self.init_ui()
 
+    def _create_card(self, title_text, subtitle_text=""):
+        card = QFrame()
+        card.setObjectName("cardFrame")
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(14, 10, 14, 10)
+        card_layout.setSpacing(6)
+
+        header = QLabel(
+            f"<span style='color: #ffffff; font-weight: bold; font-size: 11px; letter-spacing: 0.5px;'>{title_text}</span> "
+            f"<span style='color: #64748b; font-size: 10px; font-weight: normal;'>{subtitle_text}</span>"
+        )
+        card_layout.addWidget(header)
+        return card, card_layout
+
     def init_ui(self):
-        colors = get_theme_colors()
-        self.setStyleSheet(f"""
-            QDialog {{
-                background-color: #0f0c18;
-                border: 2px solid {colors['border']};
-                border-radius: 12px;
-            }}
-            QTabWidget::pane {{
-                border: 1px solid {colors['accent']};
-                background: #130f20;
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #0c0d12;
+                border: 1px solid #272a38;
+                border-radius: 10px;
+            }
+            QTabWidget::pane {
+                border: 1px solid #232736;
+                background: #0f1118;
                 border-radius: 8px;
-            }}
-            QTabBar::tab {{
-                background: #171324;
-                color: #d8b4fe;
-                padding: 8px 16px;
+                top: -1px;
+            }
+            QTabBar::tab {
+                background: #141722;
+                color: #94a3b8;
+                padding: 8px 18px;
                 border-top-left-radius: 6px;
                 border-top-right-radius: 6px;
                 font-weight: bold;
                 font-size: 11px;
                 margin-right: 4px;
-            }}
-            QTabBar::tab:selected {{
-                background: {colors['accent']};
+                border: 1px solid #232736;
+                border-bottom: none;
+            }
+            QTabBar::tab:selected {
+                background: #1f2438;
                 color: #ffffff;
-            }}
-            QLabel {{
-                color: #f5f3ff;
+                border-top: 2px solid #ffffff;
+            }
+            QTabBar::tab:hover:!selected {
+                background: #181c2b;
+                color: #cbd5e1;
+            }
+            QFrame#cardFrame {
+                background-color: #141722;
+                border: 1px solid #272a38;
+                border-radius: 8px;
+            }
+            QLabel {
+                color: #cbd5e1;
                 font-size: 11px;
                 font-weight: bold;
-            }}
-            QLineEdit, QComboBox {{
-                background-color: #1a1528;
+            }
+            QLabel#hintLabel {
+                color: #64748b;
+                font-size: 10px;
+                font-weight: normal;
+            }
+            QLineEdit, QComboBox {
+                background-color: #181b26;
                 color: #ffffff;
-                border: 1px solid #4c1d95;
+                border: 1px solid #2d3246;
                 border-radius: 6px;
                 padding: 6px 10px;
                 font-size: 11px;
-            }}
-            QLineEdit:focus, QComboBox:focus {{
-                border: 1px solid {colors['border']};
-                background-color: #231b36;
-            }}
-            QPushButton {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {colors['accent']}, stop:1 {colors['accent_hover']});
+            }
+            QLineEdit:focus, QComboBox:focus {
+                border: 1px solid #ffffff;
+                background-color: #1e2230;
+            }
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 22px;
+                border-left: 1px solid #2d3246;
+                border-top-right-radius: 5px;
+                border-bottom-right-radius: 5px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #181b26;
                 color: #ffffff;
+                selection-background-color: #272d40;
+                selection-color: #ffffff;
+                border: 1px solid #2d3246;
                 border-radius: 6px;
-                padding: 8px 14px;
+                padding: 4px;
+            }
+            QPushButton {
+                background-color: #1c1f2e;
+                color: #cbd5e1;
+                border: 1px solid #2d3348;
+                border-radius: 6px;
+                padding: 7px 14px;
                 font-size: 11px;
                 font-weight: bold;
-                border: 1px solid {colors['border']};
-            }}
-            QPushButton:hover {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {colors['accent_hover']}, stop:1 {colors['border']});
-            }}
-            QPushButton#btnBrowse, QPushButton#btnColor {{
-                background: #251c3a;
-                border: 1px solid #4c1d95;
-                color: #d8b4fe;
-                padding: 5px 10px;
-            }}
-            QPushButton#btnBrowse:hover, QPushButton#btnColor:hover {{
-                background: #3b285a;
+            }
+            QPushButton:hover {
+                background-color: #252a3d;
                 color: #ffffff;
-            }}
-            QPushButton#btnCancel {{
-                background: #261122;
-                border: 1px solid #701a75;
-                color: #f472b6;
-            }}
-            QPushButton#btnCancel:hover {{
-                background: #3b1434;
-            }}
+                border: 1px solid #3f4764;
+            }
+            QPushButton#btnSave {
+                background-color: #27272a;
+                color: #ffffff;
+                border: 1px solid #52525b;
+                padding: 9px 20px;
+                font-size: 12px;
+            }
+            QPushButton#btnSave:hover {
+                background-color: #3f3f46;
+                border: 1px solid #a1a1aa;
+            }
+            QPushButton#btnCancel {
+                background-color: #18181b;
+                color: #a1a1aa;
+                border: 1px solid #3f3f46;
+                padding: 9px 16px;
+                font-size: 12px;
+            }
+            QPushButton#btnCancel:hover {
+                background-color: #27272a;
+                color: #ffffff;
+            }
+            QSlider::groove:horizontal {
+                height: 6px;
+                background: #232736;
+                border-radius: 3px;
+            }
+            QSlider::sub-page:horizontal {
+                background: #475569;
+                border-radius: 3px;
+            }
+            QSlider::handle:horizontal {
+                background: #ffffff;
+                border: 1px solid #94a3b8;
+                width: 14px;
+                margin: -5px 0;
+                border-radius: 7px;
+            }
+            QCheckBox {
+                color: #ffffff;
+                font-size: 11px;
+                font-weight: bold;
+                spacing: 8px;
+            }
+            QCheckBox::indicator {
+                width: 16px;
+                height: 16px;
+                border: 1px solid #3b4259;
+                border-radius: 4px;
+                background: #181b26;
+            }
+            QCheckBox::indicator:checked {
+                background: #3b82f6;
+                border: 1px solid #60a5fa;
+            }
         """)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(18, 18, 18, 18)
-        layout.setSpacing(10)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(12)
 
-        # Title
-        title_label = QLabel(f"🛡️ <span style='color: {colors['border']}; font-size: 15px;'><b>LSPD Log Assistent</b></span> <span style='color: #a855f7; font-size: 11px;'>v{CURRENT_VERSION}</span>")
-        layout.addWidget(title_label)
+        # Header Title
+        title_bar = QHBoxLayout()
+        title_lbl = QLabel(
+            "🛡️ <span style='color: #ffffff; font-size: 14px;'><b>LSPD DIENST-ASSISTENT</b></span> "
+            "<span style='color: #64748b; font-size: 11px; font-weight: normal;'>| Grandkasten Konfiguration</span>"
+        )
+        title_bar.addWidget(title_lbl)
+        title_bar.addStretch()
+        version_lbl = QLabel(f"<span style='color: #38bdf8; font-size: 10px; font-weight: bold;'>v{CURRENT_VERSION}</span>")
+        title_bar.addWidget(version_lbl)
+        layout.addLayout(title_bar)
 
-        # Tabs
         self.tabs = QTabWidget()
 
-        # --- TAB 1: Dienst & Discord ---
+        # ==================== TAB 1: Dienst & Discord ====================
         tab_service = QWidget()
         l_serv = QVBoxLayout(tab_service)
         l_serv.setContentsMargins(12, 12, 12, 12)
-        l_serv.setSpacing(8)
+        l_serv.setSpacing(10)
 
-        l_serv.addWidget(QLabel("1. Reisepassnummer / Badge-ID (z. B. 317595):"))
+        # Card 1: Beamten-Profil
+        c1, c1_lay = self._create_card("BEAMTEN-PROFIL & DIENSTNUMMER", "• Wichtig für Protokolle")
+        c1_lay.addWidget(QLabel("Reisepassnummer / Badge-ID:"))
         self.badge_input = QLineEdit()
+        self.badge_input.setPlaceholderText("z. B. 317595")
         self.badge_input.setText(str(CONFIG.get("user_badge", "")))
-        l_serv.addWidget(self.badge_input)
+        c1_lay.addWidget(self.badge_input)
+        h1 = QLabel("Wird für deine automatischen Arrest-Logs, Bußgeld-Akten und Funkmeldungen verwendet.")
+        h1.setObjectName("hintLabel")
+        c1_lay.addWidget(h1)
+        l_serv.addWidget(c1)
 
-        l_serv.addWidget(QLabel("2. Medal Screenshot-Ordner:"))
+        # Card 2: Screenshot Überwachung
+        c2, c2_lay = self._create_card("MEDAL SCREENSHOT-ORDNER", "• Lokale Überwachung")
+        c2_lay.addWidget(QLabel("Überwachter Ordner für Logs & Berechnungen:"))
         dir_lay = QHBoxLayout()
         self.dir_input = QLineEdit()
         self.dir_input.setText(CONFIG.get("watch_dir", get_default_watch_dir()))
         dir_lay.addWidget(self.dir_input)
         browse_btn = QPushButton("📁 Durchsuchen")
-        browse_btn.setObjectName("btnBrowse")
         browse_btn.clicked.connect(self.choose_directory)
         dir_lay.addWidget(browse_btn)
-        l_serv.addLayout(dir_lay)
+        c2_lay.addLayout(dir_lay)
+        h2 = QLabel("Standard: Medal Clips oder GTA V Screenshot-Ordner (automatischer Upload bei neuem Bild).")
+        h2.setObjectName("hintLabel")
+        c2_lay.addWidget(h2)
+        l_serv.addWidget(c2)
 
-        l_serv.addWidget(QLabel("3. Forum Thread-ID (Optional):"))
+        # Card 3: Discord Forum
+        c3, c3_lay = self._create_card("DISCORD FORUM-THREAD", "• Server-Synchronisation")
+        c3_lay.addWidget(QLabel("Forum Thread-ID (Optional):"))
         self.thread_input = QLineEdit()
-        self.thread_input.setPlaceholderText("Leer lassen für automatische Suche")
+        self.thread_input.setPlaceholderText("Leer lassen für automatische Thread-Erkennung")
         self.thread_input.setText(CONFIG.get("thread_id", ""))
-        l_serv.addWidget(self.thread_input)
+        c3_lay.addWidget(self.thread_input)
+        
+        token_box = QFrame()
+        token_box.setStyleSheet("background: #0f1118; border: 1px solid #232736; border-radius: 6px; padding: 6px;")
+        tb_lay = QHBoxLayout(token_box)
+        tb_lay.setContentsMargins(8, 4, 8, 4)
+        t_ico = QLabel("🔒")
+        t_ico.setStyleSheet("font-size: 14px; border: none;")
+        tb_lay.addWidget(t_ico)
+        t_lbl = QLabel("<span style='color: #94a3b8; font-size: 10px; font-weight: normal;'>"
+                       "<b>Discord-Token:</b> Wird automatisch und sicher aus deiner Desktop-App gelesen. "
+                       "Keine manuelle Eingabe erforderlich.</span>")
+        t_lbl.setStyleSheet("border: none;")
+        tb_lay.addWidget(t_lbl, 1)
+        c3_lay.addWidget(token_box)
+        l_serv.addWidget(c3)
 
-        info_box = QFrame()
-        info_box.setStyleSheet("background: #171324; border: 1px solid #4c1d95; border-radius: 6px; padding: 4px;")
-        ib_lay = QVBoxLayout(info_box)
-        ib_lay.setContentsMargins(6, 6, 6, 6)
-        itxt = QLabel("ℹ️ <b>Discord-Token:</b> Wird automatisch und sicher aus deiner Desktop-App gelesen.")
-        itxt.setStyleSheet("color: #d8b4fe; font-size: 10px; font-weight: normal; border: none;")
-        ib_lay.addWidget(itxt)
-        l_serv.addWidget(info_box)
-
+        l_serv.addStretch()
         self.tabs.addTab(tab_service, "👮 Dienst & Discord")
 
-        # --- TAB 2: HUD & Aussehen ---
+        # ==================== TAB 2: Grandkasten Rechner & F10 ====================
+        tab_calc = QWidget()
+        l_calc = QVBoxLayout(tab_calc)
+        l_calc.setContentsMargins(12, 12, 12, 12)
+        l_calc.setSpacing(10)
+
+        # Card 1: F12 Dienst-Rechner
+        cc1, cc1_lay = self._create_card("F12 DIENST-RECHNER", "• Grandkasten DE1 Bußgeld & Wanted Rechner")
+        
+        calc_grid = QGridLayout()
+        calc_grid.setHorizontalSpacing(14)
+        calc_grid.setVerticalSpacing(8)
+
+        calc_grid.addWidget(QLabel("F12 Rechner Design-Theme:"), 0, 0)
+        self.calc_theme_combo = QComboBox()
+        self.calc_theme_combo.addItems([
+            "Schwarz-Grau-Weiß (Monochrome)",
+            "Grandkasten Cyberpunk",
+            "Schwarz-Lila (Standard)",
+            "LSPD Cyber Blue",
+            "Tactical Stealth Red",
+            "Emerald Special Forces"
+        ])
+        curr_ct = CONFIG.get("calc_theme", "Schwarz-Grau-Weiß (Monochrome)")
+        c_idx = self.calc_theme_combo.findText(curr_ct)
+        if c_idx >= 0:
+            self.calc_theme_combo.setCurrentIndex(c_idx)
+        calc_grid.addWidget(self.calc_theme_combo, 0, 1)
+
+        calc_grid.addWidget(QLabel("F12 Fenstergröße / Skalierung:"), 1, 0)
+        self.calc_scale_combo = QComboBox()
+        self.calc_scale_combo.addItem("Mini (25% - 1 Spalte)", 0.25)
+        self.calc_scale_combo.addItem("Halb (50% - 2 Spalten)", 0.50)
+        self.calc_scale_combo.addItem("Kompakt (75% - 3 Spalten)", 0.75)
+        self.calc_scale_combo.addItem("Standard (82% - 3 Spalten)", 0.82)
+        self.calc_scale_combo.addItem("Groß (88%)", 0.88)
+        self.calc_scale_combo.addItem("Sehr groß (95%)", 0.95)
+        self.calc_scale_combo.addItem("Vollbild (100%)", 1.00)
+        c_scale = float(CONFIG.get("calc_scale", 0.82))
+        for i in range(self.calc_scale_combo.count()):
+            if abs(self.calc_scale_combo.itemData(i) - c_scale) < 0.02:
+                self.calc_scale_combo.setCurrentIndex(i)
+                break
+        calc_grid.addWidget(self.calc_scale_combo, 1, 1)
+
+        cc1_lay.addLayout(calc_grid)
+        hc1 = QLabel("💡 Tipp: Du kannst die Größe auch direkt im geöffneten F12-Rechner oben rechts per Dropdown umschalten.")
+        hc1.setObjectName("hintLabel")
+        cc1_lay.addWidget(hc1)
+        l_calc.addWidget(cc1)
+
+        # Card 2: F10 Teleprompter
+        cc2, cc2_lay = self._create_card("F10 TELEPROMPTER & RECHTE", "• Automatische Miranda-Warnung")
+        
+        promp_grid = QGridLayout()
+        promp_grid.setHorizontalSpacing(14)
+        promp_grid.setVerticalSpacing(8)
+
+        promp_grid.addWidget(QLabel("Teleprompter Seiten-Takt:"), 0, 0)
+        self.prompter_speed_combo = QComboBox()
+        self.prompter_speed_combo.addItem("3 Sekunden (Empfohlen)", 3)
+        self.prompter_speed_combo.addItem("4 Sekunden", 4)
+        self.prompter_speed_combo.addItem("5 Sekunden", 5)
+        self.prompter_speed_combo.addItem("6 Sekunden", 6)
+        self.prompter_speed_combo.addItem("7 Sekunden", 7)
+        self.prompter_speed_combo.addItem("8 Sekunden", 8)
+        self.prompter_speed_combo.addItem("9 Sekunden", 9)
+        self.prompter_speed_combo.addItem("10 Sekunden (Langsam)", 10)
+        curr_ps = int(CONFIG.get("prompter_seconds", 3))
+        for i in range(self.prompter_speed_combo.count()):
+            if self.prompter_speed_combo.itemData(i) == curr_ps:
+                self.prompter_speed_combo.setCurrentIndex(i)
+                break
+        promp_grid.addWidget(self.prompter_speed_combo, 0, 1)
+        cc2_lay.addLayout(promp_grid)
+
+        auto_box = QFrame()
+        auto_box.setStyleSheet("background: #0f1118; border: 1px solid #232736; border-radius: 6px; padding: 6px;")
+        ab_lay = QHBoxLayout(auto_box)
+        ab_lay.setContentsMargins(8, 4, 8, 4)
+        ab_ico = QLabel("⚡")
+        ab_ico.setStyleSheet("font-size: 14px; border: none;")
+        ab_lay.addWidget(ab_ico)
+        ab_lbl = QLabel("<span style='color: #94a3b8; font-size: 10px; font-weight: normal;'>"
+                        "<b>Automatische Rechte:</b> Nach Druck auf [F10] wechselt der Teleprompter alle eingestellten Sekunden "
+                        "automatisch zur nächsten Seite und schließt sich nach dem Durchlauf selbstständig.</span>")
+        ab_lbl.setStyleSheet("border: none;")
+        ab_lay.addWidget(ab_lbl, 1)
+        cc2_lay.addWidget(auto_box)
+        l_calc.addWidget(cc2)
+
+        l_calc.addStretch()
+        self.tabs.addTab(tab_calc, "⚖️ Grandkasten Rechner & F10")
+
+        # ==================== TAB 3: Ingame-HUD & Audio ====================
         tab_hud = QWidget()
         l_hud = QVBoxLayout(tab_hud)
         l_hud.setContentsMargins(12, 12, 12, 12)
-        l_hud.setSpacing(8)
+        l_hud.setSpacing(10)
 
         hud_conf = CONFIG.get("hud", {})
 
-        # Theme selection
-        l_hud.addWidget(QLabel("1. Farb-Theme:"))
+        # Card 1: Ingame HUD
+        ch1, ch1_lay = self._create_card("INGAME STATS-HUD (OVERLAY)", "• Live-Anzeige im Spiel")
+        
+        hud_grid = QGridLayout()
+        hud_grid.setHorizontalSpacing(14)
+        hud_grid.setVerticalSpacing(8)
+
+        hud_grid.addWidget(QLabel("HUD Farb-Theme:"), 0, 0)
         self.theme_combo = QComboBox()
         theme_names = list(THEMES.keys()) + ["Benutzerdefiniert"]
         self.theme_combo.addItems(theme_names)
-        curr_theme = hud_conf.get("theme", "Schwarz-Lila (Standard)")
+        curr_theme = hud_conf.get("theme", "Schwarz-Grau-Weiß (Monochrome)")
         idx = self.theme_combo.findText(curr_theme)
         if idx >= 0:
             self.theme_combo.setCurrentIndex(idx)
-        l_hud.addWidget(self.theme_combo)
+        hud_grid.addWidget(self.theme_combo, 0, 1)
 
-        # Custom colors row
+        # Custom colors
+        hud_grid.addWidget(QLabel("Farben (Benutzerdefiniert):"), 1, 0)
         custom_row = QHBoxLayout()
         self.btn_bg_color = QPushButton("Hintergrund")
-        self.btn_bg_color.setObjectName("btnColor")
         self.btn_bg_color.clicked.connect(self.pick_bg_color)
         custom_row.addWidget(self.btn_bg_color)
-
         self.btn_accent_color = QPushButton("Akzent/Border")
-        self.btn_accent_color.setObjectName("btnColor")
         self.btn_accent_color.clicked.connect(self.pick_accent_color)
         custom_row.addWidget(self.btn_accent_color)
-
         self.btn_text_color = QPushButton("Textfarbe")
-        self.btn_text_color.setObjectName("btnColor")
         self.btn_text_color.clicked.connect(self.pick_text_color)
         custom_row.addWidget(self.btn_text_color)
-        l_hud.addLayout(custom_row)
+        hud_grid.addLayout(custom_row, 1, 1)
 
-        self.custom_bg = hud_conf.get("custom_bg", "#0f0c18")
-        self.custom_accent = hud_conf.get("custom_accent", "#a855f7")
-        self.custom_text = hud_conf.get("custom_text", "#f5f3ff")
+        self.custom_bg = hud_conf.get("custom_bg", "#0c0d12")
+        self.custom_accent = hud_conf.get("custom_accent", "#38bdf8")
+        self.custom_text = hud_conf.get("custom_text", "#ffffff")
 
-        # Scale & Position
-        grid_hud = QGridLayout()
-        grid_hud.setSpacing(6)
+        hud_grid.addWidget(QLabel("Bildschirm-Position:"), 2, 0)
+        self.pos_combo = QComboBox()
+        self.pos_combo.addItems(["Oben Rechts", "Oben Links", "Unten Rechts", "Unten Links", "Mitte"])
+        self.pos_combo.setCurrentText(hud_conf.get("position", "Oben Rechts"))
+        hud_grid.addWidget(self.pos_combo, 2, 1)
 
-        grid_hud.addWidget(QLabel("2. HUD-Größe / Skalierung:"), 0, 0)
+        hud_grid.addWidget(QLabel("HUD-Skalierung:"), 3, 0)
         self.scale_combo = QComboBox()
         self.scale_combo.addItem("Kompakt (85%)", 0.85)
         self.scale_combo.addItem("Standard (100%)", 1.0)
@@ -1042,113 +1255,81 @@ class SetupDialog(QDialog):
             if abs(self.scale_combo.itemData(i) - curr_scale) < 0.05:
                 self.scale_combo.setCurrentIndex(i)
                 break
-        grid_hud.addWidget(self.scale_combo, 0, 1)
+        hud_grid.addWidget(self.scale_combo, 3, 1)
 
-        grid_hud.addWidget(QLabel("3. Bildschirm-Position:"), 1, 0)
-        self.pos_combo = QComboBox()
-        self.pos_combo.addItems(["Oben Rechts", "Oben Links", "Unten Rechts", "Unten Links", "Mitte"])
-        self.pos_combo.setCurrentText(hud_conf.get("position", "Oben Rechts"))
-        grid_hud.addWidget(self.pos_combo, 1, 1)
-
-        grid_hud.addWidget(QLabel("4. Schriftart (Font):"), 2, 0)
+        hud_grid.addWidget(QLabel("Schriftart & Schriftgröße:"), 4, 0)
+        f_row = QHBoxLayout()
         self.font_combo = QComboBox()
         self.font_combo.addItems(["Segoe UI", "Bahnschrift", "Roboto", "Montserrat", "Arial", "Consolas"])
         curr_font = hud_conf.get("font_family", "Segoe UI")
         f_idx = self.font_combo.findText(curr_font)
         if f_idx >= 0:
             self.font_combo.setCurrentIndex(f_idx)
-        grid_hud.addWidget(self.font_combo, 2, 1)
+        f_row.addWidget(self.font_combo, 2)
 
-        grid_hud.addWidget(QLabel("5. Schriftgröße:"), 3, 0)
         self.font_size_combo = QComboBox()
-        self.font_size_combo.addItem("Klein (10pt)", 10)
-        self.font_size_combo.addItem("Normal (11pt)", 11)
-        self.font_size_combo.addItem("Groß (12pt)", 12)
-        self.font_size_combo.addItem("Extra Groß (13pt)", 13)
+        self.font_size_combo.addItem("10pt", 10)
+        self.font_size_combo.addItem("11pt", 11)
+        self.font_size_combo.addItem("12pt", 12)
+        self.font_size_combo.addItem("13pt", 13)
         curr_fsize = int(hud_conf.get("font_size", 11))
         for i in range(self.font_size_combo.count()):
             if self.font_size_combo.itemData(i) == curr_fsize:
                 self.font_size_combo.setCurrentIndex(i)
                 break
-        grid_hud.addWidget(self.font_size_combo, 3, 1)
+        f_row.addWidget(self.font_size_combo, 1)
+        hud_grid.addLayout(f_row, 4, 1)
 
-        grid_hud.addWidget(QLabel("6. F12 Rechner Größe:"), 4, 0)
-        self.calc_scale_combo = QComboBox()
-        self.calc_scale_combo.addItem("Mini (25%)", 0.25)
-        self.calc_scale_combo.addItem("Halb (50%)", 0.50)
-        self.calc_scale_combo.addItem("Kompakt (75%)", 0.75)
-        self.calc_scale_combo.addItem("Standard (82%)", 0.82)
-        self.calc_scale_combo.addItem("Groß (88%)", 0.88)
-        self.calc_scale_combo.addItem("Sehr groß (95%)", 0.95)
-        self.calc_scale_combo.addItem("Vollbild (100%)", 1.00)
-        c_scale = float(CONFIG.get("calc_scale", 0.82))
-        for i in range(self.calc_scale_combo.count()):
-            if abs(self.calc_scale_combo.itemData(i) - c_scale) < 0.02:
-                self.calc_scale_combo.setCurrentIndex(i)
-                break
-        grid_hud.addWidget(self.calc_scale_combo, 4, 1)
-
-        grid_hud.addWidget(QLabel("7. F12 Rechner Design:"), 5, 0)
-        self.calc_theme_combo = QComboBox()
-        self.calc_theme_combo.addItems([
-            "Grandkasten Cyberpunk",
-            "Schwarz-Grau-Weiß (Monochrome)",
-            "Schwarz-Lila (Standard)",
-            "LSPD Cyber Blue",
-            "Tactical Stealth Red",
-            "Emerald Special Forces"
-        ])
-        curr_ct = CONFIG.get("calc_theme", "Grandkasten Cyberpunk")
-        c_idx = self.calc_theme_combo.findText(curr_ct)
-        if c_idx >= 0:
-            self.calc_theme_combo.setCurrentIndex(c_idx)
-        grid_hud.addWidget(self.calc_theme_combo, 5, 1)
-
-        l_hud.addLayout(grid_hud)
-
-        # Opacity Slider
-        l_hud.addWidget(QLabel("6. Transparenz / Deckkraft:"))
+        hud_grid.addWidget(QLabel("Transparenz / Deckkraft:"), 5, 0)
         op_lay = QHBoxLayout()
         self.op_slider = QSlider(Qt.Horizontal)
         self.op_slider.setRange(75, 100)
         curr_op = int(float(hud_conf.get("opacity", 0.96)) * 100)
         self.op_slider.setValue(curr_op)
         self.op_label = QLabel(f"{curr_op}%")
+        self.op_label.setStyleSheet("color: #ffffff; font-weight: bold; min-width: 38px;")
         self.op_slider.valueChanged.connect(lambda v: self.op_label.setText(f"{v}%"))
         op_lay.addWidget(self.op_slider)
         op_lay.addWidget(self.op_label)
-        l_hud.addLayout(op_lay)
+        hud_grid.addLayout(op_lay, 5, 1)
 
-        # Sound toggle
-        self.cb_sound = QCheckBox("🔊 Signalton (Piep-Sound) bei Uploads & Aktionen aktivieren")
+        ch1_lay.addLayout(hud_grid)
+        l_hud.addWidget(ch1)
+
+        # Card 2: Audio & Feedback
+        ch2, ch2_lay = self._create_card("AKUSTIK & FEEDBACK", "• Soundeffekte")
+        self.cb_sound = QCheckBox("🔊 Signalton (Piep-Sound) bei Uploads & Rechner-Aktionen abspielen")
         self.cb_sound.setChecked(CONFIG.get("sound_enabled", True))
-        self.cb_sound.setStyleSheet("font-size: 12px; font-weight: bold; margin-top: 6px;")
-        l_hud.addWidget(self.cb_sound)
+        ch2_lay.addWidget(self.cb_sound)
+        l_hud.addWidget(ch2)
 
-        # Test Preview button
-        self.btn_preview = QPushButton("👁️ HUD-Vorschau jetzt testen")
-        self.btn_preview.setObjectName("btnBrowse")
+        # Card 3: Preview
+        ch3, ch3_lay = self._create_card("SCHNELL-TEST", "• Live-Vorschau")
+        self.btn_preview = QPushButton("👁️ Ingame-HUD Vorschau jetzt testen")
         self.btn_preview.clicked.connect(self.trigger_hud_preview)
-        l_hud.addWidget(self.btn_preview)
+        ch3_lay.addWidget(self.btn_preview)
+        l_hud.addWidget(ch3)
 
-        self.tabs.addTab(tab_hud, "🎨 HUD & Aussehen")
+        l_hud.addStretch()
+        self.tabs.addTab(tab_hud, "🖥️ Ingame-HUD & Audio")
 
         layout.addWidget(self.tabs)
 
-        # Bottom Buttons
-        btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(10)
+        # Bottom Bar
+        bottom_bar = QHBoxLayout()
+        bottom_bar.setSpacing(10)
 
         self.save_btn = QPushButton("💾 Einstellungen speichern & anwenden")
+        self.save_btn.setObjectName("btnSave")
         self.save_btn.clicked.connect(self.save_and_close)
-        btn_layout.addWidget(self.save_btn)
+        bottom_bar.addWidget(self.save_btn, 2)
 
         self.cancel_btn = QPushButton("Abbrechen")
         self.cancel_btn.setObjectName("btnCancel")
         self.cancel_btn.clicked.connect(self.reject)
-        btn_layout.addWidget(self.cancel_btn)
+        bottom_bar.addWidget(self.cancel_btn, 1)
 
-        layout.addLayout(btn_layout)
+        layout.addLayout(bottom_bar)
 
     def choose_directory(self):
         curr = self.dir_input.text()
@@ -1185,6 +1366,8 @@ class SetupDialog(QDialog):
         CONFIG["calc_scale"] = float(self.calc_scale_combo.currentData())
         if hasattr(self, 'calc_theme_combo'):
             CONFIG["calc_theme"] = self.calc_theme_combo.currentText()
+        if hasattr(self, 'prompter_speed_combo'):
+            CONFIG["prompter_seconds"] = int(self.prompter_speed_combo.currentData())
         if hasattr(self, 'cb_sound'):
             CONFIG["sound_enabled"] = self.cb_sound.isChecked()
 
@@ -1908,6 +2091,19 @@ def main():
             global CONFIG
             CONFIG = load_config()
             reload_hud_theme()
+            try:
+                calc = locals().get('calc_overlay') or globals().get('calc_overlay')
+                if calc:
+                    if hasattr(calc, 'on_theme_changed_from_ui'):
+                        calc.on_theme_changed_from_ui(CONFIG.get("calc_theme", "Schwarz-Grau-Weiß (Monochrome)"))
+                    if hasattr(calc, 'combo_header_scale'):
+                        c_sc = float(CONFIG.get("calc_scale", 0.82))
+                        for i in range(calc.combo_header_scale.count()):
+                            if abs(calc.combo_header_scale.itemData(i) - c_sc) < 0.03:
+                                calc.combo_header_scale.setCurrentIndex(i)
+                                break
+            except Exception as e:
+                log(f"[Settings Sync Error] {e}")
             threading.Thread(target=lambda: overlay._fetch_stats_async(), daemon=True).start()
 
     overlay_signal.open_settings.connect(show_settings_dialog)
