@@ -1,5 +1,5 @@
 {
-    "version": "1.4.0",
-    "changelog": "🛡️ Update v1.4.0 - Monochrome Grandkasten Einstellungsmenü & F12-Fix:\n- Reines Schwarz-Weiß-Grau (Monochrome) Design: Einstellungen vollständig überarbeitet in edlem, aufgeräumtem Card-Design ohne störende Farbtöne.\n- 3 übersichtliche Tabs: 'Dienst & Discord', 'Grandkasten Rechner & F10' und 'Ingame-HUD & Audio'.\n- F12 Rechner fixiert: Feste, zentrierte Bildschirmposition – versehentliches Verschieben per Mausklick ist vollständig deaktiviert.\n- Dokumentation aktualisiert: Vollständiges README mit allen Hotkeys, Funktionen und Richtlinien.",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.0/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.4.6",
+    "changelog": "Update v1.4.6 - Grandkasten Datenbank-Fix, Inter-Typografie & Farbige Status-Punkte:\n- Grandkasten Dienst-Rechner gefixt: Zuverlaessiges Laden aller 104 Straftatbestaende in PyInstaller onedir/internal Umgebung.\n- 1:1 Ember Inter-Typografie: Originale InterVariable TTF-Schriftart fuer alle Fenster, Buttons und Offense-Cards.\n- Farbige Punkte (Ember Design): Antialiased Farb-Indikatoren an allen 7 HUD-Buttons sowie allen 9 Kategorien und 104 Straftaten im F12-Rechner.\n- Aktenvermerk & Dashboard: Elegantes Velvet Obsidian Styling ohne grelle Rahmen.",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.6/LSPD_Log_Assistent_Paket.zip"
 }

@@ -8,25 +8,105 @@ from PySide6.QtWidgets import (
     QProgressBar, QTextEdit, QTabWidget, QComboBox, QSlider, QColorDialog, QScrollArea,
     QCheckBox, QButtonGroup, QRadioButton
 )
-from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint
+from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QSize
 from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter, QAction, QKeyEvent, QPen, QPalette
 
-def get_base_dir():
+def find_data_file(filename):
+    candidates = []
+    meipass = getattr(sys, '_MEIPASS', None)
+    if meipass:
+        candidates.append(os.path.join(meipass, filename))
+        candidates.append(os.path.join(meipass, '_internal', filename))
     if getattr(sys, 'frozen', False):
-        return os.path.dirname(os.path.abspath(sys.executable))
-    return os.path.dirname(os.path.abspath(__file__))
+        exe_dir = os.path.dirname(sys.executable)
+        candidates.append(os.path.join(exe_dir, '_internal', filename))
+        candidates.append(os.path.join(exe_dir, filename))
+    file_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates.append(os.path.join(file_dir, '_internal', filename))
+    candidates.append(os.path.join(file_dir, filename))
+    candidates.append(os.path.join(r"C:\Users\theop\.gemini\antigravity\scratch\pd_logger", filename))
+    candidates.append(os.path.join(r"C:\Users\theop\.gemini\antigravity\scratch\pd_logger", "_internal", filename))
+    candidates.append(os.path.join(r"C:\Users\theop\AppData\Local\Programs\LSPD_Log_Assistent", filename))
+    candidates.append(os.path.join(r"C:\Users\theop\AppData\Local\Programs\LSPD_Log_Assistent", "_internal", filename))
 
-BASE_DIR = get_base_dir()
-DB_FILE = os.path.join(BASE_DIR, "grandkasten_db.json")
+    for c in candidates:
+        if c and os.path.exists(c):
+            return c
+    return None
+
+def init_custom_fonts(app=None):
+    font_path = find_data_file("InterVariable.ttf")
+    loaded = False
+    if font_path and os.path.exists(font_path):
+        font_id = QFontDatabase.addApplicationFont(font_path)
+        if font_id >= 0:
+            loaded = True
+    if app:
+        font = QFont("Inter" if loaded else "Segoe UI Variable Text", 10)
+        font.setStyleStrategy(QFont.PreferAntialias)
+        app.setFont(font)
+    return "Inter" if loaded else "Segoe UI Variable Text"
+
+def create_dot_pixmap(color_hex, size=8):
+    pix = QPixmap(size, size)
+    pix.fill(Qt.transparent)
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.Antialiasing)
+    p.setBrush(QColor(color_hex))
+    p.setPen(Qt.NoPen)
+    p.drawEllipse(0, 0, size, size)
+    p.end()
+    return pix
+
+def create_dot_icon(color_hex, size=8):
+    return QIcon(create_dot_pixmap(color_hex, size))
+
+def get_category_color(cat_str):
+    if not cat_str:
+        return "#a1a1aa"
+    cl = str(cat_str).lower()
+    if "stvo" in cl:
+        return "#f7bd2e" # Enterprise Yellow (Ember)
+    elif "integrit" in cl:
+        return "#4bd4a3" # Business Mint (Ember)
+    elif "wirtschaft" in cl:
+        return "#5ea2ef" # Pro Blue (Ember)
+    elif "beamte" in cl or "beamten" in cl:
+        return "#a87ffb" # Free Purple (Ember)
+    elif "waff" in cl:
+        return "#ef4444" # Crimson Red
+    elif "btmg" in cl or "bet" in cl:
+        return "#ec5ba3" # Starter Pink (Ember)
+    elif "sperr" in cl or "kapital" in cl:
+        return "#fb923c" # Coral Orange
+    elif "bdg" in cl or "stpo" in cl:
+        return "#2dd4bf" # Neon Teal
+    return "#a1a1aa"
+
+CAT_COLORS = {
+    "Alle": "#a1a1aa",
+    "StVO": "#f7bd2e",
+    "StGB Integrität": "#4bd4a3",
+    "StGB Wirtschaft": "#5ea2ef",
+    "StGB Beamte": "#a87ffb",
+    "WaffG": "#ef4444",
+    "BtMG": "#ec5ba3",
+    "Sperrzonen": "#fb923c",
+    "BDG": "#2dd4bf"
+}
 
 def load_grandkasten_db():
-    if os.path.exists(DB_FILE):
+    p = find_data_file("grandkasten_db.json")
+    if p and os.path.exists(p):
         try:
-            with open(DB_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
+            with open(p, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if data:
+                    return data
+        except Exception as e:
+            print(f"[Error] load_grandkasten_db failed: {e}")
     return {}
+
 
 def make_item_key(item):
     return f"{item.get('id', '')}|{item.get('name', '')}"
@@ -216,8 +296,9 @@ class ClickableTerminalEdit(QTextEdit):
 class OffenseCard(QFrame):
     clicked = Signal()
 
-    def __init__(self, item, overlay, parent=None):
+    def __init__(self, item, overlay, parent=None, category=""):
         super().__init__(parent)
+        self.category = category or item.get("_category", "")
         self.item = item
         self.item_id = item.get("id", "")
         self.name = item.get("name", "")
@@ -256,12 +337,19 @@ class OffenseCard(QFrame):
         row1.setContentsMargins(0, 0, 0, 0)
         row1.setSpacing(6)
 
+        dot_col = get_category_color(self.category)
+        self.lbl_dot = QLabel()
+        self.lbl_dot.setPixmap(create_dot_pixmap(dot_col, 8))
+        self.lbl_dot.setFixedSize(8, 8)
+        self.lbl_dot.setStyleSheet("background: transparent;")
+        row1.addWidget(self.lbl_dot)
+
         self.lbl_id = QLabel(self.item_id)
-        self.lbl_id.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: bold; background: transparent;")
+        self.lbl_id.setStyleSheet("color: #ffffff; font-size: 13px; font-weight: 700; background: transparent;")
         row1.addWidget(self.lbl_id)
 
         self.lbl_check = QLabel("✓")
-        self.lbl_check.setStyleSheet(f"color: {t.get('card_active_border', '#8b5cf6')}; font-size: 13px; font-weight: 900; background: transparent;")
+        self.lbl_check.setStyleSheet("color: #4bd4a3; font-size: 13px; font-weight: 900; background: transparent;")
         self.lbl_check.setVisible(False)
         row1.addWidget(self.lbl_check)
 
@@ -395,7 +483,7 @@ class OffenseCard(QFrame):
                 self.lbl_check.setStyleSheet(f"color: {active_border}; font-size: 13px; font-weight: 900; background: transparent;")
                 self.lbl_check.setVisible(True)
             if hasattr(self, 'lbl_id'):
-                self.lbl_id.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: bold; background: transparent;")
+                self.lbl_id.setStyleSheet("color: #ffffff; font-size: 13px; font-weight: 700; background: transparent;")
         else:
             self.setStyleSheet(f"""
                 QFrame#offenseCard, #offenseCard {{
@@ -411,7 +499,7 @@ class OffenseCard(QFrame):
             if hasattr(self, 'lbl_check'):
                 self.lbl_check.setVisible(False)
             if hasattr(self, 'lbl_id'):
-                self.lbl_id.setStyleSheet(f"color: {t['accent']}; font-size: 13px; font-weight: bold; background: transparent;")
+                self.lbl_id.setStyleSheet("color: #ffffff; font-size: 13px; font-weight: 700; background: transparent;")
 
         if hasattr(self, 'lbl_fine'):
             self.lbl_fine.setStyleSheet(f"color: {t.get('money', '#22c55e')}; background: transparent; border: none; font-size: 13px; font-weight: 900;")
@@ -630,6 +718,7 @@ class GrandCalculatorOverlay(QWidget):
 
     def __init__(self, theme_name=None, parent=None):
         super().__init__(parent)
+        init_custom_fonts(QApplication.instance())
         self.db = load_grandkasten_db()
         self.selected_items = {} # unique_key -> {"item": item, "voluntary": count}
         self.current_category = "Alle"
@@ -1033,7 +1122,10 @@ class GrandCalculatorOverlay(QWidget):
         categories = ["Alle", "StVO", "StGB Integrität", "StGB Wirtschaft", "StGB Beamte", "WaffG", "BtMG", "Sperrzonen", "BDG"]
         self.cat_buttons = {}
         for cat_name in categories:
-            b = QPushButton(cat_name)
+            b = QPushButton(f"  {cat_name}")
+            dot_color = CAT_COLORS.get(cat_name, "#a1a1aa")
+            b.setIcon(create_dot_icon(dot_color, 8))
+            b.setIconSize(QSize(8, 8))
             b.setCheckable(True)
             b.setChecked(cat_name == "Alle")
             b.setCursor(Qt.PointingHandCursor)
@@ -1220,17 +1312,17 @@ class GrandCalculatorOverlay(QWidget):
         self.txt_aktenvermerk.setPlaceholderText("Bitte Tatbestände wählen...")
         self.txt_aktenvermerk.setStyleSheet("""
             QTextEdit {
-                background: #000000;
-                border: 2px solid #22c55e;
-                border-radius: 6px;
-                color: #22c55e;
-                font-family: 'Consolas', 'Courier New', monospace;
-                font-size: 13px;
-                font-weight: bold;
-                padding: 8px;
+                background: #101012;
+                border: 1px solid #262628;
+                border-radius: 8px;
+                color: #ffffff;
+                font-family: 'Inter', -apple-system, monospace;
+                font-size: 12px;
+                font-weight: 500;
+                padding: 8px 10px;
             }
             QTextEdit:hover {
-                border-color: #4ade80;
+                border-color: #383842;
             }
         """)
         self.txt_aktenvermerk.clicked.connect(self.copy_aktenvermerk)
@@ -1245,16 +1337,19 @@ class GrandCalculatorOverlay(QWidget):
         self.btn_copy_akte.setCursor(Qt.PointingHandCursor)
         self.btn_copy_akte.setStyleSheet("""
             QPushButton {
-                background-color: #10b981;
-                color: #ffffff;
-                font-size: 13px;
-                font-weight: bold;
-                border-radius: 6px;
+                background-color: #122019;
+                color: #4bd4a3;
+                font-size: 12px;
+                font-weight: 600;
+                border-radius: 8px;
                 padding: 9px;
-                border: none;
+                border: 1px solid #224233;
+                font-family: 'Inter', system-ui, sans-serif;
             }
             QPushButton:hover {
-                background-color: #059669;
+                background-color: #182d23;
+                border-color: #4bd4a3;
+                color: #ffffff;
             }
         """)
         self.btn_copy_akte.clicked.connect(self.copy_aktenvermerk)
@@ -1265,17 +1360,19 @@ class GrandCalculatorOverlay(QWidget):
         btn_reset.setCursor(Qt.PointingHandCursor)
         btn_reset.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ef4444, stop:1 #991b1b);
-                color: #ffffff;
+                background-color: #181113;
+                color: #f87171;
                 font-size: 12px;
-                font-weight: bold;
-                border-radius: 6px;
+                font-weight: 600;
+                border-radius: 8px;
                 padding: 9px;
-                border: none;
-                text-transform: uppercase;
+                border: 1px solid #381a1f;
+                font-family: 'Inter', system-ui, sans-serif;
             }
             QPushButton:hover {
-                filter: brightness(1.2);
+                background-color: #261317;
+                border-color: #ef4444;
+                color: #fecaca;
             }
         """)
         btn_reset.clicked.connect(self.reset_calculator)
@@ -1328,7 +1425,7 @@ class GrandCalculatorOverlay(QWidget):
         for cat, items in self.db.items():
             for item in items:
                 key = make_item_key(item)
-                card = OffenseCard(item, self)
+                card = OffenseCard(item, self, category=cat)
                 self.cards_by_key[key] = card
                 self.all_card_items.append((cat, item, card))
 

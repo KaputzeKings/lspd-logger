@@ -19,12 +19,12 @@ from PySide6.QtWidgets import (
     QProgressBar, QTextEdit, QTabWidget, QComboBox, QSlider, QColorDialog, QScrollArea,
     QCheckBox
 )
-from PySide6.QtCore import Qt, QTimer, Signal, QObject
+from PySide6.QtCore import Qt, QTimer, Signal, QObject, QPoint, QSize
 from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter, QAction, QKeyEvent
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.4.5"
+CURRENT_VERSION = "1.4.6"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -56,27 +56,59 @@ def play_beep(freq=1000, duration=150):
     except Exception:
         pass
 
+def find_data_file(filename):
+    candidates = []
+    meipass = getattr(sys, '_MEIPASS', None)
+    if meipass:
+        candidates.append(os.path.join(meipass, filename))
+        candidates.append(os.path.join(meipass, '_internal', filename))
+    if getattr(sys, 'frozen', False):
+        exe_dir = os.path.dirname(sys.executable)
+        candidates.append(os.path.join(exe_dir, '_internal', filename))
+        candidates.append(os.path.join(exe_dir, filename))
+    file_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates.append(os.path.join(file_dir, '_internal', filename))
+    candidates.append(os.path.join(file_dir, filename))
+    candidates.append(os.path.join(r"C:\Users\theop\.gemini\antigravity\scratch\pd_logger", filename))
+    candidates.append(os.path.join(r"C:\Users\theop\.gemini\antigravity\scratch\pd_logger", "_internal", filename))
+    candidates.append(os.path.join(r"C:\Users\theop\AppData\Local\Programs\LSPD_Log_Assistent", filename))
+    candidates.append(os.path.join(r"C:\Users\theop\AppData\Local\Programs\LSPD_Log_Assistent", "_internal", filename))
+
+    for c in candidates:
+        if c and os.path.exists(c):
+            return c
+    return None
+
+def create_dot_pixmap(color_hex, size=8):
+    pix = QPixmap(size, size)
+    pix.fill(Qt.transparent)
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.Antialiasing)
+    p.setBrush(QColor(color_hex))
+    p.setPen(Qt.NoPen)
+    p.drawEllipse(0, 0, size, size)
+    p.end()
+    return pix
+
+def create_dot_icon(color_hex, size=8):
+    return QIcon(create_dot_pixmap(color_hex, size))
+
 def init_custom_fonts(app=None):
-    candidates = [
-        os.path.join(getattr(sys, "_MEIPASS", ""), "InterVariable.ttf"),
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "InterVariable.ttf"),
-        os.path.join(os.path.dirname(sys.executable), "InterVariable.ttf"),
-        os.path.join(BASE_DIR, "InterVariable.ttf"),
-        r"C:\Users\theop\.gemini\antigravity\scratch\pd_logger\InterVariable.ttf"
-    ]
+    font_path = find_data_file("InterVariable.ttf")
     loaded = False
-    for p in candidates:
-        if p and os.path.exists(p):
-            font_id = QFontDatabase.addApplicationFont(p)
-            if font_id >= 0:
-                log(f"[Font] Inter Font erfolgreich geladen: {p} (ID: {font_id})")
-                loaded = True
-                break
+    if font_path and os.path.exists(font_path):
+        font_id = QFontDatabase.addApplicationFont(font_path)
+        if font_id >= 0:
+            log(f"[Font] Inter Font erfolgreich geladen: {font_path} (ID: {font_id})")
+            loaded = True
+        else:
+            log(f"[Font] Fehler beim Laden von Inter: {font_path}")
     if app:
         font = QFont("Inter" if loaded else "Segoe UI Variable Text", 10)
         font.setStyleStrategy(QFont.PreferAntialias)
         app.setFont(font)
     return "Inter" if loaded else "Segoe UI Variable Text"
+
 
 def adjust_color(hex_color, factor):
     try:
@@ -1836,34 +1868,48 @@ class PDOverlayWindow(QWidget):
         self.grid = QGridLayout()
         self.grid.setSpacing(6)
 
-        self.btn_inhaftierung = QPushButton("[1] ● 1. Inhaftierung")
+        self.btn_inhaftierung = QPushButton(" [1] 1. Inhaftierung")
+        self.btn_inhaftierung.setIcon(create_dot_icon("#4bd4a3", 10))
+        self.btn_inhaftierung.setIconSize(QSize(10, 10))
         self.btn_inhaftierung.clicked.connect(lambda: self.handle_action("Inhaftierung", "Inhaftierung"))
         self.grid.addWidget(self.btn_inhaftierung, 0, 0)
 
-        self.btn_global = QPushButton("[2] ● 1. Global")
+        self.btn_global = QPushButton(" [2] 1. Global")
+        self.btn_global.setIcon(create_dot_icon("#ef4444", 10))
+        self.btn_global.setIconSize(QSize(10, 10))
         self.btn_global.clicked.connect(lambda: self.handle_action("Global", "Global"))
         self.grid.addWidget(self.btn_global, 0, 1)
 
-        self.btn_local = QPushButton("[3] ● 1. Local")
+        self.btn_local = QPushButton(" [3] 1. Local")
+        self.btn_local.setIcon(create_dot_icon("#5ea2ef", 10))
+        self.btn_local.setIconSize(QSize(10, 10))
         self.btn_local.clicked.connect(lambda: self.handle_action("Local", "Local"))
         self.grid.addWidget(self.btn_local, 1, 0)
 
-        self.btn_event = QPushButton("[4] ● 1. Event (1/2)")
+        self.btn_event = QPushButton(" [4] 1. Event (1/2)")
+        self.btn_event.setIcon(create_dot_icon("#a87ffb", 10))
+        self.btn_event.setIconSize(QSize(10, 10))
         self.btn_event.clicked.connect(lambda: self.handle_event_action("Event"))
         self.grid.addWidget(self.btn_event, 1, 1)
 
-        self.btn_shoprob = QPushButton("[5] ● 1. Shoprob (1/2)")
+        self.btn_shoprob = QPushButton(" [5] 1. Shoprob (1/2)")
+        self.btn_shoprob.setIcon(create_dot_icon("#f7bd2e", 10))
+        self.btn_shoprob.setIconSize(QSize(10, 10))
         self.btn_shoprob.clicked.connect(lambda: self.handle_shoprob_action("Shoprob"))
         self.grid.addWidget(self.btn_shoprob, 2, 0)
 
-        self.btn_fz = QPushButton("[6] ● 1. FZ-Raid (1/2)")
+        self.btn_fz = QPushButton(" [6] 1. FZ-Raid (1/2)")
+        self.btn_fz.setIcon(create_dot_icon("#2dd4bf", 10))
+        self.btn_fz.setIconSize(QSize(10, 10))
         self.btn_fz.clicked.connect(lambda: self.handle_fz_action("FZ Raid"))
         self.grid.addWidget(self.btn_fz, 2, 1)
 
         self.card_layout.addLayout(self.grid)
 
         # Streifenpartner Button
-        self.btn_streifenpartner = QPushButton("[7] ● 1. Streifenpartner")
+        self.btn_streifenpartner = QPushButton(" [7] 1. Streifenpartner")
+        self.btn_streifenpartner.setIcon(create_dot_icon("#ec5ba3", 10))
+        self.btn_streifenpartner.setIconSize(QSize(10, 10))
         self.btn_streifenpartner.clicked.connect(lambda: self.handle_action("Streifenpartner", "Streifenpartner"))
         self.card_layout.addWidget(self.btn_streifenpartner)
 
@@ -2050,47 +2096,66 @@ class PDOverlayWindow(QWidget):
         fz_num = self.get_next_number("FZ Raid")
         sp_num = self.get_next_number("Streifenpartner")
 
-        self.btn_inhaftierung.setText(f"[1] ● {inh_num}. Inhaftierung")
-        self.btn_global.setText(f"[2] ● {gl_num}. Global")
-        self.btn_local.setText(f"[3] ● {lo_num}. Local")
+        hud = CONFIG.get("hud", {})
+        scale = float(hud.get("scale", 1.0))
+        dot_sz = max(8, int(10 * scale))
+
+        self.btn_inhaftierung.setIcon(create_dot_icon("#4bd4a3", dot_sz))
+        self.btn_inhaftierung.setIconSize(QSize(dot_sz, dot_sz))
+        self.btn_global.setIcon(create_dot_icon("#ef4444", dot_sz))
+        self.btn_global.setIconSize(QSize(dot_sz, dot_sz))
+        self.btn_local.setIcon(create_dot_icon("#5ea2ef", dot_sz))
+        self.btn_local.setIconSize(QSize(dot_sz, dot_sz))
+        self.btn_event.setIcon(create_dot_icon("#a87ffb", dot_sz))
+        self.btn_event.setIconSize(QSize(dot_sz, dot_sz))
+        self.btn_shoprob.setIcon(create_dot_icon("#f7bd2e", dot_sz))
+        self.btn_shoprob.setIconSize(QSize(dot_sz, dot_sz))
+        self.btn_fz.setIcon(create_dot_icon("#2dd4bf", dot_sz))
+        self.btn_fz.setIconSize(QSize(dot_sz, dot_sz))
+        self.btn_streifenpartner.setIcon(create_dot_icon("#ec5ba3", dot_sz))
+        self.btn_streifenpartner.setIconSize(QSize(dot_sz, dot_sz))
+
+        self.btn_inhaftierung.setText(f" [1] {inh_num}. Inhaftierung")
+        self.btn_global.setText(f" [2] {gl_num}. Global")
+        self.btn_local.setText(f" [3] {lo_num}. Local")
 
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Event":
             self.status_label.setText("Event: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
-            self.btn_event.setText(f"[4] ● {ev_num}. Event (2/2)")
+            self.btn_event.setText(f" [4] {ev_num}. Event (2/2)")
             self.highlight_button(self.btn_event, "#a87ffb", "#1c1428")
         else:
-            self.btn_event.setText(f"[4] ● {ev_num}. Event (1/2)")
+            self.btn_event.setText(f" [4] {ev_num}. Event (1/2)")
 
         if self.pending_two_shot and self.pending_two_shot.get("type") == "Ammu-Rob":
             self.status_label.setText("Shoprob: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
-            self.btn_shoprob.setText(f"[5] ● {sh_num}. Shoprob (2/2)")
+            self.btn_shoprob.setText(f" [5] {sh_num}. Shoprob (2/2)")
             self.highlight_button(self.btn_shoprob, "#f7bd2e", "#261a10")
         else:
-            self.btn_shoprob.setText(f"[5] ● {sh_num}. Shoprob (1/2)")
+            self.btn_shoprob.setText(f" [5] {sh_num}. Shoprob (1/2)")
 
         if self.pending_two_shot and self.pending_two_shot.get("type") == "FZ Raid":
             self.status_label.setText("FZ-Raid: Foto 1 aktiv. Das hier als Foto 2 senden?")
             self.status_label.setVisible(True)
-            self.btn_fz.setText(f"[6] ● {fz_num}. FZ-Raid (2/2)")
+            self.btn_fz.setText(f" [6] {fz_num}. FZ-Raid (2/2)")
             self.highlight_button(self.btn_fz, "#2dd4bf", "#102320")
         else:
-            self.btn_fz.setText(f"[6] ● {fz_num}. FZ-Raid (1/2)")
+            self.btn_fz.setText(f" [6] {fz_num}. FZ-Raid (1/2)")
 
-        self.btn_streifenpartner.setText(f"[7] ● {sp_num}. Streifenpartner")
+        self.btn_streifenpartner.setText(f" [7] {sp_num}. Streifenpartner")
 
         if not self.pending_two_shot:
             self.status_label.setVisible(False)
             if recommendation == "inhaftierung":
                 self.highlight_button(self.btn_inhaftierung, "#4bd4a3", "#122019")
-                self.btn_inhaftierung.setText(f"[1] ● {inh_num}. Inhaftierung")
+                self.btn_inhaftierung.setText(f" [1] {inh_num}. Inhaftierung")
             elif recommendation == "global":
                 self.highlight_button(self.btn_global, "#ef4444", "#241215")
-                self.btn_global.setText(f"[2] ● {gl_num}. Global")
+                self.btn_global.setText(f" [2] {gl_num}. Global")
             elif recommendation == "local":
                 self.highlight_button(self.btn_local, "#5ea2ef", "#121a28")
-                self.btn_local.setText(f"[3] ● {lo_num}. Local")
+                self.btn_local.setText(f" [3] {lo_num}. Local")
 
     def update_stats_ui(self, counts):
         if counts:

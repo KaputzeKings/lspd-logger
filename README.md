@@ -1,12 +1,29 @@
-# 👮‍♂️ LSPD Log Assistent
+# 👮‍♂️ LSPD Log Assistent (v1.4.6)
 
-[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=7c3aed&label=Version)](https://github.com/KaputzeKings/lspd-logger/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.4.6)](https://github.com/KaputzeKings/lspd-logger/releases)
 [![GrandRP DE1](https://img.shields.io/badge/GrandRP-DE1-blue.svg)](https://gta5grand.com)
 [![Platform](https://img.shields.io/badge/Plattform-Windows-0078d7.svg)](https://microsoft.com)
 
 Ein leistungsstarkes, automatisiertes **Logging-, Auswertungs- und Dienst-Tool** für Beamte des **Los Santos Police Department** auf GrandRP (DE1). 
 
 Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset und vollwertigem **Dienst-Rechner (F12)** für Bußgelder, Wanteds und TOW nach Vorbild von [Grandkasten](https://grandkasten.com/).
+
+---
+
+## 🚀 Neu in Version 1.4.6
+
+* **Grandkasten Dienst-Rechner gefixt:**
+  * Zuverlässiges Laden aller 104 Straftatbestände auch in PyInstaller onedir/internal Umgebungen.
+  * Kein leeres Fenster mehr: Alle Paragraphen (StVO, StGB, WaffG, BtMG, BDG etc.) werden sauber im 3-Spalten-Raster gerendert.
+* **1:1 Ember Inter-Typografie:**
+  * Originale `InterVariable.ttf` Schriftart für gestochen scharfe Lesbarkeit mit nativer Kantenglättung (`PreferAntialias`).
+  * Saubere Schriftgewichte (700 für Paragraphen & Zahlen, 600 für Badges/Kategorien, 500 für Namen).
+* **Farbige Status-Punkte (Ember Design System):**
+  * **Ingame-HUD:** Echte, antialiased Farb-Icons an allen 7 Action-Buttons (Mint `#4bd4a3` für Inhaftierung, Crimson `#ef4444` für Global, Blau `#5ea2ef` für Local, Lila `#a87ffb` für Event, Amber `#f7bd2e` für Shoprob, Cyan `#2dd4bf` für FZ-Raid, Pink `#ec5ba3` für Streifenpartner).
+  * **Dienst-Rechner:** Farbige Status-Punkte auf jedem Kategorie-Pill (`Alle`, `StVO`, `StGB Integrität`, `StGB Wirtschaft`, `StGB Beamte`, `WaffG`, `BtMG`, `Sperrzonen`, `BDG`) und auf jeder einzelnen Delikt-Karte.
+* **Aktenvermerk & Terminal-Bereich überarbeitet:**
+  * Samtiges Dark-Card Design (`#101012`) ohne grelle Rahmenlinien.
+  * Dezente Velvet-Buttons für Kopieren (Mint) und Zurücksetzen (Subtiles Rot).
 
 ---
 
