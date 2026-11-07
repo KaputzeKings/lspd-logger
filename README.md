@@ -1,12 +1,25 @@
-# 👮‍♂️ LSPD Log Assistent (v1.4.9)
+# 👮‍♂️ LSPD Log Assistent (v1.5.0)
 
-[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.4.9)](https://github.com/KaputzeKings/lspd-logger/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.5.0)](https://github.com/KaputzeKings/lspd-logger/releases)
 [![GrandRP DE1](https://img.shields.io/badge/GrandRP-DE1-blue.svg)](https://gta5grand.com)
 [![Platform](https://img.shields.io/badge/Plattform-Windows-0078d7.svg)](https://microsoft.com)
 
 Ein leistungsstarkes, automatisiertes **Logging-, Auswertungs- und Dienst-Tool** für Beamte des **Los Santos Police Department** auf GrandRP (DE1). 
 
 Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset und vollwertigem **Dienst-Rechner (F12)** für Bußgelder, Wanteds und TOW nach Vorbild von [Grandkasten](https://grandkasten.com/).
+
+---
+
+## 🚀 Neu in Version 1.5.0
+
+* **Intelligenter Zähler-Schutz (Verhindert fehlerhafte Altzahlen):**
+  * Verhindert zuverlässig, dass weitergeleitete oder alte Nachrichten aus der Vorwoche (z.B. alte Texte mit `17. Inhaftierung`) die Zählung einer neuen Woche verfälschen.
+  * Zählt strikt die **tatsächlichen Logs im aktuellen Wochen-Logbuch** (bei 2 vorhandenen Inhaftierungen wird die nächste zutreffend als `3. Inhaftierung` gezählt, statt fälschlicherweise als `18.`).
+* **Manuelle Zähler-Steuerung in den Einstellungen:**
+  * Unter *Log-Beschriftung & Stil* gibt es nun neben jeder Kategorie das Feld **Nächste Nr.**.
+  * Beamte können den Zähler auf `Auto` belassen oder jederzeit eine eigene Start-/Folgenummer eintragen (z.B. `1`).
+* **1:1 Synchronisation:**
+  * Vollkommener Gleichklang zwischen HUD-Statistik (z.B. `Inh: 2/7`) und den Button-Ziffern (`[1] 3. Inhaftierung`).
 
 ---
 

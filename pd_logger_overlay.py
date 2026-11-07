@@ -25,7 +25,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.4.9"
+CURRENT_VERSION = "1.5.0"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -296,6 +296,7 @@ def get_default_config():
             "underline": False,
             "italic": False
         },
+        "counter_overrides": {},
         "hud": {
             "theme": "Ember Dark (Velvet Obsidian)",
             "scale": 1.0,
@@ -323,6 +324,8 @@ def load_config():
                     config["log_titles"] = {**get_default_config()["log_titles"], **loaded["log_titles"]}
                 if "log_style" in loaded and isinstance(loaded["log_style"], dict):
                     config["log_style"] = {**get_default_config()["log_style"], **loaded["log_style"]}
+                if "counter_overrides" in loaded and isinstance(loaded["counter_overrides"], dict):
+                    config["counter_overrides"] = loaded["counter_overrides"]
         except Exception as e:
             log(f"[Config Load Error] {e}")
     else:
@@ -705,9 +708,28 @@ def calculate_zwischenstand(token=None, thread_id=None):
                     highest_prefix['Local'] = prefix_num
 
         next_numbers = {}
+        overrides = CONFIG.get("counter_overrides", {})
         for cat in detailed_counts:
-            cnt = max(detailed_counts[cat], highest_prefix[cat])
-            next_numbers[cat] = cnt + 1
+            cnt = detailed_counts[cat]
+            pref = highest_prefix.get(cat, 0)
+            # Schutz: Wenn eine Nachricht alte Nummern aus einer vorherigen Woche enthaelt (z.B. 17 bei nur 2 Logs),
+            # darf sie die Zaehlung der aktuellen Woche nicht ruinieren.
+            if pref > 0 and pref <= cnt + 1:
+                base_num = max(cnt, pref)
+            else:
+                base_num = cnt
+            auto_next = base_num + 1
+
+            if cat in overrides:
+                try:
+                    ov = int(overrides[cat])
+                    if ov > 0:
+                        next_numbers[cat] = ov
+                        continue
+                except (ValueError, TypeError):
+                    pass
+
+            next_numbers[cat] = auto_next
 
         counts['next_numbers'] = next_numbers
         counts['detailed_counts'] = detailed_counts
@@ -1437,64 +1459,91 @@ class SetupDialog(QDialog):
         cf1_lay.addWidget(preview_box)
         l_form.addWidget(cf1)
 
-        # Card 2: Titel-Vorlagen der Kategorien
-        cf2, cf2_lay = self._create_card("Log-Beschriftungen der Kategorien", "Platzhalter {nr} = Zähler")
-        h_tmpl = QLabel("Verwende <b>{nr}</b> als Platzhalter für die fortlaufende Nummer (z. B. <i>{nr}. Inhaftierung</i> oder <i>Inhaftierung #{nr}</i>). Im HUD bleibt die Ansicht kurz und sauber.")
+        # Card 2: Titel-Vorlagen & Zähler der Kategorien
+        cf2, cf2_lay = self._create_card("Log-Beschriftungen & Zähler-Steuerung", "{nr} = Zähler | Nr = Manuelle nächste Zahl")
+        h_tmpl = QLabel("Verwende <b>{nr}</b> für die fortlaufende Nummer. Unter <b>Nächste Nr.</b> kannst du den Zähler bei Bedarf manuell anpassen (leer lassen für vollautomatische Zählung aus dem Wochen-Logbuch).")
         h_tmpl.setObjectName("hintLabel")
         h_tmpl.setWordWrap(True)
         cf2_lay.addWidget(h_tmpl)
 
         titles_cfg = CONFIG.get("log_titles", {})
+        ov_cfg = CONFIG.get("counter_overrides", {})
         
         t_grid = QGridLayout()
-        t_grid.setHorizontalSpacing(14)
+        t_grid.setHorizontalSpacing(12)
         t_grid.setVerticalSpacing(6)
 
-        t_grid.addWidget(QLabel("<span style='color: #4bd4a3;'>●</span> Inhaftierung:"), 0, 0)
+        t_grid.addWidget(QLabel("<span style='color: #888888; font-size: 10px; font-weight: bold;'>KATEGORIE</span>"), 0, 0)
+        t_grid.addWidget(QLabel("<span style='color: #888888; font-size: 10px; font-weight: bold;'>DISCORD-VORLAGE</span>"), 0, 1)
+        t_grid.addWidget(QLabel("<span style='color: #888888; font-size: 10px; font-weight: bold;'>NÄCHSTE NR.</span>"), 0, 2)
+
+        def _make_num_inp(cat_k):
+            inp = QLineEdit()
+            inp.setFixedWidth(65)
+            inp.setPlaceholderText("Auto")
+            cur = ov_cfg.get(cat_k, "")
+            inp.setText(str(cur) if cur else "")
+            return inp
+
+        t_grid.addWidget(QLabel("<span style='color: #4bd4a3;'>●</span> Inhaftierung:"), 1, 0)
         self.title_inh = QLineEdit()
         self.title_inh.setText(titles_cfg.get("Inhaftierung", "{nr}. Inhaftierung"))
         self.title_inh.textChanged.connect(self._update_style_preview)
-        t_grid.addWidget(self.title_inh, 0, 1)
+        t_grid.addWidget(self.title_inh, 1, 1)
+        self.override_inh = _make_num_inp("Inhaftierung")
+        t_grid.addWidget(self.override_inh, 1, 2)
 
-        t_grid.addWidget(QLabel("<span style='color: #ef4444;'>●</span> Global:"), 1, 0)
+        t_grid.addWidget(QLabel("<span style='color: #ef4444;'>●</span> Global:"), 2, 0)
         self.title_global = QLineEdit()
         self.title_global.setText(titles_cfg.get("Global", "{nr}. Global"))
         self.title_global.textChanged.connect(self._update_style_preview)
-        t_grid.addWidget(self.title_global, 1, 1)
+        t_grid.addWidget(self.title_global, 2, 1)
+        self.override_global = _make_num_inp("Global")
+        t_grid.addWidget(self.override_global, 2, 2)
 
-        t_grid.addWidget(QLabel("<span style='color: #5ea2ef;'>●</span> Local:"), 2, 0)
+        t_grid.addWidget(QLabel("<span style='color: #5ea2ef;'>●</span> Local:"), 3, 0)
         self.title_local = QLineEdit()
         self.title_local.setText(titles_cfg.get("Local", "{nr}. Local"))
         self.title_local.textChanged.connect(self._update_style_preview)
-        t_grid.addWidget(self.title_local, 2, 1)
+        t_grid.addWidget(self.title_local, 3, 1)
+        self.override_local = _make_num_inp("Local")
+        t_grid.addWidget(self.override_local, 3, 2)
 
-        t_grid.addWidget(QLabel("<span style='color: #a87ffb;'>●</span> Event:"), 3, 0)
+        t_grid.addWidget(QLabel("<span style='color: #a87ffb;'>●</span> Event:"), 4, 0)
         self.title_event = QLineEdit()
         self.title_event.setText(titles_cfg.get("Event", "{nr}. Event"))
         self.title_event.textChanged.connect(self._update_style_preview)
-        t_grid.addWidget(self.title_event, 3, 1)
+        t_grid.addWidget(self.title_event, 4, 1)
+        self.override_event = _make_num_inp("Event")
+        t_grid.addWidget(self.override_event, 4, 2)
 
-        t_grid.addWidget(QLabel("<span style='color: #f7bd2e;'>●</span> Shoprob:"), 4, 0)
+        t_grid.addWidget(QLabel("<span style='color: #f7bd2e;'>●</span> Shoprob:"), 5, 0)
         self.title_shoprob = QLineEdit()
         self.title_shoprob.setText(titles_cfg.get("Shoprob", "{nr}. Shoprob"))
         self.title_shoprob.textChanged.connect(self._update_style_preview)
-        t_grid.addWidget(self.title_shoprob, 4, 1)
+        t_grid.addWidget(self.title_shoprob, 5, 1)
+        self.override_shoprob = _make_num_inp("Shoprob")
+        t_grid.addWidget(self.override_shoprob, 5, 2)
 
-        t_grid.addWidget(QLabel("<span style='color: #2dd4bf;'>●</span> FZ-Raid:"), 5, 0)
+        t_grid.addWidget(QLabel("<span style='color: #2dd4bf;'>●</span> FZ-Raid:"), 6, 0)
         self.title_fz = QLineEdit()
         self.title_fz.setText(titles_cfg.get("FZ Raid", "{nr}. FZ-Raid"))
         self.title_fz.textChanged.connect(self._update_style_preview)
-        t_grid.addWidget(self.title_fz, 5, 1)
+        t_grid.addWidget(self.title_fz, 6, 1)
+        self.override_fz = _make_num_inp("FZ Raid")
+        t_grid.addWidget(self.override_fz, 6, 2)
 
-        t_grid.addWidget(QLabel("<span style='color: #ec5ba3;'>●</span> Streifenpartner:"), 6, 0)
+        t_grid.addWidget(QLabel("<span style='color: #ec5ba3;'>●</span> Streifenpartner:"), 7, 0)
         self.title_partner = QLineEdit()
         self.title_partner.setText(titles_cfg.get("Streifenpartner", "{nr}. Streifenpartner"))
         self.title_partner.textChanged.connect(self._update_style_preview)
-        t_grid.addWidget(self.title_partner, 6, 1)
+        t_grid.addWidget(self.title_partner, 7, 1)
+        self.override_partner = _make_num_inp("Streifenpartner")
+        t_grid.addWidget(self.override_partner, 7, 2)
 
         cf2_lay.addLayout(t_grid)
 
-        btn_reset_titles = QPushButton("Beschriftungen zurücksetzen")
+        btn_reset_titles = QPushButton("Beschriftungen & Zähler auf Automatik zurücksetzen")
         btn_reset_titles.clicked.connect(self._reset_titles_to_defaults)
         cf2_lay.addWidget(btn_reset_titles)
 
@@ -1770,6 +1819,13 @@ class SetupDialog(QDialog):
         self.title_shoprob.setText("{nr}. Shoprob")
         self.title_fz.setText("{nr}. FZ-Raid")
         self.title_partner.setText("{nr}. Streifenpartner")
+        for w in [getattr(self, 'override_inh', None), getattr(self, 'override_global', None),
+                  getattr(self, 'override_local', None), getattr(self, 'override_event', None),
+                  getattr(self, 'override_shoprob', None), getattr(self, 'override_fz', None),
+                  getattr(self, 'override_partner', None)]:
+            if w:
+                w.clear()
+        CONFIG["counter_overrides"] = {}
         self._update_style_preview()
 
     def choose_directory(self):
@@ -1827,6 +1883,22 @@ class SetupDialog(QDialog):
             "FZ Raid": self.title_fz.text().strip() or "{nr}. FZ-Raid",
             "Streifenpartner": self.title_partner.text().strip() or "{nr}. Streifenpartner"
         }
+
+        overrides = {}
+        for cat, w in [
+            ("Inhaftierung", getattr(self, 'override_inh', None)),
+            ("Global", getattr(self, 'override_global', None)),
+            ("Local", getattr(self, 'override_local', None)),
+            ("Event", getattr(self, 'override_event', None)),
+            ("Shoprob", getattr(self, 'override_shoprob', None)),
+            ("FZ Raid", getattr(self, 'override_fz', None)),
+            ("Streifenpartner", getattr(self, 'override_partner', None))
+        ]:
+            if w:
+                txt = w.text().strip()
+                if txt.isdigit() and int(txt) > 0:
+                    overrides[cat] = int(txt)
+        CONFIG["counter_overrides"] = overrides
 
         CONFIG["hud"] = {
             "theme": self.theme_combo.currentText(),
@@ -2485,6 +2557,10 @@ class PDOverlayWindow(QWidget):
         if success:
             if cat_key in self.next_numbers:
                 self.next_numbers[cat_key] += 1
+                if "counter_overrides" in CONFIG and isinstance(CONFIG["counter_overrides"], dict):
+                    if cat_key in CONFIG["counter_overrides"]:
+                        CONFIG["counter_overrides"][cat_key] = self.next_numbers[cat_key]
+                        save_config(CONFIG)
                 self.update_button_labels()
             try:
                 play_beep(1500, 100)

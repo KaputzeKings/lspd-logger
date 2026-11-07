@@ -1,5 +1,5 @@
 {
-    "version": "1.4.9",
-    "changelog": "Update v1.4.9 - Automatisches Logbuch mit hoechster Kalenderwoche (KW):\n- Dynamische Erkennung des neuesten Discord-Forum-Logbuchs anhand der hoechsten KW-Nummer (z.B. KW 46 statt alter KW 45).\n- Nahtloser Wochenwechsel jeden Samstag: Neues Logbuch erstellen genuegt, der Assistent switcht sofort automatisch.\n- Visuelle KW-Anzeige als blauer Badge im Ingame-HUD Header (z.B. '#317108 KW 46').",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.9/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.5.0",
+    "changelog": "Update v1.5.0 - Intelligenter Zaehler-Schutz & Manuelle Zaehler-Steuerung:\n- Zaehler-Schutz gegen Altdaten: Verhindert, dass alte Nummern aus Vorwochen (z.B. '17. Inhaftierung') die Zaehlung einer neuen Woche verfaelschen (zaehlt nun korrekt die echten Logs des aktuellen Wochen-Threads).\n- Manuelle Zaehler-Korrektur in den Einstellungen: In den Einstellungen kann unter 'Log-Beschriftung & Stil' nun jederzeit fuer jede Kategorie eine individuelle Start-/Folgenummer eingetragen werden (oder 'Auto' belassen).\n- 1:1 Abgleich zwischen HUD-Stats (z.B. 2/7) und Button-Nummerierung (z.B. 3. Inhaftierung).",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.5.0/LSPD_Log_Assistent_Paket.zip"
 }
