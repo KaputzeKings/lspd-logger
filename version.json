@@ -1,5 +1,5 @@
 {
-    "version": "1.5.0",
-    "changelog": "Update v1.5.0 - Intelligenter Zaehler-Schutz & Manuelle Zaehler-Steuerung:\n- Zaehler-Schutz gegen Altdaten: Verhindert, dass alte Nummern aus Vorwochen (z.B. '17. Inhaftierung') die Zaehlung einer neuen Woche verfaelschen (zaehlt nun korrekt die echten Logs des aktuellen Wochen-Threads).\n- Manuelle Zaehler-Korrektur in den Einstellungen: In den Einstellungen kann unter 'Log-Beschriftung & Stil' nun jederzeit fuer jede Kategorie eine individuelle Start-/Folgenummer eingetragen werden (oder 'Auto' belassen).\n- 1:1 Abgleich zwischen HUD-Stats (z.B. 2/7) und Button-Nummerierung (z.B. 3. Inhaftierung).",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.5.0/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.5.1",
+    "changelog": "Update v1.5.1 - Maximale Logbuch- & Token-Kompatibilitaet (Multi-User Fix):\n- Universelle Logbuch-Erkennung: Findet Threads jetzt auch bei abweichenden Formaten (mit/ohne '#' im Badge, Ingame-Name oder automatisch ueber Discord Account-Inhaberschaft owner_id).\n- Vollstaendige Discord-Link Unterstuetzung: Beamte koennen jetzt direkt ihren Discord-Thread-Link (Rechtsklick -> 'Link kopieren') in die Einstellungen einfuegen.\n- Multi-Source Token Reader: Liest Discord Tokens zuverlaessig aus Discord Desktop, Canary, PTB sowie Browsern (Chrome, Opera GX, Brave, Edge) inklusive Shared-Read fuer gesperrte LevelDB-Dateien.\n- Neuer Diagnose-Button 'Discord & Logbuch testen': Zeigt in den Einstellungen sofort mit einem Klick an, welcher Discord-Account und welches Logbuch verbunden sind.",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.5.1/LSPD_Log_Assistent_Paket.zip"
 }
