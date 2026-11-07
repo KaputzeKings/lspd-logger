@@ -1,5 +1,5 @@
 {
-    "version": "1.4.7",
-    "changelog": "Update v1.4.7 - Systemfehler (+ Vermerk) & Switch-Toggles im Grandkasten:\n- Neuer Schalter 'Systemfehler (+ Vermerk)': Fuegt vorschriftsmaessig '+ Systemfehler' an den Aktenvermerk an (z.B. '05.11 21:53 - ... + Systemfehler' oder 'StGB §4.1 + Systemfehler').\n- 1:1 Grandkasten Switch-Toggles: Moderne, farblich akzentuierte Pill-Switches fuer Wiederholungstaeter (Orange), §35 Reue (Lila) und Systemfehler (Blau).\n- Perfekte GrandRP DE1 MDT-Kompatibilitaet fuer unvorhergesehene Server- und Systemfehler.",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.7/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.4.8",
+    "changelog": "Update v1.4.8 - Fluessige Fenster-Animationen & DWM Micro-Transitions:\n- Butterweiche Ein- & Ausblend-Animationen beim Oeffnen und Schliessen aller Fenster (F12 Grandkasten, Ingame-HUD, F10 Teleprompter & Einstellungen).\n- Hardware-beschleunigtes Cubic Easing & Micro-Slide ueber Windows DWM (60-144Hz) ohne FPS-Einfluss auf FiveM.\n- Re-Entrance-Schutz gegen schnelles Tastendruecken von F12/ESC.",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.8/LSPD_Log_Assistent_Paket.zip"
 }

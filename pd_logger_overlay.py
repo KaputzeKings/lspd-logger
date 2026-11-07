@@ -1,3 +1,4 @@
+from window_animator import WindowAnimator
 import os
 import sys
 import time
@@ -24,7 +25,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.4.7"
+CURRENT_VERSION = "1.4.8"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -1068,7 +1069,19 @@ class SetupDialog(QDialog):
         self.setWindowTitle("LSPD Dienst-Assistent - Einstellungen")
         self.setFixedSize(720, 680)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
+        self.setWindowOpacity(0.0)
         self.init_ui()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not getattr(self, '_anim_opened', False):
+            self._anim_opened = True
+            WindowAnimator.animate_open(self, target_opacity=1.0, duration=170, slide_distance=12)
+
+    def reject(self):
+        if getattr(self, '_is_animating_close', False):
+            return
+        WindowAnimator.animate_close(self, on_finished=lambda: super(SetupDialog, self).reject(), duration=130, slide_distance=8)
 
     def _create_card(self, title_text, subtitle_text=""):
         card = QFrame()
@@ -1775,11 +1788,12 @@ class SetupDialog(QDialog):
         save_config(CONFIG)
         log(f"[Setup] Gespeichert: Badge={badge}, HUD Theme={CONFIG['hud']['theme']}, Scale={CONFIG['hud']['scale']}")
         overlay_signal.reload_theme.emit()
-        self.accept()
+        WindowAnimator.animate_close(self, on_finished=self.accept, duration=130, slide_distance=8)
 
 class PDOverlayWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.setWindowOpacity(0.0)
         self.current_screenshot = None
         self.pending_two_shot = self.load_pending_state()
         self.next_numbers = {
@@ -2190,9 +2204,13 @@ class PDOverlayWindow(QWidget):
         self.update_button_labels(recommendation)
 
         self.notify_label.setVisible(False)
-        self.show()
-        self.raise_()
-        self.activateWindow()
+        self.apply_theme()
+        self._normal_pos = self.pos()
+        target_op = float(CONFIG.get("hud", {}).get("opacity", 0.96))
+        WindowAnimator.animate_open(self, target_opacity=target_op, duration=190, slide_distance=14)
+        auto_sec = float(CONFIG.get("hud", {}).get("auto_close_sec", 25))
+        if auto_sec > 0:
+            self.auto_timer.start(int(auto_sec * 1000))
 
         try:
             hwnd = int(self.winId())
@@ -2407,7 +2425,7 @@ class PDOverlayWindow(QWidget):
 
     def close_overlay(self):
         self.auto_timer.stop()
-        self.hide()
+        WindowAnimator.animate_close(self, on_finished=self.hide, duration=140, slide_distance=10)
 
     def on_hotkey_pressed(self, key_char):
         if not self.isVisible():
@@ -2568,8 +2586,11 @@ def main():
     def toggle_calc():
         log("[Calc] toggle_calc getriggert")
         try:
-            if calc_overlay.isVisible():
-                calc_overlay.hide()
+            if calc_overlay.isVisible() and not getattr(calc_overlay, '_is_animating_close', False):
+                if hasattr(calc_overlay, 'animate_close'):
+                    calc_overlay.animate_close()
+                else:
+                    calc_overlay.hide()
             else:
                 if hasattr(calc_overlay, 'show_calculator'):
                     calc_overlay.show_calculator()

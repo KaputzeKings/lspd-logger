@@ -1,3 +1,4 @@
+from window_animator import WindowAnimator
 import sys
 import os
 import json
@@ -574,8 +575,10 @@ class FloatingPrompterHUD(QWidget):
         self.theme_data = theme_data
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.setWindowOpacity(0.0)
         self.drag_pos = None
         self.setFixedSize(600, 185)
+        self.setWindowOpacity(0.0)
         self.init_ui()
 
     def init_ui(self):
@@ -624,7 +627,7 @@ class FloatingPrompterHUD(QWidget):
         btn_close.setFixedSize(22, 22)
         btn_close.setCursor(Qt.PointingHandCursor)
         btn_close.setStyleSheet("QPushButton { background: #18181a; color: #71717a; border: 1px solid #262628; border-radius: 6px; font-weight: bold; font-size: 11px; } QPushButton:hover { background: #27272a; color: #ffffff; }")
-        btn_close.clicked.connect(self.hide)
+        btn_close.clicked.connect(self.animate_close)
         header.addWidget(btn_close)
 
         c_lay.addLayout(header)
@@ -704,6 +707,11 @@ class FloatingPrompterHUD(QWidget):
             self.move(event.globalPosition().toPoint() - self.drag_pos)
             event.accept()
 
+    def animate_close(self, on_finished=None):
+        if hasattr(self, 'main_calc') and self.main_calc:
+            self.main_calc.stop_autoplay()
+        WindowAnimator.animate_close(self, on_finished=on_finished or self.hide, duration=130, slide_distance=8)
+
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key_Space, Qt.Key_Right, Qt.Key_Return, Qt.Key_Enter):
             self.main_calc.prompter_next()
@@ -718,7 +726,7 @@ class FloatingPrompterHUD(QWidget):
             self.main_calc.toggle_autoplay()
             event.accept()
         elif event.key() in (Qt.Key_Escape, Qt.Key_F10):
-            self.hide()
+            self.animate_close()
             event.accept()
         else:
             super().keyPressEvent(event)
@@ -1166,7 +1174,7 @@ class GrandCalculatorOverlay(QWidget):
                 background-color: #dc2626;
             }
         """)
-        btn_close.clicked.connect(self.hide)
+        btn_close.clicked.connect(self.animate_close)
         header.addWidget(btn_close)
         frame_layout.addLayout(header)
 
@@ -2620,7 +2628,7 @@ class GrandCalculatorOverlay(QWidget):
                 self.prompter_step = 0
                 self.render_prompter_sentences()
                 if hasattr(self, 'floating_prompter') and self.floating_prompter.isVisible():
-                    self.floating_prompter.hide()
+                    self.floating_prompter.animate_close()
 
     def prompter_prev(self):
         if self.prompter_step > 0:
@@ -2729,9 +2737,8 @@ class GrandCalculatorOverlay(QWidget):
 
     def toggle_floating_prompter(self):
         if hasattr(self, 'floating_prompter'):
-            if self.floating_prompter.isVisible():
-                self.floating_prompter.hide()
-                self.stop_autoplay()
+            if self.floating_prompter.isVisible() and not getattr(self.floating_prompter, '_is_animating_close', False):
+                self.floating_prompter.animate_close()
             else:
                 self.prompter_step = 0
                 self.render_prompter_sentences()
@@ -2743,10 +2750,9 @@ class GrandCalculatorOverlay(QWidget):
                 w = self.floating_prompter.width()
                 x = avail_x + (avail_w - w) // 2
                 y = avail_y + 45
+                self.floating_prompter._normal_pos = QPoint(x, y)
                 self.floating_prompter.move(x, y)
-                self.floating_prompter.show()
-                self.floating_prompter.raise_()
-                self.floating_prompter.activateWindow()
+                WindowAnimator.animate_open(self.floating_prompter, target_opacity=1.0, duration=180, slide_distance=10)
                 self.start_autoplay()
 
     def toggle_autoplay(self):
@@ -2800,7 +2806,7 @@ class GrandCalculatorOverlay(QWidget):
                 self.prompter_step = 0
                 self.render_prompter_sentences()
                 if hasattr(self, 'floating_prompter') and self.floating_prompter.isVisible():
-                    self.floating_prompter.hide()
+                    self.floating_prompter.animate_close()
                 return
         self._update_autoplay_buttons()
 
@@ -3008,9 +3014,12 @@ class GrandCalculatorOverlay(QWidget):
             self.render_prompter_sentences()
 
     # --- KEY & EVENT HANDLERS ---
+    def animate_close(self, on_finished=None):
+        WindowAnimator.animate_close(self, on_finished=on_finished or self.hide, duration=140, slide_distance=10)
+
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key_Escape, Qt.Key_F12):
-            self.hide()
+            self.animate_close()
             event.accept()
         elif hasattr(self, 'tabs') and self.tabs.currentIndex() == 2 and not self.search_input.hasFocus():
             if event.key() in (Qt.Key_Space, Qt.Key_Right, Qt.Key_Return, Qt.Key_Enter):
@@ -3025,8 +3034,8 @@ class GrandCalculatorOverlay(QWidget):
             super().keyPressEvent(event)
 
     def toggle_visibility(self):
-        if self.isVisible():
-            self.hide()
+        if self.isVisible() and not getattr(self, '_is_animating_close', False):
+            self.animate_close()
         else:
             self.show_overlay()
 
@@ -3035,7 +3044,6 @@ class GrandCalculatorOverlay(QWidget):
 
     def show_overlay(self):
         self.resize_to_screen()
-        self.show()
-        self.raise_()
-        self.activateWindow()
+        self._normal_pos = self.pos()
+        WindowAnimator.animate_open(self, target_opacity=1.0, duration=190, slide_distance=14)
         self.search_input.setFocus()

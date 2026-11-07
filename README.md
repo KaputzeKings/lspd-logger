@@ -1,12 +1,26 @@
-# 👮‍♂️ LSPD Log Assistent (v1.4.7)
+# 👮‍♂️ LSPD Log Assistent (v1.4.8)
 
-[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.4.7)](https://github.com/KaputzeKings/lspd-logger/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.4.8)](https://github.com/KaputzeKings/lspd-logger/releases)
 [![GrandRP DE1](https://img.shields.io/badge/GrandRP-DE1-blue.svg)](https://gta5grand.com)
 [![Platform](https://img.shields.io/badge/Plattform-Windows-0078d7.svg)](https://microsoft.com)
 
 Ein leistungsstarkes, automatisiertes **Logging-, Auswertungs- und Dienst-Tool** für Beamte des **Los Santos Police Department** auf GrandRP (DE1). 
 
 Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset und vollwertigem **Dienst-Rechner (F12)** für Bußgelder, Wanteds und TOW nach Vorbild von [Grandkasten](https://grandkasten.com/).
+
+---
+
+## 🚀 Neu in Version 1.4.8
+
+* **Flüssige Fenster-Animationen (Smooth Window Transitions):**
+  * **[F12] Grandkasten Dienst-Rechner:** Sanftes Einblenden mit feinem Micro-Slide-Up beim Öffnen, flüssiges Ausblenden mit Slide-Down beim Schließen (F12, ESC oder [✕]-Button).
+  * **Ingame-HUD (Echtzeit-Overlay):** Geschmeidiges Auftauchen beim Eintreffen neuer Screenshots und elegantes Wegblenden nach Auswahl eines Buttons oder Druck auf [ESC].
+  * **[F10] Teleprompter (Rechte & Miranda):** Butterweicher Übergang beim Aufrufen und Schließen des Floating-Prompters.
+  * **Einstellungen (Setup):** Fließende Öffnungs- und Schließanimation bei "Einstellungen speichern" oder "Abbrechen".
+* **DWM Hardware-Beschleunigung (60–144Hz):**
+  * Berechnet via Windows Desktop Window Manager mit `OutCubic` / `InCubic` Kurven – butterweich ohne Mikroruckler oder FPS-Verlust in FiveM.
+* **Re-Entrance Schutz:**
+  * Zuverlässiges Verhindern von Darstellungsfehlern bei schnellem Mehrfachdrücken von [F12] oder [ESC].
 
 ---
 
