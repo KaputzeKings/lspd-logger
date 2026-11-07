@@ -1,12 +1,22 @@
-# 👮‍♂️ LSPD Log Assistent (v1.4.8)
+# 👮‍♂️ LSPD Log Assistent (v1.4.9)
 
-[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.4.8)](https://github.com/KaputzeKings/lspd-logger/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.4.9)](https://github.com/KaputzeKings/lspd-logger/releases)
 [![GrandRP DE1](https://img.shields.io/badge/GrandRP-DE1-blue.svg)](https://gta5grand.com)
 [![Platform](https://img.shields.io/badge/Plattform-Windows-0078d7.svg)](https://microsoft.com)
 
 Ein leistungsstarkes, automatisiertes **Logging-, Auswertungs- und Dienst-Tool** für Beamte des **Los Santos Police Department** auf GrandRP (DE1). 
 
 Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset und vollwertigem **Dienst-Rechner (F12)** für Bußgelder, Wanteds und TOW nach Vorbild von [Grandkasten](https://grandkasten.com/).
+
+---
+
+## 🚀 Neu in Version 1.4.9
+
+* **Automatisches Logbuch mit höchster Kalenderwoche (KW):**
+  * Erkennt im Discord-Forum automatisch das **aktuelle Logbuch mit der höchsten KW-Nummer** (z.B. `KW 46` statt `KW 45`).
+  * **Perfekt für den wöchentlichen Samstag-Reset:** Sobald jeden Samstag ein neues Logbuch (z.B. KW 46, KW 47) erstellt wird, wechselt der Log-Assistent vollautomatisch in den neuen Thread – ganz ohne manuelle Konfiguration!
+  * **Live KW-Badge im HUD:** Der Ingame-Header zeigt jetzt direkt an, in welche Woche geloggt wird (z.B. `#317108 KW 46`).
+  * Berücksichtigt Archivierungsstatus und Discord-Snowflakes für maximale Ausfallsicherheit.
 
 ---
 

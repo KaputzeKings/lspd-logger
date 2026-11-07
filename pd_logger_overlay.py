@@ -25,7 +25,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.4.8"
+CURRENT_VERSION = "1.4.9"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -486,7 +486,28 @@ def get_discord_token():
         log(f"[Discord Token Error] {e}")
     return None
 
-def get_active_thread_id(token, badge=None, thread_override=None):
+def extract_kw_number(thread_name):
+    """
+    Extrahiert die Kalenderwoche (KW) aus dem Thread-Namen im Discord-Forum.
+    Beispiele:
+      'KW 46 I Justin Liebermann I 317108' -> 46
+      'KW45 | Justin Liebermann' -> 45
+      'Kalenderwoche 47' -> 47
+    Gibt int >= 0 zurueck, sonst -1.
+    """
+    if not thread_name:
+        return -1
+    m = re.search(r'(?:kw|kalenderwoche)\s*[:#-]?\s*(\d+)', thread_name, re.IGNORECASE)
+    if m:
+        try:
+            return int(m.group(1))
+        except ValueError:
+            pass
+    return -1
+
+_cached_thread_info = {"id": None, "time": 0, "badge": None, "name": "", "kw": -1}
+
+def get_active_thread_id(token, badge=None, thread_override=None, force_refresh=False):
     if thread_override and thread_override.strip():
         return thread_override.strip()
     manual_thread = CONFIG.get("thread_id", "").strip()
@@ -494,35 +515,70 @@ def get_active_thread_id(token, badge=None, thread_override=None):
         return manual_thread
 
     badge = str(badge or CONFIG.get("user_badge", "")).strip()
+    now = time.time()
+    if not force_refresh and _cached_thread_info["id"] and _cached_thread_info["badge"] == badge:
+        if now - _cached_thread_info["time"] < 45:
+            return _cached_thread_info["id"]
+
     forum_channel = CONFIG.get("forum_channel_id", "1551241898340122756").strip()
     headers = {'Authorization': token}
+    candidates = {}
 
+    # 1. Gezielte Suche nach Badge im Forum
     if badge:
         try:
-            url = f'https://discord.com/api/v9/channels/{forum_channel}/threads/search?name={badge}&sort_by=last_message_time&sort_order=desc'
+            url = f'https://discord.com/api/v9/channels/{forum_channel}/threads/search?name={badge}'
             res = requests.get(url, headers=headers, timeout=6)
             if res.status_code == 200:
-                threads = res.json().get('threads', [])
-                for t in threads:
+                for t in res.json().get('threads', []):
                     if badge in t.get('name', ''):
-                        log(f"[Thread Finder] Gefunden: {t.get('name')} (ID: {t.get('id')})")
-                        return t['id']
+                        candidates[t['id']] = t
         except Exception as e:
             log(f"[Thread Search by Badge Error] {e}")
 
+    # 2. Ergaenzende Suche nach aktiven Threads
     try:
         url = f'https://discord.com/api/v9/channels/{forum_channel}/threads/search?sort_by=last_message_time&sort_order=desc'
         res = requests.get(url, headers=headers, timeout=6)
         if res.status_code == 200:
-            threads = res.json().get('threads', [])
-            for t in threads:
+            for t in res.json().get('threads', []):
                 if badge and badge in t.get('name', ''):
-                    return t['id']
+                    candidates[t['id']] = t
     except Exception as e:
         log(f"[Thread Search Fallback Error] {e}")
 
-    if badge == "317108":
-        return "1566193909250400278"
+    if candidates:
+        # Sortiere strikt nach:
+        # 1. Hoechste Kalenderwoche (KW-Nummer z.B. 46 > 45 > 44)
+        # 2. Nicht archiviert (aktive Threads bevorzugen)
+        # 3. Neueste Discord Snowflake ID (Erstellungszeitpunkt)
+        sorted_threads = sorted(
+            candidates.values(),
+            key=lambda t: (
+                extract_kw_number(t.get('name', '')),
+                not t.get('thread_metadata', {}).get('archived', False),
+                int(t.get('id', 0))
+            ),
+            reverse=True
+        )
+
+        chosen = sorted_threads[0]
+        kw = extract_kw_number(chosen.get('name', ''))
+        kw_label = f"KW {kw}" if kw >= 0 else "Keine KW"
+
+        if _cached_thread_info["id"] != chosen['id']:
+            log(f"[Thread Finder] Aktives Logbuch gewaehlt ({kw_label}, hoechste KW): '{chosen.get('name')}' (ID: {chosen.get('id')})")
+
+        _cached_thread_info["id"] = chosen['id']
+        _cached_thread_info["time"] = now
+        _cached_thread_info["badge"] = badge
+        _cached_thread_info["name"] = chosen.get('name', '')
+        _cached_thread_info["kw"] = kw
+        return chosen['id']
+
+    if _cached_thread_info["id"] and _cached_thread_info["badge"] == badge:
+        return _cached_thread_info["id"]
+
     return None
 
 def send_to_discord(token, thread_id, title, file_paths):
@@ -1309,9 +1365,16 @@ class SetupDialog(QDialog):
         c3, c3_lay = self._create_card("Discord Forum-Thread", "Server-Synchronisation")
         c3_lay.addWidget(QLabel("Forum Thread-ID (Optional):"))
         self.thread_input = QLineEdit()
-        self.thread_input.setPlaceholderText("Leer lassen für automatische Thread-Erkennung")
+        self.thread_input.setPlaceholderText("Leer lassen für automatische Erkennung (höchste KW)")
         self.thread_input.setText(CONFIG.get("thread_id", ""))
         c3_lay.addWidget(self.thread_input)
+        
+        kw_hint = QLabel("<span style='color: #888888; font-size: 10px; font-weight: normal;'>"
+                         "<b>Automatisches Logbuch:</b> Das System wählt immer automatisch das Logbuch mit der <b>höchsten Kalenderwoche (KW)</b>. "
+                         "Jeden Samstag kannst du einfach dein neues Logbuch (z.B. KW 46) erstellen – der Assistent wechselt sofort nahtlos.</span>")
+        kw_hint.setStyleSheet("border: none; margin-top: 2px;")
+        kw_hint.setWordWrap(True)
+        c3_lay.addWidget(kw_hint)
         
         token_box = QFrame()
         token_box.setStyleSheet("background: #111111; border: 1px solid #242424; border-radius: 5px; padding: 6px;")
@@ -1786,6 +1849,8 @@ class SetupDialog(QDialog):
 
         self.apply_to_config_runtime()
         save_config(CONFIG)
+        global _cached_thread_info
+        _cached_thread_info = {"id": None, "time": 0, "badge": None, "name": "", "kw": -1}
         log(f"[Setup] Gespeichert: Badge={badge}, HUD Theme={CONFIG['hud']['theme']}, Scale={CONFIG['hud']['scale']}")
         overlay_signal.reload_theme.emit()
         WindowAnimator.animate_close(self, on_finished=self.accept, duration=130, slide_distance=8)
@@ -1973,10 +2038,13 @@ class PDOverlayWindow(QWidget):
         self.setGeometry(x, y, w, h)
 
         badge_text = str(CONFIG.get("user_badge", "317108"))
+        kw_val = _cached_thread_info.get("kw", -1)
+        kw_pill = f" <span style='background: #151d28; color: #5ea2ef; border: 1px solid #1e2c3f; border-radius: 6px; padding: 2px 7px; font-size: {int(font_size * 0.82)}px; font-weight: 700;'>KW {kw_val}</span>" if kw_val > 0 else ""
         self.header_label.setText(
             f"<span style='font-size: {int(font_size * 1.15)}px; font-weight: 800; color: #ffffff;'>LSPD</span> "
             f"<span style='font-size: {int(font_size * 1.05)}px; font-weight: 600; color: #71717a;'>Log Assistent</span> "
             f"<span style='background: #181820; color: #a1a1aa; border: 1px solid #282835; border-radius: 6px; padding: 2px 7px; font-size: {int(font_size * 0.82)}px; font-weight: 600;'>#{badge_text}</span>"
+            f"{kw_pill}"
         )
         self.header_label.setStyleSheet(f"font-size: {int(font_size * 1.15)}px; border: none; font-family: '{font_family}';")
 
@@ -2184,7 +2252,20 @@ class PDOverlayWindow(QWidget):
             part = f"<b>{counts.get('Streifenpartner', 0)}</b>/2"
             self.stats_line1.setText(f"GL/LO: {gl}  •  Shop: {sh}  •  Events: {ev}")
             self.stats_line2.setText(f"FZ: {fz}  •  Inh: {inh}  •  Partner: {part}")
-            log(f"[UI] Stats: GL/LO={gl}, Shop={sh}, Ev={ev}, FZ={fz}, Inh={inh}, Partner={part}")
+            
+            # Aktualisiere KW-Pill im Header
+            badge_text = str(CONFIG.get("user_badge", "317108"))
+            kw_val = _cached_thread_info.get("kw", -1)
+            hud = CONFIG.get("hud", {})
+            font_size = int(hud.get("font_size", 11))
+            kw_pill = f" <span style='background: #151d28; color: #5ea2ef; border: 1px solid #1e2c3f; border-radius: 6px; padding: 2px 7px; font-size: {int(font_size * 0.82)}px; font-weight: 700;'>KW {kw_val}</span>" if kw_val > 0 else ""
+            self.header_label.setText(
+                f"<span style='font-size: {int(font_size * 1.15)}px; font-weight: 800; color: #ffffff;'>LSPD</span> "
+                f"<span style='font-size: {int(font_size * 1.05)}px; font-weight: 600; color: #71717a;'>Log Assistent</span> "
+                f"<span style='background: #181820; color: #a1a1aa; border: 1px solid #282835; border-radius: 6px; padding: 2px 7px; font-size: {int(font_size * 0.82)}px; font-weight: 600;'>#{badge_text}</span>"
+                f"{kw_pill}"
+            )
+            log(f"[UI] Stats: GL/LO={gl}, Shop={sh}, Ev={ev}, FZ={fz}, Inh={inh}, Partner={part} | KW={kw_val}")
 
     def display_screenshot(self, screenshot_path, recommendation=None):
         log(f"[UI] display_screenshot: {screenshot_path}")
@@ -2614,6 +2695,8 @@ def main():
     overlay_signal.toggle_prompter.connect(toggle_prompter_hud)
 
     def reload_hud_theme():
+        global _cached_thread_info
+        _cached_thread_info = {"id": None, "time": 0, "badge": None, "name": "", "kw": -1}
         overlay.apply_theme()
         calc_theme_name = CONFIG.get("calc_theme", "Grandkasten Cyberpunk")
         calc_overlay.update_theme(calc_theme_name)

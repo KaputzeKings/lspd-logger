@@ -1,5 +1,5 @@
 {
-    "version": "1.4.8",
-    "changelog": "Update v1.4.8 - Fluessige Fenster-Animationen & DWM Micro-Transitions:\n- Butterweiche Ein- & Ausblend-Animationen beim Oeffnen und Schliessen aller Fenster (F12 Grandkasten, Ingame-HUD, F10 Teleprompter & Einstellungen).\n- Hardware-beschleunigtes Cubic Easing & Micro-Slide ueber Windows DWM (60-144Hz) ohne FPS-Einfluss auf FiveM.\n- Re-Entrance-Schutz gegen schnelles Tastendruecken von F12/ESC.",
-    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.8/LSPD_Log_Assistent_Paket.zip"
+    "version": "1.4.9",
+    "changelog": "Update v1.4.9 - Automatisches Logbuch mit hoechster Kalenderwoche (KW):\n- Dynamische Erkennung des neuesten Discord-Forum-Logbuchs anhand der hoechsten KW-Nummer (z.B. KW 46 statt alter KW 45).\n- Nahtloser Wochenwechsel jeden Samstag: Neues Logbuch erstellen genuegt, der Assistent switcht sofort automatisch.\n- Visuelle KW-Anzeige als blauer Badge im Ingame-HUD Header (z.B. '#317108 KW 46').",
+    "download_url": "https://github.com/KaputzeKings/lspd-logger/releases/download/v1.4.9/LSPD_Log_Assistent_Paket.zip"
 }
