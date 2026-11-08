@@ -25,7 +25,7 @@ from PySide6.QtGui import QPixmap, QColor, QFont, QFontDatabase, QIcon, QPainter
 from pynput import keyboard
 from grand_calculator import GrandCalculatorOverlay, load_grandkasten_db
 
-CURRENT_VERSION = "1.5.1"
+CURRENT_VERSION = "1.5.2"
 DEFAULT_UPDATE_URL = "https://api.github.com/repos/KaputzeKings/lspd-logger/releases/latest"
 
 # Base directory
@@ -2144,9 +2144,24 @@ class PDOverlayWindow(QWidget):
                 pass
 
     def init_ui(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool | Qt.WindowDoesNotAcceptFocus)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setAttribute(Qt.WA_ShowWithoutActivating, True)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.setFocusPolicy(Qt.NoFocus)
+        self._no_activate = True
+
+        try:
+            hwnd = int(self.winId())
+            GWL_EXSTYLE = -20
+            WS_EX_NOACTIVATE = 0x08000000
+            WS_EX_TRANSPARENT = 0x00000020
+            WS_EX_TOPMOST = 0x00000008
+            WS_EX_TOOLWINDOW = 0x00000080
+            old_style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+            ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, old_style | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW)
+        except Exception as e:
+            log(f"[Win32 Init Error] {e}")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
@@ -2533,15 +2548,15 @@ class PDOverlayWindow(QWidget):
         self.apply_theme()
         self._normal_pos = self.pos()
         target_op = float(CONFIG.get("hud", {}).get("opacity", 0.96))
-        WindowAnimator.animate_open(self, target_opacity=target_op, duration=190, slide_distance=14)
+        WindowAnimator.animate_open(self, target_opacity=target_op, duration=190, slide_distance=14, no_activate=True)
         auto_sec = float(CONFIG.get("hud", {}).get("auto_close_sec", 25))
         if auto_sec > 0:
             self.auto_timer.start(int(auto_sec * 1000))
 
         try:
             hwnd = int(self.winId())
-            ctypes.windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0040)
-            ctypes.windll.user32.SetForegroundWindow(hwnd)
+            # SWP_NOSIZE (0x0001) | SWP_NOMOVE (0x0002) | SWP_NOACTIVATE (0x0010) | SWP_SHOWWINDOW (0x0040) = 0x0053
+            ctypes.windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0053)
         except Exception as e:
             log(f"[Win32 Error] {e}")
 
@@ -2758,6 +2773,19 @@ class PDOverlayWindow(QWidget):
         WindowAnimator.animate_close(self, on_finished=self.hide, duration=140, slide_distance=10)
 
     def on_hotkey_pressed(self, key_char):
+        if key_char == "esc":
+            closed = False
+            if self.isVisible():
+                self.close_overlay()
+                closed = True
+            if hasattr(self, 'calc_overlay') and hasattr(self.calc_overlay, 'floating_prompter'):
+                if self.calc_overlay.floating_prompter.isVisible():
+                    self.calc_overlay.floating_prompter.animate_close()
+                    closed = True
+            if closed:
+                log("[Hotkey] ESC -> Overlay / Prompter geschlossen")
+            return
+
         if not self.isVisible():
             return
         log(f"[Hotkey] Taste gedrückt: {key_char}")
@@ -2779,8 +2807,6 @@ class PDOverlayWindow(QWidget):
             self.handle_send_summary()
         elif key_char in ("9", "del", "delete", "entf"):
             self.handle_delete_last_log()
-        elif key_char == "esc":
-            self.close_overlay()
 
 def watch_medal_folder():
     seen_files = set()
@@ -2912,6 +2938,7 @@ def main():
     overlay_signal.update_stats.connect(overlay.update_stats_ui)
 
     calc_overlay = GrandCalculatorOverlay(CONFIG.get("calc_theme", "Grandkasten Cyberpunk"))
+    overlay.calc_overlay = calc_overlay
 
     def toggle_calc():
         log("[Calc] toggle_calc getriggert")

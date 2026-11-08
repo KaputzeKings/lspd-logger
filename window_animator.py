@@ -9,7 +9,7 @@ class WindowAnimator:
     """
 
     @staticmethod
-    def animate_open(widget, target_opacity=1.0, duration=180, slide_distance=12):
+    def animate_open(widget, target_opacity=1.0, duration=180, slide_distance=12, no_activate=False):
         if hasattr(widget, '_anim_group') and widget._anim_group:
             try:
                 widget._anim_group.stop()
@@ -30,7 +30,8 @@ class WindowAnimator:
         widget.move(start_pos)
         widget.show()
         widget.raise_()
-        widget.activateWindow()
+        if not no_activate and not getattr(widget, '_no_activate', False):
+            widget.activateWindow()
 
         anim_group = QParallelAnimationGroup(widget)
 

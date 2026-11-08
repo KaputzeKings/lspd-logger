@@ -573,15 +573,31 @@ class FloatingPrompterHUD(QWidget):
         super().__init__(parent)
         self.main_calc = main_calc
         self.theme_data = theme_data
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool | Qt.WindowDoesNotAcceptFocus)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WA_ShowWithoutActivating, True)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.setFocusPolicy(Qt.NoFocus)
+        self._no_activate = True
         self.setWindowOpacity(0.0)
         self.drag_pos = None
         self.setFixedSize(600, 185)
-        self.setWindowOpacity(0.0)
         self.init_ui()
 
     def init_ui(self):
+        try:
+            import ctypes
+            hwnd = int(self.winId())
+            GWL_EXSTYLE = -20
+            WS_EX_NOACTIVATE = 0x08000000
+            WS_EX_TRANSPARENT = 0x00000020
+            WS_EX_TOPMOST = 0x00000008
+            WS_EX_TOOLWINDOW = 0x00000080
+            old_style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+            ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, old_style | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW)
+        except Exception:
+            pass
+
         t = self.theme_data
         self.setStyleSheet(f"""
             QFrame#hudContainer {{
@@ -2752,7 +2768,13 @@ class GrandCalculatorOverlay(QWidget):
                 y = avail_y + 45
                 self.floating_prompter._normal_pos = QPoint(x, y)
                 self.floating_prompter.move(x, y)
-                WindowAnimator.animate_open(self.floating_prompter, target_opacity=1.0, duration=180, slide_distance=10)
+                try:
+                    import ctypes
+                    hwnd = int(self.floating_prompter.winId())
+                    ctypes.windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0053)
+                except Exception:
+                    pass
+                WindowAnimator.animate_open(self.floating_prompter, target_opacity=1.0, duration=180, slide_distance=10, no_activate=True)
                 self.start_autoplay()
 
     def toggle_autoplay(self):

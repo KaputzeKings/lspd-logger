@@ -1,12 +1,26 @@
-# 👮‍♂️ LSPD Log Assistent (v1.5.1)
+# 👮‍♂️ LSPD Log Assistent (v1.5.2)
 
-[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.5.1)](https://github.com/KaputzeKings/lspd-logger/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/KaputzeKings/lspd-logger?color=4bd4a3&label=Version%201.5.2)](https://github.com/KaputzeKings/lspd-logger/releases)
 [![GrandRP DE1](https://img.shields.io/badge/GrandRP-DE1-blue.svg)](https://gta5grand.com)
 [![Platform](https://img.shields.io/badge/Plattform-Windows-0078d7.svg)](https://microsoft.com)
 
 Ein leistungsstarkes, automatisiertes **Logging-, Auswertungs- und Dienst-Tool** für Beamte des **Los Santos Police Department** auf GrandRP (DE1). 
 
 Inklusive Echtzeit-HUD, Discord-Forum-Uploader, automatischem Mitternachts-Reset und vollwertigem **Dienst-Rechner (F12)** für Bußgelder, Wanteds und TOW nach Vorbild von [Grandkasten](https://grandkasten.com/).
+
+---
+
+## 🚀 Neu in Version 1.5.2
+
+* **Kein Raustabben bei Screenshots (FiveM Game Focus & Audio Preservation):**
+  * **Native Windows Non-Activate Flags (`WS_EX_NOACTIVATE` & `SWP_NOACTIVATE`):** Beim Erstellen eines Screenshots blendet sich das Ingame-HUD geschmeidig ein, ohne FiveM jemals den Fensterfokus zu entziehen. Der Ingame-Sound von GTA V / FiveM läuft zu 100% unterbrechungsfrei weiter!
+* **Vollständiges Klick-Durchgangsverhalten (Click-Through / Mouse Passthrough):**
+  * Durch das native `WS_EX_TRANSPARENT`-Flag und `WA_TransparentForMouseEvents` werden Mausbewegungen und Klicks direkt an FiveM durchgereicht. Beamte können mitten in Verfolgungsjagden oder Schusswechseln Screenshots machen, ohne dass der Mauscursor am HUD hängenbleibt oder das Zielen beeinträchtigt wird.
+* **100% Reine Tastatur-Bedienung:**
+  * Das Log-HUD wird komfortabel und fehlerfrei über die Zifferntasten `[1]`–`[7]` gesteuert (sowie `[8]`/`[Z]` für Zusammenfassung, `[9]`/`[ENTF]` für Löschen und `[ESC]` zum Schließen).
+  * Der Teleprompter (`[F10]`) läuft mit Autoplay flüssig im Hintergrund mit und lässt sich jederzeit per `[F10]` oder `[ESC]` schließen.
+* **Grandkasten Bußgeldrechner (F12) unverändert voll interaktiv:**
+  * Wie gewünscht bleibt der F12 Bußgeld- & TOW-Rechner vollständig fokussierbar und mit Maus bedienbar (Tatbestände anklicken, Aktenvermerk kopieren, Suchleiste bedienen).
 
 ---
 
